@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nursing Shift Simulator: Critical Care Unit</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const patientCases = [
+            {
+                id: 1,
+                name: "Mrs. Anderson",
+                age: 67,
+                diagnosis: "Heart Failure Exacerbation",
+                imbalance: "ECV Excess",
+                emoji: "👵",
+                initialPresentation: "Patient admitted 2 hours ago with severe shortness of breath and swollen ankles.",
+                assessmentFindings: [
+                    "Weight gain of 8 lbs in 3 days",
+                    "3+ pitting edema in lower extremities",
+                    "Crackles heard in bilateral lung bases",
+                    "JVD present",
+                    "BP: 165/95, HR: 98, RR: 26",
+                    "Patient sitting upright, anxious"
+                ],
+                correctAssessments: ["lung-sounds", "weight", "io"],
+                correctInterventions: ["diuretics", "elevate-hob", "restrict-fluids"],
+                criticalAction: "elevate-hob",
+                criticalTiming: 3000,
+                safetyAlert: "Risk for pulmonary edema - monitor respiratory status closely!",
+                teachingPoints: [
+                    "Weigh yourself daily at the same time",
+                    "Call doctor if weight increases >2 lbs in one day",
+                    "Follow low-sodium diet (2g/day)",
+                    "Limit fluid intake as prescribed"
+                ],
+                expectedOutcome: "Decreased edema, clear breath sounds, stable weight, improved breathing"
+            },
+            {
+                id: 2,
+                name: "Mr. Jackson",
+                age: 45,
+                diagnosis: "Severe Vomiting & Diarrhea",
+                imbalance: "ECV Deficit",
+                emoji: "🤢",
+                initialPresentation: "Brought in by ambulance after 48 hours of vomiting and diarrhea. Appears weak and confused.",
+                assessmentFindings: [
+                    "Dry mucous membranes, poor skin turgor",
+                    "Sunken eyes, flat neck veins",
+                    "BP: 88/54 (lying), 70/40 (standing)",
+                    "HR: 125, weak and thready",
+                    "Urine output: 20 mL/hr, dark amber color",
+                    "Patient states 'I'm so thirsty and dizzy'"
+                ],
+                correctAssessments: ["orthostatic-bp", "skin-turgor", "io"],
+                correctInterventions: ["isotonic-fluids", "fall-precautions", "monitor-vitals"],
+                criticalAction: "fall-precautions",
+                criticalTiming: 3000,
+                safetyAlert: "High fall risk due to orthostatic hypotension!",
+                teachingPoints: [
+                    "Increase fluid intake during illness",
+                    "Use oral rehydration solutions for diarrhea",
+                    "Rise slowly from lying to standing",
+                    "Call for help before getting out of bed"
+                ],
+                expectedOutcome: "Stable BP and HR, moist mucous membranes, improved urine output"
+            },
+            {
+                id: 3,
+                name: "Ms. Chen",
+                age: 52,
+                diagnosis: "SIADH (Post-surgery)",
+                imbalance: "Hyponatremia",
+                emoji: "😵",
+                initialPresentation: "Post-op day 3 from brain surgery. Family reports increasing confusion and headache.",
+                assessmentFindings: [
+                    "Confused to time and place",
+                    "Complains of severe headache and nausea",
+                    "Muscle weakness noted",
+                    "Na⁺: 122 mEq/L (critical low)",
+                    "BP: 110/70, HR: 88",
+                    "Has vomited twice this morning"
+                ],
+                correctAssessments: ["neuro-status", "labs", "io"],
+                correctInterventions: ["fluid-restriction", "seizure-precautions", "neuro-checks"],
+                criticalAction: "seizure-precautions",
+                criticalTiming: 4000,
+                safetyAlert: "Severe hyponatremia - high seizure risk due to cerebral edema!",
+                teachingPoints: [
+                    "Limit water intake to prescribed amount",
+                    "Report headaches or confusion immediately",
+                    "Avoid excessive plain water",
+                    "Monitor for signs of seizure activity"
+                ],
+                expectedOutcome: "Improved mental status, Na⁺ levels rising, no seizure activity"
+            },
+            {
+                id: 4,
+                name: "Mr. Davis",
+                age: 78,
+                diagnosis: "Heatstroke & Dehydration",
+                imbalance: "Hypernatremia",
+                emoji: "🥵",
+                initialPresentation: "Found unresponsive at home during heat wave. No AC, limited fluid intake for days.",
+                assessmentFindings: [
+                    "Altered mental status, restless and agitated",
+                    "Dry, sticky mucous membranes",
+                    "Flushed, hot skin",
+                    "Na⁺: 158 mEq/L (critical high)",
+                    "Urine output minimal, very concentrated",
+                    "Muscle twitching observed"
+                ],
+                correctAssessments: ["neuro-status", "mucous-membranes", "labs"],
+                correctInterventions: ["hypotonic-fluids", "seizure-precautions", "neuro-checks"],
+                criticalAction: "seizure-precautions",
+                criticalTiming: 4000,
+                safetyAlert: "Critical hypernatremia - seizure risk! Correct sodium slowly.",
+                teachingPoints: [
+                    "Stay cool during hot weather",
+                    "Drink water regularly throughout the day",
+                    "Recognize early signs of dehydration",
+                    "Avoid excessive sodium intake"
+                ],
+                expectedOutcome: "Na⁺ decreasing gradually, improved mental status, adequate hydration"
+            },
+            {
+                id: 5,
+                name: "Mrs. Taylor",
+                age: 58,
+                diagnosis: "Chronic Diuretic Use",
+                imbalance: "Hypokalemia",
+                emoji: "💊",
+                initialPresentation: "Presents to ER with extreme weakness and 'skipped heartbeats'. On furosemide for years.",
+                assessmentFindings: [
+                    "Severe muscle weakness, can barely stand",
+                    "Irregular pulse noted",
+                    "ECG shows flattened T waves and U waves",
+                    "K⁺: 2.6 mEq/L (critical low)",
+                    "Complains of leg cramps and constipation",
+                    "States 'I feel so tired all the time'"
+                ],
+                correctAssessments: ["cardiac-monitor", "muscle-strength", "labs"],
+                correctInterventions: ["potassium-replacement", "cardiac-monitoring", "diet-teaching"],
+                criticalAction: "cardiac-monitoring",
+                criticalTiming: 2000,
+                safetyAlert: "Life-threatening hypokalemia - cardiac dysrhythmias possible!",
+                teachingPoints: [
+                    "NEVER give IV potassium as a push - must be diluted and slow",
+                    "Eat potassium-rich foods: bananas, oranges, potatoes, spinach",
+                    "Take potassium supplements with food",
+                    "Report muscle weakness or irregular heartbeat immediately"
+                ],
+                expectedOutcome: "K⁺ levels normalized, regular cardiac rhythm, improved muscle strength"
+            },
+            {
+                id: 6,
+                name: "Mr. Brown",
+                age: 62,
+                diagnosis: "End-Stage Renal Disease",
+                imbalance: "Hyperkalemia",
+                emoji: "🚨",
+                initialPresentation: "Missed dialysis for 2 days. Called 911 for chest palpitations and weakness.",
+                assessmentFindings: [
+                    "Weakness and paresthesias in extremities",
+                    "ECG shows peaked T waves, widened QRS",
+                    "K⁺: 7.2 mEq/L (CRITICAL - LIFE THREATENING)",
+                    "HR: 48, irregular rhythm",
+                    "Patient anxious, reports 'chest feels funny'",
+                    "Diarrhea present"
+                ],
+                correctAssessments: ["cardiac-monitor", "ecg", "labs"],
+                correctInterventions: ["calcium-gluconate", "insulin-glucose", "kayexalate"],
+                criticalAction: "calcium-gluconate",
+                criticalTiming: 2000,
+                safetyAlert: "CRITICAL HYPERKALEMIA - Cardiac arrest imminent! Act immediately!",
+                teachingPoints: [
+                    "NEVER miss dialysis appointments",
+                    "Avoid high-potassium foods: avocados, bananas, spinach, salt substitutes",
+                    "Call doctor immediately for irregular heartbeat",
+                    "This is a life-threatening emergency"
+                ],
+                expectedOutcome: "Stabilized cardiac rhythm, K⁺ decreasing, patient prepared for emergent dialysis"
+            },
+            {
+                id: 7,
+                name: "Ms. White",
+                age: 44,
+                diagnosis: "Post-Thyroidectomy",
+                imbalance: "Hypocalcemia",
+                emoji: "🦋",
+                initialPresentation: "Post-op day 1 from total thyroidectomy. Reports tingling around mouth and hand cramps.",
+                assessmentFindings: [
+                    "Numbness and tingling in lips and fingertips",
+                    "Positive Chvostek's sign (facial twitching when tapped)",
+                    "Positive Trousseau's sign (hand spasm with BP cuff)",
+                    "Ca²⁺: 7.2 mg/dL (critical low)",
+                    "Patient anxious, reports muscle cramps",
+                    "ECG shows prolonged QT interval"
+                ],
+                correctAssessments: ["chvostek-trousseau", "neuro-status", "labs"],
+                correctInterventions: ["calcium-replacement", "seizure-precautions", "airway-monitoring"],
+                criticalAction: "seizure-precautions",
+                criticalTiming: 3000,
+                safetyAlert: "Risk for seizures and laryngospasm - keep airway equipment ready!",
+                teachingPoints: [
+                    "Take calcium and Vitamin D supplements as prescribed",
+                    "Eat calcium-rich foods: dairy, sardines, leafy greens",
+                    "Report tingling or muscle cramps immediately",
+                    "This may be temporary as parathyroids recover"
+                ],
+                expectedOutcome: "Ca²⁺ levels normalized, no seizures, resolved paresthesias"
+            },
+            {
+                id: 8,
+                name: "Mr. Garcia",
+                age: 71,
+                diagnosis: "Metastatic Lung Cancer",
+                imbalance: "Hypercalcemia",
+                emoji: "😴",
+                initialPresentation: "Family brought him in for increasing lethargy and confusion over past week.",
+                assessmentFindings: [
+                    "Lethargic, difficult to arouse",
+                    "Confused about time, place, person",
+                    "Severe constipation, hasn't had BM in 5 days",
+                    "Ca²⁺: 14.2 mg/dL (critical high)",
+                    "Decreased muscle tone, weak reflexes",
+                    "ECG shows shortened QT interval"
+                ],
+                correctAssessments: ["neuro-status", "bowel-sounds", "labs"],
+                correctInterventions: ["increase-fluids", "mobility", "calcitonin"],
+                criticalAction: "increase-fluids",
+                criticalTiming: 3000,
+                safetyAlert: "Severe hypercalcemia can cause cardiac arrhythmias and renal stones!",
+                teachingPoints: [
+                    "Drink 3-4 liters of fluid daily if able",
+                    "Stay mobile - walking helps prevent bone calcium release",
+                    "Limit calcium intake temporarily",
+                    "Report increasing confusion or weakness"
+                ],
+                expectedOutcome: "Ca²⁺ decreasing, improved mental status, bowel function returning"
+            },
+            {
+                id: 9,
+                name: "Ms. Robinson",
+                age: 39,
+                diagnosis: "Chronic Alcoholism",
+                imbalance: "Hypomagnesemia",
+                emoji: "😰",
+                initialPresentation: "Admitted for alcohol withdrawal. Day 2: develops tremors, hyperreflexia, and a seizure.",
+                assessmentFindings: [
+                    "Tremors in hands and arms",
+                    "Hyperactive deep tendon reflexes (4+)",
+                    "Just had a generalized tonic-clonic seizure",
+                    "Mg²⁺: 0.8 mEq/L (critical low)",
+                    "Muscle cramps and fasciculations",
+                    "Cardiac monitor shows irregular rhythm"
+                ],
+                correctAssessments: ["dtrs", "cardiac-monitor", "labs"],
+                correctInterventions: ["magnesium-sulfate", "seizure-precautions", "cardiac-monitoring"],
+                criticalAction: "magnesium-sulfate",
+                criticalTiming: 3000,
+                safetyAlert: "Severe hypomagnesemia - risk for torsades de pointes and repeated seizures!",
+                teachingPoints: [
+                    "Increase magnesium-rich foods: nuts, whole grains, leafy greens",
+                    "Alcohol depletes magnesium - abstinence is critical",
+                    "May also need potassium and calcium replacement",
+                    "Report tremors or muscle twitching"
+                ],
+                expectedOutcome: "Mg²⁺ normalized, no further seizures, decreased tremors"
+            },
+            {
+                id: 10,
+                name: "Mr. Lee",
+                age: 68,
+                diagnosis: "Renal Failure - Excessive Antacid Use",
+                imbalance: "Hypermagnesemia",
+                emoji: "🐌",
+                initialPresentation: "Brought in by wife who reports he's been 'sleeping all day' and barely moving. Takes Milk of Magnesia daily.",
+                assessmentFindings: [
+                    "Extreme lethargy, barely responsive",
+                    "Absent deep tendon reflexes",
+                    "BP: 85/50, HR: 48 (bradycardia)",
+                    "Mg²⁺: 4.8 mEq/L (critical high)",
+                    "Respirations: 8/min, shallow",
+                    "Muscle weakness, floppy tone"
+                ],
+                correctAssessments: ["dtrs", "respiratory-rate", "labs"],
+                correctInterventions: ["stop-magnesium", "calcium-gluconate-antidote", "airway-support"],
+                criticalAction: "airway-support",
+                criticalTiming: 2000,
+                safetyAlert: "CRITICAL - Respiratory arrest imminent! Calcium gluconate is the antidote!",
+                teachingPoints: [
+                    "STOP all magnesium-containing medications immediately",
+                    "Avoid antacids and laxatives with magnesium",
+                    "Especially dangerous with kidney disease",
+                    "Call 911 for extreme weakness or breathing problems"
+                ],
+                expectedOutcome: "Improved respiratory effort, reflexes returning, Mg²⁺ decreasing"
+            }
+        ];
+
+        const assessmentOptions = [
+            { id: "lung-sounds", label: "Auscultate lung sounds", points: 10 },
+            { id: "weight", label: "Obtain daily weight", points: 10 },
+            { id: "io", label: "Monitor intake & output", points: 10 },
+            { id: "orthostatic-bp", label: "Check orthostatic vital signs", points: 10 },
+            { id: "skin-turgor", label: "Assess skin turgor", points: 10 },
+            { id: "neuro-status", label: "Perform neurological assessment", points: 10 },
+            { id: "labs", label: "Review lab results", points: 10 },
+            { id: "mucous-membranes", label: "Assess mucous membranes", points: 10 },
+            { id: "cardiac-monitor", label: "Place on cardiac monitor", points: 15 },
+            { id: "muscle-strength", label: "Test muscle strength", points: 10 },
+            { id: "ecg", label: "Obtain 12-lead ECG", points: 10 },
+            { id: "chvostek-trousseau", label: "Check Chvostek's & Trousseau's signs", points: 15 },
+            { id: "bowel-sounds", label: "Auscultate bowel sounds", points: 10 },
+            { id: "dtrs", label: "Check deep tendon reflexes", points: 10 },
+            { id: "respiratory-rate", label: "Monitor respiratory rate closely", points: 10 }
+        ];
+
+        const interventionOptions = [
+            { id: "diuretics", label: "Administer loop diuretics (Furosemide)", points: 15, critical: false },
+            { id: "elevate-hob", label: "Elevate head of bed to semi-Fowler's", points: 15, critical: true },
+            { id: "restrict-fluids", label: "Restrict fluids and sodium", points: 10, critical: false },
+            { id: "isotonic-fluids", label: "Administer isotonic IV fluids (0.9% NS)", points: 15, critical: false },
+            { id: "fall-precautions", label: "Implement fall precautions", points: 15, critical: true },
+            { id: "monitor-vitals", label: "Frequent vital sign monitoring", points: 10, critical: false },
+            { id: "fluid-restriction", label: "Strict fluid restriction", points: 15, critical: false },
+            { id: "seizure-precautions", label: "Implement seizure precautions", points: 20, critical: true },
+            { id: "neuro-checks", label: "Frequent neurological checks", points: 10, critical: false },
+            { id: "hypotonic-fluids", label: "Administer hypotonic IV fluids slowly", points: 15, critical: false },
+            { id: "potassium-replacement", label: "Administer IV potassium (slow & diluted)", points: 15, critical: false },
+            { id: "cardiac-monitoring", label: "Continuous cardiac monitoring", points: 20, critical: true },
+            { id: "diet-teaching", label: "Teach high-potassium diet", points: 10, critical: false },
+            { id: "calcium-gluconate", label: "Give IV calcium gluconate STAT", points: 25, critical: true },
+            { id: "insulin-glucose", label: "Administer insulin + glucose", points: 20, critical: false },
+            { id: "kayexalate", label: "Give sodium polystyrene (Kayexalate)", points: 15, critical: false },
+            { id: "calcium-replacement", label: "Administer IV calcium", points: 15, critical: false },
+            { id: "airway-monitoring", label: "Monitor airway for laryngospasm", points: 20, critical: true },
+            { id: "increase-fluids", label: "Increase fluid intake (3-4 L/day)", points: 15, critical: true },
+            { id: "mobility", label: "Promote mobility and ambulation", points: 10, critical: false },
+            { id: "calcitonin", label: "Administer calcitonin/bisphosphonates", points: 15, critical: false },
+            { id: "magnesium-sulfate", label: "Administer magnesium sulfate IV", points: 15, critical: true },
+            { id: "stop-magnesium", label: "STOP all magnesium medications", points: 15, critical: false },
+            { id: "calcium-gluconate-antidote", label: "Give calcium gluconate (antidote)", points: 25, critical: true },
+            { id: "airway-support", label: "Prepare for respiratory support", points: 25, critical: true }
+        ];
+
+        function App() {
+            const [gameState, setGameState] = useState('menu');
+            const [currentPatientIndex, setCurrentPatientIndex] = useState(0);
+            const [selectedAssessments, setSelectedAssessments] = useState([]);
+            const [selectedInterventions, setSelectedInterventions] = useState([]);
+            const [score, setScore] = useState(0);
+            const [timer, setTimer] = useState(0);
+            const [criticalActionTaken, setCriticalActionTaken] = useState(false);
+            const [showResults, setShowResults] = useState(false);
+            const [feedbackMessage, setFeedbackMessage] = useState('');
+            const [totalPatientsCompleted, setTotalPatientsCompleted] = useState(0);
+            const [shuffledPatients, setShuffledPatients] = useState([]);
+            const [phase, setPhase] = useState('assessment'); // assessment or intervention
+
+            useEffect(() => {
+                const shuffled = [...patientCases].sort(() => Math.random() - 0.5);
+                setShuffledPatients(shuffled);
+            }, []);
+
+            useEffect(() => {
+                if (gameState === 'playing') {
+                    const interval = setInterval(() => {
+                        setTimer(prev => prev + 100);
+                    }, 100);
+                    return () => clearInterval(interval);
+                }
+            }, [gameState]);
+
+            const startGame = () => {
+                setGameState('playing');
+                setScore(0);
+                setTimer(0);
+                setCurrentPatientIndex(0);
+                setTotalPatientsCompleted(0);
+                const shuffled = [...patientCases].sort(() => Math.random() - 0.5);
+                setShuffledPatients(shuffled);
+                setSelectedAssessments([]);
+                setSelectedInterventions([]);
+                setCriticalActionTaken(false);
+                setShowResults(false);
+                setPhase('assessment');
+            };
+
+            const toggleAssessment = (id) => {
+                if (selectedAssessments.includes(id)) {
+                    setSelectedAssessments(selectedAssessments.filter(a => a !== id));
+                } else {
+                    setSelectedAssessments([...selectedAssessments, id]);
+                }
+            };
+
+            const toggleIntervention = (id) => {
+                if (selectedInterventions.includes(id)) {
+                    setSelectedInterventions(selectedInterventions.filter(i => i !== id));
+                } else {
+                    setSelectedInterventions([...selectedInterventions, id]);
+                    
+                    const currentPatient = shuffledPatients[currentPatientIndex];
+                    if (id === currentPatient.criticalAction && !criticalActionTaken) {
+                        setCriticalActionTaken(true);
+                    }
+                }
+            };
+
+            const submitAssessments = () => {
+                setPhase('intervention');
+            };
+
+            const submitInterventions = () => {
+                const currentPatient = shuffledPatients[currentPatientIndex];
+                let points = 0;
+                let feedback = [];
+
+                // Score assessments
+                const correctAssessments = selectedAssessments.filter(a => 
+                    currentPatient.correctAssessments.includes(a)
+                );
+                const incorrectAssessments = selectedAssessments.filter(a => 
+                    !currentPatient.correctAssessments.includes(a)
+                );
+                const missedAssessments = currentPatient.correctAssessments.filter(a =>
+                    !selectedAssessments.includes(a)
+                );
+
+                correctAssessments.forEach(a => {
+                    const option = assessmentOptions.find(opt => opt.id === a);
+                    points += option.points;
+                });
+
+                // Score interventions
+                const correctInterventions = selectedInterventions.filter(i => 
+                    currentPatient.correctInterventions.includes(i)
+                );
+                const incorrectInterventions = selectedInterventions.filter(i => 
+                    !currentPatient.correctInterventions.includes(i)
+                );
+                const missedInterventions = currentPatient.correctInterventions.filter(i =>
+                    !selectedInterventions.includes(i)
+                );
+
+                correctInterventions.forEach(i => {
+                    const option = interventionOptions.find(opt => opt.id === i);
+                    points += option.points;
+                });
+
+                // Critical action bonus
+                if (criticalActionTaken && timer < currentPatient.criticalTiming) {
+                    points += 50;
+                    feedback.push("🌟 EXCELLENT! Critical action taken quickly!");
+                } else if (criticalActionTaken) {
+                    points += 25;
+                    feedback.push("✓ Critical action taken, but speed it up next time!");
+                } else {
+                    feedback.push("⚠️ MISSED critical safety action - patient at risk!");
+                }
+
+                // Time bonus
+                if (timer < 30000) {
+                    const timeBonus = Math.floor((30000 - timer) / 1000);
+                    points += timeBonus;
+                    feedback.push(`⏱️ Time bonus: +${timeBonus} points`);
+                }
+
+                if (missedAssessments.length > 0) {
+                    feedback.push(`📋 Missed key assessments: ${missedAssessments.length}`);
+                }
+                if (missedInterventions.length > 0) {
+                    feedback.push(`💉 Missed key interventions: ${missedInterventions.length}`);
+                }
+                if (incorrectAssessments.length > 0 || incorrectInterventions.length > 0) {
+                    feedback.push(`❌ Unnecessary actions: ${incorrectAssessments.length + incorrectInterventions.length}`);
+                }
+
+                setScore(score + points);
+                setFeedbackMessage(feedback.join(' • '));
+                setShowResults(true);
+                setGameState('result');
+            };
+
+            const nextPatient = () => {
+                setTotalPatientsCompleted(totalPatientsCompleted + 1);
+                
+                if (currentPatientIndex + 1 >= shuffledPatients.length) {
+                    setGameState('gameOver');
+                } else {
+                    setCurrentPatientIndex(currentPatientIndex + 1);
+                    setSelectedAssessments([]);
+                    setSelectedInterventions([]);
+                    setCriticalActionTaken(false);
+                    setShowResults(false);
+                    setTimer(0);
+                    setPhase('assessment');
+                    setGameState('playing');
+                }
+            };
+
+            const currentPatient = shuffledPatients[currentPatientIndex];
+
+            if (gameState === 'menu') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-teal-800 via-cyan-700 to-blue-600 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-3xl w-full">
+                            <div className="text-center mb-6">
+                                <div className="text-7xl mb-4">👩‍⚕️</div>
+                                <h1 className="text-5xl font-bold text-teal-900 mb-2">Nursing Shift Simulator</h1>
+                                <h2 className="text-2xl text-teal-700">Critical Care Unit</h2>
+                            </div>
+                            
+                            <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 mb-6">
+                                <h3 className="font-bold text-xl mb-4 text-teal-900">🎮 Your Mission:</h3>
+                                <div className="space-y-3 text-gray-700">
+                                    <p className="flex items-start">
+                                        <span className="mr-2">📋</span>
+                                        <span><strong>Assess your patients:</strong> Choose the priority assessments based on their presentation</span>
+                                    </p>
+                                    <p className="flex items-start">
+                                        <span className="mr-2">💉</span>
+                                        <span><strong>Intervene appropriately:</strong> Select the correct interventions for their imbalance</span>
+                                    </p>
+                                    <p className="flex items-start">
+                                        <span className="mr-2">⚠️</span>
+                                        <span><strong>Act fast on critical actions:</strong> Some interventions are time-sensitive!</span>
+                                    </p>
+                                    <p className="flex items-start">
+                                        <span className="mr-2">🏆</span>
+                                        <span><strong>Score points:</strong> Correct actions + speed = high score!</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                                <p className="text-red-800 font-semibold">⚠️ Remember: Patient safety is your #1 priority!</p>
+                            </div>
+
+                            <div className="text-center">
+                                <button 
+                                    onClick={startGame}
+                                    className="bg-teal-600 hover:bg-teal-700 text-white text-2xl font-bold py-5 px-10 rounded-xl transition transform hover:scale-105 shadow-lg"
+                                >
+                                    Start Your Shift 🏥
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'playing' && currentPatient) {
+                const timeInSeconds = Math.floor(timer / 1000);
+                const criticalTimeLimit = Math.floor(currentPatient.criticalTiming / 1000);
+                const isUrgent = timer >= currentPatient.criticalTiming;
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+                        <div className="max-w-6xl mx-auto">
+                            {/* Header */}
+                            <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h1 className="text-2xl font-bold text-teal-900">🏥 Critical Care Unit</h1>
+                                        <p className="text-gray-600">Patient {currentPatientIndex + 1} of {shuffledPatients.length}</p>
+                                    </div>
+                                    <div className="flex gap-6">
+                                        <div className="text-center">
+                                            <p className="text-sm text-gray-600">Score</p>
+                                            <p className="text-3xl font-bold text-teal-600">{score}</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-sm text-gray-600">Time</p>
+                                            <p className={`text-3xl font-bold ${isUrgent ? 'text-red-600 animate-pulse' : 'text-blue-600'}`}>
+                                                {timeInSeconds}s
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Safety Alert */}
+                            <div className="bg-red-100 border-l-4 border-red-600 p-4 mb-4 rounded-lg">
+                                <p className="text-red-900 font-bold">⚠️ {currentPatient.safetyAlert}</p>
+                                <p className="text-red-800 text-sm mt-1">Critical action must be taken within {criticalTimeLimit} seconds!</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                                {/* Patient Info */}
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <div className="flex items-start mb-4">
+                                        <div className="text-6xl mr-4">{currentPatient.emoji}</div>
+                                        <div>
+                                            <h2 className="text-3xl font-bold text-gray-800">{currentPatient.name}</h2>
+                                            <p className="text-gray-600 text-lg">{currentPatient.age} years old</p>
+                                            <p className="text-teal-700 font-semibold mt-1">{currentPatient.diagnosis}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                                        <h3 className="font-bold text-gray-800 mb-2">📝 Report from EMS:</h3>
+                                        <p className="text-gray-700">{currentPatient.initialPresentation}</p>
+                                    </div>
+
+                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                                        <h3 className="font-bold text-gray-800 mb-2">👀 What You Observe:</h3>
+                                        <ul className="space-y-1">
+                                            {currentPatient.assessmentFindings.map((finding, idx) => (
+                                                <li key={idx} className="text-gray-700 text-sm">• {finding}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Actions Panel */}
+                                <div className="space-y-4">
+                                    {phase === 'assessment' && (
+                                        <div className="bg-white rounded-xl shadow-lg p-6">
+                                            <h3 className="text-2xl font-bold text-gray-800 mb-4">📋 Priority Assessments</h3>
+                                            <p className="text-sm text-gray-600 mb-4">Select the most important assessments for this patient:</p>
+                                            <div className="space-y-2 max-h-96 overflow-y-auto">
+                                                {assessmentOptions.map(option => (
+                                                    <button
+                                                        key={option.id}
+                                                        onClick={() => toggleAssessment(option.id)}
+                                                        className={`w-full p-3 rounded-lg border-2 transition text-left ${
+                                                            selectedAssessments.includes(option.id)
+                                                                ? 'border-teal-500 bg-teal-50 font-semibold'
+                                                                : 'border-gray-200 hover:border-teal-300'
+                                                        }`}
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <span>{option.label}</span>
+                                                            <span className="text-xs text-teal-600">+{option.points}pts</span>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={submitAssessments}
+                                                disabled={selectedAssessments.length === 0}
+                                                className={`w-full mt-4 text-lg font-bold py-3 px-6 rounded-lg transition ${
+                                                    selectedAssessments.length > 0
+                                                        ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                }`}
+                                            >
+                                                Complete Assessments ➡️
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {phase === 'intervention' && (
+                                        <div className="bg-white rounded-xl shadow-lg p-6">
+                                            <h3 className="text-2xl font-bold text-gray-800 mb-4">💉 Nursing Interventions</h3>
+                                            <p className="text-sm text-gray-600 mb-4">Choose your interventions - some are CRITICAL for safety!</p>
+                                            <div className="space-y-2 max-h-96 overflow-y-auto">
+                                                {interventionOptions.map(option => {
+                                                    const isCritical = option.id === currentPatient.criticalAction;
+                                                    const isSelected = selectedInterventions.includes(option.id);
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={option.id}
+                                                            onClick={() => toggleIntervention(option.id)}
+                                                            className={`w-full p-3 rounded-lg border-2 transition text-left ${
+                                                                isSelected
+                                                                    ? isCritical
+                                                                        ? 'border-red-500 bg-red-50 font-semibold'
+                                                                        : 'border-green-500 bg-green-50 font-semibold'
+                                                                    : isCritical
+                                                                        ? 'border-red-200 hover:border-red-400 bg-red-50'
+                                                                        : 'border-gray-200 hover:border-green-300'
+                                                            }`}
+                                                        >
+                                                            <div className="flex justify-between items-center">
+                                                                <span>{option.label}</span>
+                                                                <div className="flex items-center gap-2">
+                                                                    {isCritical && <span className="text-red-600 font-bold text-xs">CRITICAL</span>}
+                                                                    <span className="text-xs text-green-600">+{option.points}pts</span>
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <button
+                                                onClick={submitInterventions}
+                                                disabled={selectedInterventions.length === 0}
+                                                className={`w-full mt-4 text-lg font-bold py-3 px-6 rounded-lg transition ${
+                                                    selectedInterventions.length > 0
+                                                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                }`}
+                                            >
+                                                Submit Care Plan ✓
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'result' && currentPatient) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+                        <div className="max-w-5xl mx-auto">
+                            {/* Results Header */}
+                            <div className={`rounded-xl shadow-2xl p-8 mb-6 ${
+                                criticalActionTaken ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-orange-500 to-red-600'
+                            }`}>
+                                <div className="text-center text-white">
+                                    <div className="text-7xl mb-4">{criticalActionTaken ? '✅' : '⚠️'}</div>
+                                    <h2 className="text-4xl font-bold mb-2">
+                                        {criticalActionTaken ? 'Patient Stabilized!' : 'Patient at Risk'}
+                                    </h2>
+                                    <p className="text-xl mb-4">{feedbackMessage}</p>
+                                    <p className="text-3xl font-bold">+{score} points this round</p>
+                                </div>
+                            </div>
+
+                            {/* Correct Actions */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-4">✅ Priority Nursing Actions</h3>
+                                
+                                <div className="mb-4">
+                                    <h4 className="font-semibold text-lg text-teal-900 mb-2">Key Assessments:</h4>
+                                    <div className="space-y-2">
+                                        {currentPatient.correctAssessments.map(aId => {
+                                            const assessment = assessmentOptions.find(a => a.id === aId);
+                                            const wasSelected = selectedAssessments.includes(aId);
+                                            return (
+                                                <div key={aId} className={`p-3 rounded-lg ${wasSelected ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-500'}`}>
+                                                    <span className="font-medium">{wasSelected ? '✓' : '✗'}</span> {assessment.label}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="font-semibold text-lg text-teal-900 mb-2">Priority Interventions:</h4>
+                                    <div className="space-y-2">
+                                        {currentPatient.correctInterventions.map(iId => {
+                                            const intervention = interventionOptions.find(i => i.id === iId);
+                                            const wasSelected = selectedInterventions.includes(iId);
+                                            const isCritical = iId === currentPatient.criticalAction;
+                                            return (
+                                                <div key={iId} className={`p-3 rounded-lg ${wasSelected ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-500'}`}>
+                                                    <div className="flex justify-between items-center">
+                                                        <span><span className="font-medium">{wasSelected ? '✓' : '✗'}</span> {intervention.label}</span>
+                                                        {isCritical && <span className="text-red-600 font-bold text-sm">CRITICAL</span>}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Patient Teaching */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-4">📚 Patient Education</h3>
+                                <div className="bg-purple-50 border-l-4 border-purple-500 p-4">
+                                    <ul className="space-y-2">
+                                        {currentPatient.teachingPoints.map((point, idx) => (
+                                            <li key={idx} className="text-gray-700">• {point}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Expected Outcome */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-4">🎯 Expected Outcome</h3>
+                                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                                    <p className="text-gray-800">{currentPatient.expectedOutcome}</p>
+                                </div>
+                            </div>
+
+                            {/* Next Button */}
+                            <div className="text-center">
+                                <button
+                                    onClick={nextPatient}
+                                    className="bg-teal-600 hover:bg-teal-700 text-white text-xl font-bold py-4 px-8 rounded-lg transition transform hover:scale-105 shadow-lg"
+                                >
+                                    {currentPatientIndex + 1 >= shuffledPatients.length ? 'End Shift 🏁' : 'Next Patient ➡️'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'gameOver') {
+                const avgScore = Math.round(score / shuffledPatients.length);
+                let performance = '';
+                let emoji = '';
+                
+                if (avgScore >= 150) {
+                    performance = 'Expert Nurse! Outstanding clinical judgment!';
+                    emoji = '🏆';
+                } else if (avgScore >= 120) {
+                    performance = 'Excellent work! Strong assessment and intervention skills!';
+                    emoji = '⭐';
+                } else if (avgScore >= 90) {
+                    performance = 'Good job! Keep practicing priority setting!';
+                    emoji = '👍';
+                } else {
+                    performance = 'Keep studying! Review priority assessments and interventions!';
+                    emoji = '📚';
+                }
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-teal-800 to-blue-900 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full text-center">
+                            <div className="text-8xl mb-4">{emoji}</div>
+                            <h1 className="text-4xl font-bold text-gray-800 mb-4">Shift Complete!</h1>
+                            <div className="bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-xl p-8 mb-6">
+                                <div className="text-6xl font-bold mb-2">{score}</div>
+                                <div className="text-2xl mb-2">Total Points</div>
+                                <div className="text-lg">Average: {avgScore} points per patient</div>
+                            </div>
+                            <p className="text-2xl text-gray-700 mb-2">{performance}</p>
+                            <p className="text-lg text-gray-600 mb-6">You cared for {shuffledPatients.length} critical patients</p>
+                            <div className="space-x-4">
+                                <button
+                                    onClick={startGame}
+                                    className="bg-teal-600 hover:bg-teal-700 text-white text-xl font-bold py-3 px-6 rounded-lg transition transform hover:scale-105"
+                                >
+                                    New Shift 🔄
+                                </button>
+                                <button
+                                    onClick={() => setGameState('menu')}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white text-xl font-bold py-3 px-6 rounded-lg transition transform hover:scale-105"
+                                >
+                                    Main Menu 🏠
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

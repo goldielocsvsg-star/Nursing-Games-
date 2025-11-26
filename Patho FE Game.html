@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ER Challenge: Fluid & Electrolyte Master</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const patientScenarios = [
+            {
+                id: 1,
+                name: "Maria Rodriguez",
+                age: 68,
+                presentation: "Brought in by daughter who reports her mother has had severe diarrhea for 3 days. Patient appears weak and confused. Skin tenting present.",
+                vitals: "BP: 90/60, HR: 115, Temp: 99.8°F",
+                labs: "Na⁺: 148 mEq/L, K⁺: 3.2 mEq/L, BUN: 28 mg/dL, Hct: 52%, Urine SG: 1.035",
+                correctDiagnosis: "dehydration",
+                correctTreatment: "isotonic",
+                explanation: "This is CLINICAL DEHYDRATION (ECV deficit + hypernatremia). The patient lost both water and sodium through diarrhea, but lost relatively MORE water. Key clues: elevated Na⁺ (>145), high BUN (>20), high Hct and urine SG showing concentration. The body is both volume depleted AND hyperosmolar.",
+                pathophysiology: "Excessive GI loss → ↓ plasma volume + water deficit → cellular dehydration (brain cells shrink) + hypovolemia → poor perfusion and altered mental status.",
+                emoji: "👵"
+            },
+            {
+                id: 2,
+                name: "Jake Thompson",
+                age: 45,
+                presentation: "Marathon runner who collapsed after race. Reports drinking 'tons of water' during the run. Complaining of headache and nausea. Appears disoriented.",
+                vitals: "BP: 110/70, HR: 88, Temp: 98.6°F",
+                labs: "Na⁺: 128 mEq/L, Serum osmolality: 270 mOsm/kg",
+                correctDiagnosis: "hyponatremia",
+                correctTreatment: "restrict",
+                explanation: "This is HYPONATREMIA (water excess). Jake drank excessive hypotonic fluid (plain water) without adequate salt replacement during exercise. His Na⁺ <136 mEq/L and low osmolality confirm hypotonic state.",
+                pathophysiology: "Excessive water intake → ECF becomes hypotonic → water shifts INTO cells → cellular swelling, especially brain cells (cerebral edema) → headache, confusion, seizure risk.",
+                emoji: "🏃‍♂️"
+            },
+            {
+                id: 3,
+                name: "Robert Chen",
+                age: 72,
+                presentation: "History of heart failure. Family reports increased ankle swelling and difficulty breathing when lying flat. Weight gain of 10 lbs in one week.",
+                vitals: "BP: 145/90, HR: 92, RR: 24",
+                labs: "BUN: 8 mg/dL, Hct: 38%, Crackles in lungs, 3+ pitting edema",
+                correctDiagnosis: "ecv-excess",
+                correctTreatment: "diuretics",
+                explanation: "This is ECV EXCESS (fluid volume overload). Heart failure causes Na⁺ and water retention in equal proportions. Key clues: low BUN (<10) from hemodilution, edema, weight gain, and pulmonary congestion.",
+                pathophysiology: "Heart failure → ↓ cardiac output → kidneys sense low perfusion → RAAS activation → Na⁺ and water retention → ↑ hydrostatic pressure → fluid leaks into interstitium (edema) and lungs (pulmonary edema).",
+                emoji: "👴"
+            },
+            {
+                id: 4,
+                name: "Emily Watson",
+                age: 35,
+                presentation: "Post-op day 2 from thyroidectomy. Patient reports tingling around mouth and muscle cramps in hands. You notice twitching when you tap her cheek.",
+                vitals: "BP: 120/75, HR: 78, Temp: 98.4°F",
+                labs: "Ca²⁺: 7.8 mg/dL, Positive Chvostek's sign",
+                correctDiagnosis: "hypocalcemia",
+                correctTreatment: "calcium",
+                explanation: "This is HYPOCALCEMIA. Thyroid surgery can damage the parathyroid glands → ↓ PTH → ↓ Ca²⁺ release from bone and ↓ intestinal absorption. Normal Ca²⁺ is 9.0-10.5 mg/dL.",
+                pathophysiology: "↓ ionized Ca²⁺ in ECF → ↓ threshold for neuron depolarization → neurons become HYPEREXCITABLE → tetany, muscle spasms, and positive Chvostek's/Trousseau's signs.",
+                emoji: "💆‍♀️"
+            },
+            {
+                id: 5,
+                name: "David Miller",
+                age: 58,
+                presentation: "End-stage renal disease patient missed dialysis for 3 days. Complaining of weakness and palpitations. ECG shows tall, peaked T waves.",
+                vitals: "BP: 150/95, HR: 110 (irregular)",
+                labs: "K⁺: 6.8 mEq/L, Creatinine: 8.5 mg/dL",
+                correctDiagnosis: "hyperkalemia",
+                correctTreatment: "insulin-glucose",
+                explanation: "This is HYPERKALEMIA. Renal failure prevents K⁺ excretion → accumulation in serum. Normal K⁺ is 3.5-5.0 mEq/L. This is a LIFE-THREATENING emergency!",
+                pathophysiology: "↑ extracellular K⁺ → partial depolarization of cell membranes → cells closer to threshold but IMPAIRED repolarization → cardiac arrhythmias (peaked T waves, widened QRS) → risk of cardiac arrest.",
+                emoji: "🚨"
+            },
+            {
+                id: 6,
+                name: "Sarah Johnson",
+                age: 28,
+                presentation: "Known alcoholic admitted for alcohol withdrawal. On day 2, develops tremors, hyperreflexia, and a seizure. Previously malnourished.",
+                vitals: "BP: 160/100, HR: 120, Temp: 100.2°F",
+                labs: "Mg²⁺: 0.9 mEq/L, K⁺: 3.0 mEq/L, Ca²⁺: 8.5 mg/dL",
+                correctDiagnosis: "hypomagnesemia",
+                correctTreatment: "magnesium",
+                explanation: "This is HYPOMAGNESEMIA. Alcoholism and malnutrition → chronic Mg²⁺ deficiency. Normal Mg²⁺ is 1.3-2.1 mEq/L. Note: Low Mg²⁺ often causes low K⁺ and Ca²⁺ too!",
+                pathophysiology: "↓ Mg²⁺ → ↑ acetylcholine release at neuromuscular junction → HYPEREXCITABILITY → tremors, hyperreflexia, seizures. Also causes cardiac arrhythmias (Mg²⁺ needed for cardiac conduction).",
+                emoji: "😰"
+            },
+            {
+                id: 7,
+                name: "Patricia Lee",
+                age: 55,
+                presentation: "Admitted with severe vomiting and NG tube suctioning for bowel obstruction. Complains of muscle weakness and feels 'heart fluttering.' ECG shows flattened T waves and U waves.",
+                vitals: "BP: 105/65, HR: 95 (irregular)",
+                labs: "K⁺: 2.8 mEq/L, pH: 7.50 (alkalosis)",
+                correctDiagnosis: "hypokalemia",
+                correctTreatment: "potassium",
+                explanation: "This is HYPOKALEMIA. GI losses (vomiting, NG suction) → K⁺ loss. Alkalosis also shifts K⁺ INTO cells. Normal K⁺ is 3.5-5.0 mEq/L. Classic ECG changes: flattened T waves, U waves.",
+                pathophysiology: "↓ extracellular K⁺ → hyperpolarization of cell membranes → cells HARDER to depolarize → ↓ excitability → muscle weakness, cardiac arrhythmias, ileus (gut paralysis).",
+                emoji: "🤢"
+            },
+            {
+                id: 8,
+                name: "Michael Brown",
+                age: 80,
+                presentation: "Nursing home resident with altered mental status. Staff reports he's been 'out of it' for 2 days. Has known lung cancer. Appears lethargic and constipated.",
+                vitals: "BP: 95/60, HR: 60",
+                labs: "Ca²⁺: 13.5 mg/dL, ECG shows shortened QT interval",
+                correctDiagnosis: "hypercalcemia",
+                correctTreatment: "fluids-calcitonin",
+                explanation: "This is HYPERCALCEMIA. Malignancy (lung cancer) → either bone metastases releasing Ca²⁺ OR tumor secreting PTH-like hormone. Normal Ca²⁺ is 9.0-10.5 mg/dL.",
+                pathophysiology: "↑ Ca²⁺ in ECF → ↑ threshold for depolarization → neurons and muscles become LESS excitable → lethargy, muscle weakness, constipation, cardiac conduction slowing (shortened QT).",
+                emoji: "😴"
+            }
+        ];
+
+        const diagnoses = [
+            { id: "dehydration", label: "Clinical Dehydration (ECV Deficit + Hypernatremia)" },
+            { id: "hyponatremia", label: "Hyponatremia (Water Excess)" },
+            { id: "ecv-excess", label: "ECV Excess (Fluid Overload)" },
+            { id: "hyperkalemia", label: "Hyperkalemia" },
+            { id: "hypokalemia", label: "Hypokalemia" },
+            { id: "hypercalcemia", label: "Hypercalcemia" },
+            { id: "hypocalcemia", label: "Hypocalcemia" },
+            { id: "hypomagnesemia", label: "Hypomagnesemia" }
+        ];
+
+        const treatments = [
+            { id: "isotonic", label: "Isotonic IV fluids (NS or LR)" },
+            { id: "restrict", label: "Fluid restriction + hypertonic saline" },
+            { id: "diuretics", label: "Diuretics + Na⁺ restriction" },
+            { id: "calcium", label: "IV Calcium gluconate" },
+            { id: "insulin-glucose", label: "Insulin + Glucose (+ calcium gluconate emergency)" },
+            { id: "potassium", label: "IV or PO Potassium replacement" },
+            { id: "magnesium", label: "IV Magnesium sulfate" },
+            { id: "fluids-calcitonin", label: "IV fluids + Calcitonin/Bisphosphonates" }
+        ];
+
+        function App() {
+            const [gameState, setGameState] = useState('menu'); // menu, playing, result, gameOver
+            const [currentPatientIndex, setCurrentPatientIndex] = useState(0);
+            const [selectedDiagnosis, setSelectedDiagnosis] = useState('');
+            const [selectedTreatment, setSelectedTreatment] = useState('');
+            const [score, setScore] = useState(0);
+            const [patientsCompleted, setPatientsCompleted] = useState(0);
+            const [showExplanation, setShowExplanation] = useState(false);
+            const [isCorrect, setIsCorrect] = useState(false);
+            const [shuffledPatients, setShuffledPatients] = useState([]);
+
+            useEffect(() => {
+                // Shuffle patients at start
+                const shuffled = [...patientScenarios].sort(() => Math.random() - 0.5);
+                setShuffledPatients(shuffled);
+            }, []);
+
+            const startGame = () => {
+                setGameState('playing');
+                setScore(0);
+                setPatientsCompleted(0);
+                setCurrentPatientIndex(0);
+                const shuffled = [...patientScenarios].sort(() => Math.random() - 0.5);
+                setShuffledPatients(shuffled);
+                setSelectedDiagnosis('');
+                setSelectedTreatment('');
+                setShowExplanation(false);
+            };
+
+            const handleSubmit = () => {
+                const currentPatient = shuffledPatients[currentPatientIndex];
+                const diagnosisCorrect = selectedDiagnosis === currentPatient.correctDiagnosis;
+                const treatmentCorrect = selectedTreatment === currentPatient.correctTreatment;
+                
+                const correct = diagnosisCorrect && treatmentCorrect;
+                setIsCorrect(correct);
+                
+                if (correct) {
+                    setScore(score + 1);
+                }
+                
+                setShowExplanation(true);
+                setGameState('result');
+            };
+
+            const nextPatient = () => {
+                setPatientsCompleted(patientsCompleted + 1);
+                
+                if (currentPatientIndex + 1 >= shuffledPatients.length) {
+                    setGameState('gameOver');
+                } else {
+                    setCurrentPatientIndex(currentPatientIndex + 1);
+                    setSelectedDiagnosis('');
+                    setSelectedTreatment('');
+                    setShowExplanation(false);
+                    setGameState('playing');
+                }
+            };
+
+            const currentPatient = shuffledPatients[currentPatientIndex];
+
+            if (gameState === 'menu') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full text-center">
+                            <div className="text-6xl mb-4">🏥</div>
+                            <h1 className="text-4xl font-bold text-blue-900 mb-4">ER Challenge</h1>
+                            <h2 className="text-2xl text-blue-700 mb-6">Fluid & Electrolyte Master</h2>
+                            <div className="bg-blue-50 rounded-lg p-6 mb-6 text-left">
+                                <h3 className="font-bold text-lg mb-3 text-blue-900">📋 How to Play:</h3>
+                                <ul className="space-y-2 text-gray-700">
+                                    <li>✅ Evaluate patient presentations with vitals and labs</li>
+                                    <li>🔍 Choose the correct diagnosis</li>
+                                    <li>💉 Select the appropriate treatment</li>
+                                    <li>📚 Learn the pathophysiology behind each case</li>
+                                    <li>🎯 Score points for correct diagnosis AND treatment</li>
+                                </ul>
+                            </div>
+                            <button 
+                                onClick={startGame}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 px-8 rounded-lg transition transform hover:scale-105 shadow-lg"
+                            >
+                                Start Game 🚀
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'playing' && currentPatient) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-4">
+                        <div className="max-w-4xl mx-auto">
+                            {/* Header */}
+                            <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center">
+                                <div>
+                                    <span className="text-2xl font-bold text-blue-900">🏥 ER Challenge</span>
+                                    <span className="ml-4 text-gray-600">Patient {currentPatientIndex + 1} of {shuffledPatients.length}</span>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-sm text-gray-600">Score</div>
+                                    <div className="text-2xl font-bold text-green-600">{score}/{patientsCompleted}</div>
+                                </div>
+                            </div>
+
+                            {/* Patient Card */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <div className="flex items-start mb-4">
+                                    <div className="text-5xl mr-4">{currentPatient.emoji}</div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-800">{currentPatient.name}</h2>
+                                        <p className="text-gray-600">Age: {currentPatient.age}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                        <h3 className="font-bold text-gray-800 mb-2">📝 Presentation:</h3>
+                                        <p className="text-gray-700">{currentPatient.presentation}</p>
+                                    </div>
+
+                                    <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                                        <h3 className="font-bold text-gray-800 mb-2">💓 Vitals:</h3>
+                                        <p className="text-gray-700 font-mono">{currentPatient.vitals}</p>
+                                    </div>
+
+                                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                                        <h3 className="font-bold text-gray-800 mb-2">🔬 Labs:</h3>
+                                        <p className="text-gray-700 font-mono">{currentPatient.labs}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Diagnosis Selection */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">🎯 Your Diagnosis:</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {diagnoses.map(diag => (
+                                        <button
+                                            key={diag.id}
+                                            onClick={() => setSelectedDiagnosis(diag.id)}
+                                            className={`p-3 rounded-lg border-2 transition text-left ${
+                                                selectedDiagnosis === diag.id
+                                                    ? 'border-blue-500 bg-blue-50 font-semibold'
+                                                    : 'border-gray-200 hover:border-blue-300'
+                                            }`}
+                                        >
+                                            {diag.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Treatment Selection */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">💉 Your Treatment Plan:</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {treatments.map(treat => (
+                                        <button
+                                            key={treat.id}
+                                            onClick={() => setSelectedTreatment(treat.id)}
+                                            className={`p-3 rounded-lg border-2 transition text-left ${
+                                                selectedTreatment === treat.id
+                                                    ? 'border-green-500 bg-green-50 font-semibold'
+                                                    : 'border-gray-200 hover:border-green-300'
+                                            }`}
+                                        >
+                                            {treat.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="text-center">
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={!selectedDiagnosis || !selectedTreatment}
+                                    className={`text-xl font-bold py-4 px-8 rounded-lg transition shadow-lg ${
+                                        selectedDiagnosis && selectedTreatment
+                                            ? 'bg-green-600 hover:bg-green-700 text-white transform hover:scale-105'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                >
+                                    Submit Diagnosis 🔍
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'result' && currentPatient) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-4">
+                        <div className="max-w-4xl mx-auto">
+                            {/* Result Header */}
+                            <div className={`rounded-xl shadow-2xl p-8 mb-6 text-center ${
+                                isCorrect ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gradient-to-r from-red-500 to-orange-600'
+                            }`}>
+                                <div className="text-7xl mb-4">{isCorrect ? '✅' : '❌'}</div>
+                                <h2 className="text-4xl font-bold text-white mb-2">
+                                    {isCorrect ? 'Perfect Diagnosis!' : 'Not Quite Right'}
+                                </h2>
+                                <p className="text-xl text-white">
+                                    {isCorrect ? 'You saved the patient!' : 'Let\'s review what happened...'}
+                                </p>
+                            </div>
+
+                            {/* Correct Answer */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-4">📚 Correct Answer:</h3>
+                                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-3">
+                                    <p className="font-semibold text-gray-800">Diagnosis:</p>
+                                    <p className="text-lg text-blue-900">
+                                        {diagnoses.find(d => d.id === currentPatient.correctDiagnosis)?.label}
+                                    </p>
+                                </div>
+                                <div className="bg-green-50 border-l-4 border-green-500 p-4">
+                                    <p className="font-semibold text-gray-800">Treatment:</p>
+                                    <p className="text-lg text-green-900">
+                                        {treatments.find(t => t.id === currentPatient.correctTreatment)?.label}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Explanation */}
+                            <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-4">🧠 Why This Matters:</h3>
+                                <div className="bg-purple-50 border-l-4 border-purple-500 p-4 mb-4">
+                                    <p className="text-gray-800 leading-relaxed">{currentPatient.explanation}</p>
+                                </div>
+                                
+                                <h4 className="text-xl font-bold text-gray-800 mb-3">⚡ Pathophysiology:</h4>
+                                <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4">
+                                    <p className="text-gray-800 leading-relaxed">{currentPatient.pathophysiology}</p>
+                                </div>
+                            </div>
+
+                            {/* Next Button */}
+                            <div className="text-center">
+                                <button
+                                    onClick={nextPatient}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 px-8 rounded-lg transition transform hover:scale-105 shadow-lg"
+                                >
+                                    {currentPatientIndex + 1 >= shuffledPatients.length ? 'See Final Score 🏆' : 'Next Patient ➡️'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'gameOver') {
+                const percentage = Math.round((score / shuffledPatients.length) * 100);
+                let message = '';
+                let emoji = '';
+                
+                if (percentage === 100) {
+                    message = 'PERFECT SCORE! You\'re an electrolyte expert! 🎉';
+                    emoji = '🏆';
+                } else if (percentage >= 75) {
+                    message = 'Excellent work! You really know your stuff!';
+                    emoji = '⭐';
+                } else if (percentage >= 50) {
+                    message = 'Good job! Keep studying and you\'ll master this!';
+                    emoji = '👍';
+                } else {
+                    message = 'Keep practicing! Review the material and try again!';
+                    emoji = '📚';
+                }
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full text-center">
+                            <div className="text-8xl mb-4">{emoji}</div>
+                            <h1 className="text-4xl font-bold text-gray-800 mb-4">Game Over!</h1>
+                            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-6 mb-6">
+                                <div className="text-6xl font-bold mb-2">{score}/{shuffledPatients.length}</div>
+                                <div className="text-2xl font-semibold">{percentage}%</div>
+                            </div>
+                            <p className="text-xl text-gray-700 mb-6">{message}</p>
+                            <div className="space-x-4">
+                                <button
+                                    onClick={startGame}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-3 px-6 rounded-lg transition transform hover:scale-105"
+                                >
+                                    Play Again 🔄
+                                </button>
+                                <button
+                                    onClick={() => setGameState('menu')}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white text-xl font-bold py-3 px-6 rounded-lg transition transform hover:scale-105"
+                                >
+                                    Main Menu 🏠
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

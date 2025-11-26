@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Acid-Base Balance Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Comic Sans MS', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: bounce 1s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #764ba2;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .score-item {
+            text-align: center;
+        }
+        
+        .score-label {
+            font-size: 0.9em;
+            color: #2d3436;
+            margin-bottom: 5px;
+        }
+        
+        .score-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .menu-screen, .game-screen, .results-screen {
+            display: none;
+        }
+        
+        .menu-screen.active, .game-screen.active, .results-screen.active {
+            display: block;
+        }
+        
+        .game-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .game-mode-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .game-mode-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .game-mode-card.mode-2 {
+            background: linear-gradient(135deg, #74b9ff 0%, #a29bfe 100%);
+        }
+        
+        .game-mode-card.mode-3 {
+            background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+        }
+        
+        .game-mode-emoji {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+        
+        .game-mode-title {
+            font-size: 1.5em;
+            color: #2d3436;
+            margin-bottom: 10px;
+        }
+        
+        .game-mode-desc {
+            color: #2d3436;
+            font-size: 0.95em;
+        }
+        
+        .question-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .question-text {
+            font-size: 1.4em;
+            color: #2d3436;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .scenario-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .abg-values {
+            background: #2d3436;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .abg-values div {
+            margin: 5px 0;
+        }
+        
+        .options-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .option-btn {
+            background: white;
+            border: 3px solid #ddd;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .option-btn:hover {
+            border-color: #667eea;
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .option-btn.correct {
+            background: #55efc4;
+            border-color: #00b894;
+            animation: correctPulse 0.5s;
+        }
+        
+        .option-btn.incorrect {
+            background: #ff7675;
+            border-color: #d63031;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #2d3436;
+        }
+        
+        .btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .results-screen {
+            text-align: center;
+        }
+        
+        .final-score {
+            font-size: 4em;
+            color: #667eea;
+            margin: 20px 0;
+            animation: bounce 1s ease infinite alternate;
+        }
+        
+        .results-message {
+            font-size: 1.5em;
+            color: #2d3436;
+            margin: 20px 0;
+        }
+        
+        .results-details {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        
+        .results-stat {
+            font-size: 1.2em;
+            margin: 15px 0;
+            color: #2d3436;
+        }
+        
+        .matching-game {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .matching-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .matching-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .matching-item:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        
+        .matching-item.selected {
+            border-color: #fdcb6e;
+            background: #ffeaa7;
+            transform: scale(1.05);
+        }
+        
+        .matching-item.matched {
+            border-color: #00b894;
+            background: #55efc4;
+            cursor: default;
+        }
+        
+        .timer {
+            font-size: 1.5em;
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10em;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .celebration.show {
+            animation: celebrate 1s;
+        }
+        
+        @keyframes celebrate {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .matching-game {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="celebration" id="celebration">🎉</div>
+    
+    <div class="game-container">
+        <h1>🎮 Acid-Base Balance Game</h1>
+        <p class="subtitle">Master pH Balance While Having Fun!</p>
+        
+        <!-- Menu Screen -->
+        <div class="menu-screen active" id="menuScreen">
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-label">High Score</div>
+                    <div class="score-value" id="highScore">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Games Played</div>
+                    <div class="score-value" id="gamesPlayed">0</div>
+                </div>
+            </div>
+            
+            <h2 style="text-align: center; color: #2d3436; margin-bottom: 20px;">Choose Your Challenge!</h2>
+            
+            <div class="game-mode-grid">
+                <div class="game-mode-card" onclick="startGame('quiz')">
+                    <div class="game-mode-emoji">🧪</div>
+                    <div class="game-mode-title">ABG Analyzer</div>
+                    <div class="game-mode-desc">Interpret ABG values and diagnose acid-base disorders!</div>
+                </div>
+                
+                <div class="game-mode-card mode-2" onclick="startGame('scenario')">
+                    <div class="game-mode-emoji">🏥</div>
+                    <div class="game-mode-title">Patient Scenarios</div>
+                    <div class="game-mode-desc">Apply your knowledge to real nursing situations!</div>
+                </div>
+                
+                <div class="game-mode-card mode-3" onclick="startGame('matching')">
+                    <div class="game-mode-emoji">🎯</div>
+                    <div class="game-mode-title">Match Master</div>
+                    <div class="game-mode-desc">Match symptoms to conditions against the clock!</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-label">Score</div>
+                    <div class="score-value" id="currentScore">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Question</div>
+                    <div class="score-value"><span id="currentQuestion">1</span>/<span id="totalQuestions">10</span></div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Streak</div>
+                    <div class="score-value">🔥 <span id="streak">0</span></div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+            </div>
+            
+            <div id="timerDisplay" class="timer" style="display: none;"></div>
+            
+            <div id="questionContainer"></div>
+            
+            <div class="btn-container">
+                <button class="btn btn-secondary" onclick="returnToMenu()">Return to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div class="results-screen" id="resultsScreen">
+            <h2 style="color: #667eea; font-size: 2.5em;">Game Complete!</h2>
+            
+            <div class="final-score" id="finalScore">0</div>
+            <div class="results-message" id="resultsMessage"></div>
+            
+            <div class="results-details">
+                <div class="results-stat">✅ Correct Answers: <strong id="correctCount">0</strong></div>
+                <div class="results-stat">❌ Incorrect Answers: <strong id="incorrectCount">0</strong></div>
+                <div class="results-stat">🎯 Accuracy: <strong id="accuracy">0%</strong></div>
+                <div class="results-stat">🔥 Best Streak: <strong id="bestStreak">0</strong></div>
+            </div>
+            
+            <div class="btn-container">
+                <button class="btn" onclick="returnToMenu()" style="margin: 10px;">Play Again</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Game State
+        let gameMode = '';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let bestStreak = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let questions = [];
+        let selectedMatching = null;
+        let matchedPairs = 0;
+        let timer = null;
+        let timeLeft = 60;
+        
+        // Load saved stats
+        let highScore = localStorage.getItem('acidBaseHighScore') || 0;
+        let gamesPlayed = localStorage.getItem('acidBaseGamesPlayed') || 0;
+        document.getElementById('highScore').textContent = highScore;
+        document.getElementById('gamesPlayed').textContent = gamesPlayed;
+        
+        // Question Banks
+        const abgQuestions = [
+            {
+                question: "Analyze the following ABG results:",
+                abg: "pH: 7.28 | PaCO₂: 55 mmHg | HCO₃⁻: 26 mEq/L",
+                options: [
+                    "Respiratory Acidosis",
+                    "Respiratory Alkalosis",
+                    "Metabolic Acidosis",
+                    "Metabolic Alkalosis"
+                ],
+                correct: 0,
+                explanation: "pH is low (acidosis), PaCO₂ is high (respiratory issue), HCO₃⁻ is normal. This is Respiratory Acidosis! The problem is too much CO₂."
+            },
+            {
+                question: "What condition do these ABG values indicate?",
+                abg: "pH: 7.50 | PaCO₂: 28 mmHg | HCO₃⁻: 22 mEq/L",
+                options: [
+                    "Respiratory Alkalosis",
+                    "Metabolic Alkalosis",
+                    "Respiratory Acidosis",
+                    "Normal ABG"
+                ],
+                correct: 0,
+                explanation: "pH is high (alkalosis), PaCO₂ is low (respiratory issue), HCO₃⁻ is normal. This is Respiratory Alkalosis from hyperventilation!"
+            },
+            {
+                question: "Interpret this ABG:",
+                abg: "pH: 7.32 | PaCO₂: 38 mmHg | HCO₃⁻: 18 mEq/L",
+                options: [
+                    "Metabolic Acidosis",
+                    "Respiratory Acidosis",
+                    "Metabolic Alkalosis",
+                    "Mixed disorder"
+                ],
+                correct: 0,
+                explanation: "pH is low (acidosis), PaCO₂ is normal, HCO₃⁻ is low (metabolic issue). This is Metabolic Acidosis! Think DKA or renal failure."
+            },
+            {
+                question: "What's the diagnosis?",
+                abg: "pH: 7.48 | PaCO₂: 44 mmHg | HCO₃⁻: 32 mEq/L",
+                options: [
+                    "Metabolic Alkalosis",
+                    "Respiratory Alkalosis",
+                    "Metabolic Acidosis",
+                    "Normal with compensation"
+                ],
+                correct: 0,
+                explanation: "pH is high (alkalosis), PaCO₂ is normal, HCO₃⁻ is high (metabolic issue). This is Metabolic Alkalosis! Think vomiting or diuretics."
+            },
+            {
+                question: "Analyze this compensated ABG:",
+                abg: "pH: 7.38 | PaCO₂: 50 mmHg | HCO₃⁻: 29 mEq/L",
+                options: [
+                    "Compensated Respiratory Acidosis",
+                    "Normal ABG",
+                    "Compensated Metabolic Alkalosis",
+                    "Partially compensated Respiratory Acidosis"
+                ],
+                correct: 0,
+                explanation: "pH is normal (compensated!), PaCO₂ is high and HCO₃⁻ is high. The kidneys compensated for chronic respiratory acidosis by retaining bicarb!"
+            }
+        ];
+        
+        const scenarioQuestions = [
+            {
+                question: "A patient with COPD is confused and drowsy. Respirations are shallow at 10/min. Which acid-base imbalance is most likely?",
+                options: [
+                    "Respiratory Acidosis - CO₂ retention from hypoventilation",
+                    "Respiratory Alkalosis - hyperventilation from anxiety",
+                    "Metabolic Acidosis - lactic acid buildup",
+                    "Metabolic Alkalosis - loss of stomach acid"
+                ],
+                correct: 0,
+                explanation: "COPD + shallow breathing = can't blow off CO₂! This causes Respiratory Acidosis. Priority: improve ventilation and oxygenation!"
+            },
+            {
+                question: "A patient has been vomiting for 3 days. They have slow, shallow respirations and muscle weakness. What's happening?",
+                options: [
+                    "Metabolic Alkalosis - loss of stomach acid (HCl)",
+                    "Metabolic Acidosis - dehydration",
+                    "Respiratory Alkalosis - pain response",
+                    "Respiratory Acidosis - fatigue"
+                ],
+                correct: 0,
+                explanation: "Prolonged vomiting = loss of acid! This causes Metabolic Alkalosis. The body compensates with hypoventilation. Give fluids and replace electrolytes!"
+            },
+            {
+                question: "A diabetic patient in DKA has deep, rapid respirations (Kussmaul). Which lab finding would you expect?",
+                options: [
+                    "↓ pH, ↓ HCO₃⁻, ↓ PaCO₂",
+                    "↑ pH, ↑ HCO₃⁻, ↑ PaCO₂",
+                    "↓ pH, ↑ PaCO₂, ↑ HCO₃⁻",
+                    "↑ pH, ↓ PaCO₂, ↓ HCO₃⁻"
+                ],
+                correct: 0,
+                explanation: "DKA = Metabolic Acidosis! pH and HCO₃⁻ are down. The body compensates with Kussmaul breathing to blow off CO₂. Give insulin and fluids!"
+            },
+            {
+                question: "An anxious patient is hyperventilating and complaining of numbness and tingling. What should you do FIRST?",
+                options: [
+                    "Encourage slow, controlled breathing",
+                    "Give supplemental oxygen",
+                    "Administer sodium bicarbonate",
+                    "Call for emergency intubation"
+                ],
+                correct: 0,
+                explanation: "This is Respiratory Alkalosis from hyperventilation! First priority: calm them down and help them breathe slowly. Address the anxiety!"
+            },
+            {
+                question: "A patient on diuretics has muscle cramps and confusion. Urine specific gravity is 1.003. What's the likely problem?",
+                options: [
+                    "Metabolic Alkalosis - loss of H⁺ and Cl⁻ from diuretics",
+                    "Metabolic Acidosis - dehydration",
+                    "Respiratory Alkalosis - overventilation",
+                    "Respiratory Acidosis - medication side effect"
+                ],
+                correct: 0,
+                explanation: "Diuretics cause loss of H⁺ and Cl⁻ = Metabolic Alkalosis! Low urine SG confirms alkaline urine. Hold the diuretic and replace fluids/electrolytes!"
+            },
+            {
+                question: "Post-op patient received too much opioid. Respirations are 8/min and shallow. What's your PRIORITY?",
+                options: [
+                    "Maintain airway and support ventilation",
+                    "Check ABG values",
+                    "Administer sodium bicarbonate",
+                    "Increase IV fluids"
+                ],
+                correct: 0,
+                explanation: "Opioid overdose = respiratory depression = Respiratory Acidosis! PRIORITY is ABC - Airway, Breathing, Circulation! Give reversal agent (naloxone) and support ventilation."
+            },
+            {
+                question: "A patient with severe diarrhea for 2 days has warm, flushed skin and Kussmaul respirations. Urine SG is 1.035. What's the diagnosis?",
+                options: [
+                    "Metabolic Acidosis - bicarbonate loss from diarrhea",
+                    "Metabolic Alkalosis - fluid loss",
+                    "Respiratory Acidosis - dehydration",
+                    "Respiratory Alkalosis - infection"
+                ],
+                correct: 0,
+                explanation: "Diarrhea = loss of bicarb! This causes Metabolic Acidosis. High urine SG shows concentrated urine from dehydration. Give fluids and monitor K⁺!"
+            },
+            {
+                question: "Which nursing action is MOST important for a patient with Respiratory Acidosis from pneumonia?",
+                options: [
+                    "Encourage coughing, deep breathing, and repositioning",
+                    "Restrict fluids",
+                    "Administer antacids",
+                    "Encourage rapid breathing"
+                ],
+                correct: 0,
+                explanation: "Pneumonia causes hypoventilation = CO₂ buildup! Help them clear airways and breathe better. May need bronchodilators or oxygen too!"
+            }
+        ];
+        
+        const matchingPairs = [
+            { left: "Kussmaul Respirations", right: "Metabolic Acidosis", id: 1 },
+            { left: "Slow, Shallow Breathing", right: "Metabolic Alkalosis", id: 2 },
+            { left: "Confusion & Drowsiness", right: "Respiratory Acidosis", id: 3 },
+            { left: "Numbness & Tingling", right: "Respiratory Alkalosis", id: 4 },
+            { left: "DKA or Renal Failure", right: "Metabolic Acidosis", id: 5 },
+            { left: "Vomiting or NG Suction", right: "Metabolic Alkalosis", id: 6 },
+            { left: "COPD or Opioids", right: "Respiratory Acidosis", id: 7 },
+            { left: "Anxiety or Hyperventilation", right: "Respiratory Alkalosis", id: 8 }
+        ];
+        
+        function startGame(mode) {
+            gameMode = mode;
+            currentQuestionIndex = 0;
+            score = 0;
+            streak = 0;
+            bestStreak = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            
+            document.getElementById('menuScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            
+            if (mode === 'quiz') {
+                questions = [...abgQuestions];
+                shuffleArray(questions);
+                document.getElementById('totalQuestions').textContent = questions.length;
+                loadQuestion();
+            } else if (mode === 'scenario') {
+                questions = [...scenarioQuestions];
+                shuffleArray(questions);
+                document.getElementById('totalQuestions').textContent = questions.length;
+                loadQuestion();
+            } else if (mode === 'matching') {
+                startMatchingGame();
+            }
+            
+            updateScore();
+        }
+        
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endGame();
+                return;
+            }
+            
+            const question = questions[currentQuestionIndex];
+            let html = '<div class="question-card">';
+            html += `<div class="question-text">${question.question}</div>`;
+            
+            if (question.abg) {
+                html += `<div class="abg-values">
+                    <div>📊 <strong>ABG Results:</strong></div>
+                    <div>${question.abg}</div>
+                </div>`;
+            }
+            
+            html += '<div class="options-grid">';
+            question.options.forEach((option, index) => {
+                html += `<button class="option-btn" onclick="selectAnswer(${index})">${option}</button>`;
+            });
+            html += '</div>';
+            html += '<div class="feedback" id="feedback"></div>';
+            html += '</div>';
+            
+            document.getElementById('questionContainer').innerHTML = html;
+            updateProgress();
+        }
+        
+        function selectAnswer(selectedIndex) {
+            const question = questions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            const feedback = document.getElementById('feedback');
+            
+            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            
+            if (selectedIndex === question.correct) {
+                buttons[selectedIndex].classList.add('correct');
+                feedback.className = 'feedback correct show';
+                feedback.innerHTML = `<strong>🎉 Correct!</strong><br>${question.explanation}`;
+                score += 100 + (streak * 10);
+                streak++;
+                correctAnswers++;
+                bestStreak = Math.max(bestStreak, streak);
+                showCelebration();
+            } else {
+                buttons[selectedIndex].classList.add('incorrect');
+                buttons[question.correct].classList.add('correct');
+                feedback.className = 'feedback incorrect show';
+                feedback.innerHTML = `<strong>❌ Not quite!</strong><br>${question.explanation}`;
+                streak = 0;
+                incorrectAnswers++;
+            }
+            
+            updateScore();
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 3500);
+        }
+        
+        function startMatchingGame() {
+            document.getElementById('timerDisplay').style.display = 'block';
+            document.getElementById('totalQuestions').textContent = matchingPairs.length;
+            timeLeft = 60;
+            matchedPairs = 0;
+            selectedMatching = null;
+            
+            let shuffledLeft = [...matchingPairs].sort(() => Math.random() - 0.5);
+            let shuffledRight = [...matchingPairs].sort(() => Math.random() - 0.5);
+            
+            let html = '<div class="question-card">';
+            html += '<h3 style="text-align: center; color: #2d3436; margin-bottom: 20px;">Match the symptoms/causes with the correct condition!</h3>';
+            html += '<div class="matching-game">';
+            
+            html += '<div class="matching-column">';
+            shuffledLeft.forEach(item => {
+                html += `<div class="matching-item" data-id="${item.id}" data-value="${item.left}" onclick="selectMatching(this, 'left')">${item.left}</div>`;
+            });
+            html += '</div>';
+            
+            html += '<div class="matching-column">';
+            shuffledRight.forEach(item => {
+                html += `<div class="matching-item" data-id="${item.id}" data-value="${item.right}" onclick="selectMatching(this, 'right')">${item.right}</div>`;
+            });
+            html += '</div>';
+            
+            html += '</div></div>';
+            
+            document.getElementById('questionContainer').innerHTML = html;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').textContent = `⏱️ Time Left: ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function selectMatching(element, side) {
+            if (element.classList.contains('matched')) return;
+            
+            if (selectedMatching === null) {
+                document.querySelectorAll('.matching-item').forEach(item => {
+                    if (!item.classList.contains('matched')) {
+                        item.classList.remove('selected');
+                    }
+                });
+                element.classList.add('selected');
+                selectedMatching = { element, side, id: element.dataset.id };
+            } else {
+                if (selectedMatching.side !== side && selectedMatching.id === element.dataset.id) {
+                    element.classList.add('matched');
+                    selectedMatching.element.classList.add('matched');
+                    matchedPairs++;
+                    score += 150;
+                    streak++;
+                    correctAnswers++;
+                    bestStreak = Math.max(bestStreak, streak);
+                    showCelebration();
+                    
+                    currentQuestionIndex = matchedPairs;
+                    updateScore();
+                    updateProgress();
+                    
+                    if (matchedPairs === matchingPairs.length) {
+                        clearInterval(timer);
+                        setTimeout(() => endGame(), 1000);
+                    }
+                } else {
+                    streak = 0;
+                    incorrectAnswers++;
+                    score = Math.max(0, score - 25);
+                    updateScore();
+                }
+                
+                selectedMatching = null;
+                document.querySelectorAll('.matching-item').forEach(item => {
+                    if (!item.classList.contains('matched')) {
+                        item.classList.remove('selected');
+                    }
+                });
+            }
+        }
+        
+        function updateScore() {
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('streak').textContent = streak;
+        }
+        
+        function updateProgress() {
+            const total = gameMode === 'matching' ? matchingPairs.length : questions.length;
+            const progress = ((currentQuestionIndex) / total) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressFill').textContent = Math.round(progress) + '%';
+        }
+        
+        function showCelebration() {
+            const celebration = document.getElementById('celebration');
+            const emojis = ['🎉', '⭐', '🎊', '✨', '🏆', '💯'];
+            celebration.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            celebration.classList.add('show');
+            setTimeout(() => celebration.classList.remove('show'), 1000);
+        }
+        
+        function endGame() {
+            if (timer) clearInterval(timer);
+            
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultsScreen').classList.add('active');
+            
+            const total = correctAnswers + incorrectAnswers;
+            const accuracy = total > 0 ? Math.round((correctAnswers / total) * 100) : 0;
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('incorrectCount').textContent = incorrectAnswers;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('bestStreak').textContent = bestStreak;
+            
+            let message = '';
+            if (accuracy >= 90) {
+                message = '🏆 Outstanding! You\'re an Acid-Base Master!';
+            } else if (accuracy >= 75) {
+                message = '⭐ Great job! You really know your stuff!';
+            } else if (accuracy >= 60) {
+                message = '👍 Good effort! Keep practicing!';
+            } else {
+                message = '📚 Keep studying! You\'ll get there!';
+            }
+            document.getElementById('resultsMessage').textContent = message;
+            
+            // Update stats
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('acidBaseHighScore', highScore);
+                document.getElementById('highScore').textContent = highScore;
+            }
+            
+            gamesPlayed++;
+            localStorage.setItem('acidBaseGamesPlayed', gamesPlayed);
+            document.getElementById('gamesPlayed').textContent = gamesPlayed;
+        }
+        
+        function returnToMenu() {
+            if (timer) clearInterval(timer);
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultsScreen').classList.remove('active');
+            document.getElementById('menuScreen').classList.add('active');
+            document.getElementById('timerDisplay').style.display = 'none';
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
+</body>
+</html>

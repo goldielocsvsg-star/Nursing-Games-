@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Dr. Doom's Pharmacology Lab - Escape Room 🧪</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #1a0033 0%, #330066 50%, #4d0099 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .title-screen {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 4px solid #ff00ff;
+            box-shadow: 0 0 30px #ff00ff, inset 0 0 20px rgba(255, 0, 255, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px #ff00ff, inset 0 0 20px rgba(255, 0, 255, 0.3); }
+            50% { box-shadow: 0 0 50px #ff00ff, inset 0 0 30px rgba(255, 0, 255, 0.5); }
+        }
+        
+        h1 {
+            font-family: 'Creepster', cursive;
+            font-size: 3em;
+            color: #00ff00;
+            text-shadow: 3px 3px #ff00ff, 6px 6px #00ffff;
+            margin-bottom: 20px;
+            animation: flicker 3s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+            75% { opacity: 0.9; }
+        }
+        
+        .start-btn {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 10px;
+            margin-top: 30px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 0, 255, 0.5);
+        }
+        
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 40px rgba(255, 0, 255, 0.8);
+        }
+        
+        .level-container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            margin-bottom: 20px;
+        }
+        
+        .lab-scene {
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px dashed #ff00ff;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lab-scene::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.03) 2px,
+                rgba(0, 255, 0, 0.03) 4px
+            );
+            pointer-events: none;
+        }
+        
+        .scientist-text {
+            font-family: 'Creepster', cursive;
+            color: #00ff00;
+            font-size: 1.3em;
+            text-shadow: 2px 2px #ff00ff;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .progress-bar {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 5px;
+            margin-bottom: 20px;
+            border: 2px solid #00ffff;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #00ff00);
+            height: 30px;
+            border-radius: 15px;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+        
+        .question-card {
+            background: linear-gradient(135deg, #2d1b4e 0%, #1a0f2e 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #ff00ff;
+            margin: 20px 0;
+            box-shadow: 0 5px 25px rgba(255, 0, 255, 0.4);
+        }
+        
+        .question-text {
+            font-size: 1em;
+            line-height: 1.8;
+            color: #ffccff;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        
+        .answer-option {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.8em;
+            line-height: 1.6;
+        }
+        
+        .answer-option:hover {
+            background: rgba(0, 255, 255, 0.3);
+            transform: translateX(10px);
+            box-shadow: 0 0 15px #00ffff;
+        }
+        
+        .answer-option.selected {
+            background: rgba(255, 0, 255, 0.3);
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        
+        .answer-option.correct {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+            animation: correctPulse 1s;
+        }
+        
+        .answer-option.incorrect {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .checkbox-container input {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(45deg, #00ff00, #00ffff);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 255, 0, 0.6);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            line-height: 1.8;
+        }
+        
+        .feedback.correct {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+        }
+        
+        .feedback.incorrect {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+        }
+        
+        .animation-text {
+            font-family: 'Creepster', cursive;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #00ffff;
+            text-shadow: 2px 2px #ff00ff;
+        }
+        
+        .rationale {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #ff00ff;
+        }
+        
+        .next-btn {
+            background: linear-gradient(45deg, #ff00ff, #ff00aa);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .next-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 0, 255, 0.6);
+        }
+        
+        .recap-section {
+            background: linear-gradient(135deg, #1a0033 0%, #330066 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #00ff00;
+            margin-top: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+        
+        .recap-title {
+            font-family: 'Creepster', cursive;
+            color: #00ff00;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px #ff00ff;
+        }
+        
+        .recap-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .recap-list li {
+            padding: 8px 0;
+            font-size: 0.75em;
+            line-height: 1.6;
+            border-bottom: 1px dashed #ff00ff;
+            color: #ccffcc;
+        }
+        
+        .recap-list li:before {
+            content: "💀 ";
+            margin-right: 10px;
+        }
+        
+        .completion-screen {
+            text-align: center;
+            padding: 50px 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            border: 5px solid #00ff00;
+            box-shadow: 0 0 50px #00ff00;
+        }
+        
+        .completion-title {
+            font-family: 'Creepster', cursive;
+            font-size: 3em;
+            color: #00ff00;
+            text-shadow: 3px 3px #ff00ff;
+            margin-bottom: 20px;
+        }
+        
+        .score-display {
+            font-size: 2em;
+            color: #00ffff;
+            margin: 20px 0;
+            text-shadow: 2px 2px #ff00ff;
+        }
+        
+        .stats {
+            background: rgba(255, 0, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #ff00ff;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 0.8em;
+            border-bottom: 1px dashed #00ffff;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .question-text { font-size: 0.85em; }
+            .answer-option { font-size: 0.7em; }
+            .submit-btn, .next-btn { font-size: 0.75em; padding: 12px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Question Bank - 50 questions covering ALL concepts from the outline
+        const questionBank = [
+            // LEVEL 1 - Antiemetics (5 questions)
+            {
+                id: 1,
+                level: 1,
+                type: "mcq",
+                question: "A patient with cancer is receiving chemotherapy and develops severe nausea. The oncologist prescribes ondansetron (Zofran). What is the primary mechanism of action of this medication?",
+                options: [
+                    "Blocks dopamine D2 receptors in the chemoreceptor trigger zone",
+                    "Blocks serotonin 5-HT3 receptors on vagal afferent neurons and CTZ",
+                    "Increases gastric emptying by enhancing acetylcholine action",
+                    "Reduces prostaglandin synthesis to decrease inflammation"
+                ],
+                correct: 1,
+                rationale: "Ondansetron is a serotonin antagonist that works by blocking 5-HT3 serotonin receptors on vagal afferent neurons and the chemoreceptor trigger zone (CTZ). It is the gold standard for chemotherapy-induced nausea and vomiting (CINV) and is most effective when combined with dexamethasone."
+            },
+            {
+                id: 2,
+                level: 1,
+                type: "mcq",
+                question: "A nurse is monitoring a patient receiving ondansetron for chemotherapy-induced nausea. Which serious adverse effect requires immediate intervention?",
+                options: [
+                    "Mild headache",
+                    "QT prolongation on ECG",
+                    "Temporary dizziness",
+                    "Mild diarrhea"
+                ],
+                correct: 1,
+                rationale: "QT prolongation is a major adverse effect of ondansetron that can lead to torsades de pointes, a life-threatening cardiac arrhythmia. Patients with electrolyte abnormalities or cardiac conditions are at highest risk and this is a major NCLEX test point."
+            },
+            {
+                id: 3,
+                level: 1,
+                type: "mcq",
+                question: "Metoclopramide (Reglan) is prescribed for a patient with diabetic gastroparesis. Which serious adverse effect is associated with long-term, high-dose use of this medication?",
+                options: [
+                    "Reversible tremors that resolve after discontinuation",
+                    "Temporary sedation that improves over time",
+                    "Irreversible tardive dyskinesia",
+                    "Mild gastrointestinal cramping"
+                ],
+                correct: 2,
+                rationale: "Irreversible tardive dyskinesia is a serious adverse effect associated with long-term, high-dose use of metoclopramide. This movement disorder can persist even after the medication is discontinued, making it a critical teaching point for patients receiving this medication."
+            },
+            {
+                id: 4,
+                level: 1,
+                type: "sata",
+                question: "A pregnant patient at 8 weeks gestation presents with severe hyperemesis gravidarum. Which interventions are appropriate for this patient? (Select all that apply)",
+                options: [
+                    "Administer doxylamine plus vitamin B6 as first-line therapy",
+                    "Immediately start methylprednisolone therapy",
+                    "Monitor for dehydration and ketonuria",
+                    "Assess potassium levels for hypokalemia",
+                    "Consider ondansetron if first-line therapy fails"
+                ],
+                correct: [0, 2, 3, 4],
+                rationale: "For nausea and vomiting in pregnancy (NVP), particularly hyperemesis gravidarum, first-line therapy is doxylamine plus vitamin B6. Methylprednisolone should only be used after 10 weeks gestation due to early pregnancy risks. Severe hyperemesis can cause dehydration, ketonuria, and hypokalemia. Other options include ondansetron, prochlorperazine, and metoclopramide."
+            },
+            {
+                id: 5,
+                level: 1,
+                type: "mcq",
+                question: "A patient receiving chemotherapy is prescribed both ondansetron and dexamethasone for nausea control. What is the rationale for combining these medications?",
+                options: [
+                    "Dexamethasone reduces the risk of QT prolongation from ondansetron",
+                    "Dexamethasone potentiates the antiemetic effect of serotonin blockers",
+                    "Ondansetron prevents the immunosuppression caused by dexamethasone",
+                    "The combination reduces the required dose of both medications by 75%"
+                ],
+                correct: 1,
+                rationale: "Glucocorticoids like dexamethasone and methylprednisolone potentiate serotonin blockers, making ondansetron most effective when combined with dexamethasone for chemotherapy-induced nausea and vomiting (CINV), even though the mechanism of action for glucocorticoids is unknown."
+            },
+            
+            // LEVEL 2 - Motion Sickness & Antidiarrheals (5 questions)
+            {
+                id: 6,
+                level: 2,
+                type: "mcq",
+                question: "A patient is prescribed scopolamine patch for motion sickness on a cruise. Which adverse effects should the nurse include in patient teaching?",
+                options: [
+                    "Hyperactivity, increased appetite, and urinary frequency",
+                    "Dry mouth, blurred vision, and drowsiness",
+                    "Excessive salivation, bradycardia, and diarrhea",
+                    "Tachycardia, hypertension, and insomnia"
+                ],
+                correct: 1,
+                rationale: "Scopolamine is a muscarinic antagonist used for motion sickness. Its anticholinergic effects include dry mouth, blurred vision, and drowsiness. These are classic anticholinergic side effects that patients should be aware of before using the patch."
+            },
+            {
+                id: 7,
+                level: 2,
+                type: "mcq",
+                question: "Diphenoxylate (Lomotil) is formulated with atropine. What is the primary reason for this combination?",
+                options: [
+                    "Atropine enhances the antidiarrheal effectiveness of diphenoxylate",
+                    "Atropine prevents abuse by causing unpleasant effects at high doses",
+                    "Atropine reduces the constipation side effects of diphenoxylate",
+                    "Atropine increases the absorption rate of diphenoxylate"
+                ],
+                correct: 1,
+                rationale: "Diphenoxylate is formulated with atropine specifically to prevent abuse. At high doses, diphenoxylate can produce morphine-like euphoria, but the atropine causes unpleasant anticholinergic effects that discourage misuse."
+            },
+            {
+                id: 8,
+                level: 2,
+                type: "sata",
+                question: "A patient presents with acute diarrhea. Which complications should the nurse monitor for? (Select all that apply)",
+                options: [
+                    "Dehydration",
+                    "Hypokalemia",
+                    "Metabolic acidosis",
+                    "Hypernatremia",
+                    "Skin breakdown with prolonged diarrhea"
+                ],
+                correct: [0, 1, 2, 4],
+                rationale: "Diarrhea complications include dehydration, electrolyte depletion (particularly hypokalemia), metabolic acidosis, and skin breakdown if prolonged. These are critical assessment points for patients experiencing acute or chronic diarrhea."
+            },
+            {
+                id: 9,
+                level: 2,
+                type: "mcq",
+                question: "Which antidiarrheal agent is considered the MOST effective for managing acute diarrhea but has minimal abuse potential?",
+                options: [
+                    "Diphenoxylate (Lomotil)",
+                    "Loperamide (Imodium)",
+                    "Bismuth subsalicylate",
+                    "Paregoric"
+                ],
+                correct: 1,
+                rationale: "Loperamide (Imodium) is an opioid antidiarrheal that is highly effective for acute and chronic diarrhea and also reduces ileostomy drainage. Unlike diphenoxylate, loperamide has minimal abuse risk, making it safer for general use."
+            },
+            {
+                id: 10,
+                level: 2,
+                type: "case",
+                question: "A 6-year-old child with acute gastroenteritis is prescribed bismuth subsalicylate. What critical concern should the nurse address with the parents?",
+                options: [
+                    "The medication may cause temporary tooth discoloration",
+                    "Risk of salicylate toxicity in children, similar to aspirin",
+                    "The medication must be taken with food to prevent nausea",
+                    "Constipation is a common side effect requiring monitoring"
+                ],
+                correct: 1,
+                rationale: "Bismuth subsalicylate contains salicylate and carries a risk of salicylate toxicity in children, similar to aspirin. This is a critical safety concern, especially given the association between salicylates and Reye's syndrome in children with viral illnesses."
+            },
+            
+            // LEVEL 3 - IBS Drugs (5 questions)
+            {
+                id: 11,
+                level: 3,
+                type: "mcq",
+                question: "A female patient with IBS-D (diarrhea-predominant) is prescribed alosetron (Lotronex). What is the most serious risk associated with this medication that requires a restricted prescribing program?",
+                options: [
+                    "Severe hypertension and stroke",
+                    "Ischemic colitis and severe constipation leading to perforation",
+                    "Cardiac arrhythmias and sudden death",
+                    "Hepatotoxicity and liver failure"
+                ],
+                correct: 1,
+                rationale: "Alosetron carries a black box warning for ischemic colitis and severe constipation that can lead to bowel perforation. Due to these serious risks, it is only approved for women with IBS-D and requires enrollment in a restricted prescribing program."
+            },
+            {
+                id: 12,
+                level: 3,
+                type: "mcq",
+                question: "Lubiprostone (Amitiza) is prescribed for a patient with IBS-C (constipation-predominant). What is the mechanism of action of this medication?",
+                options: [
+                    "Stimulates peristalsis through serotonin receptor activation",
+                    "Activates chloride channels to increase fluid secretion and motility",
+                    "Blocks aldosterone receptors to retain fluid in the colon",
+                    "Increases prostaglandin synthesis to enhance intestinal contractions"
+                ],
+                correct: 1,
+                rationale: "Lubiprostone works by activating chloride channels, which increases fluid secretion into the intestinal lumen and enhances motility. It is used for IBS-C (constipation-predominant IBS) and chronic idiopathic constipation (CIC). Common adverse effects include nausea and headache."
+            },
+            {
+                id: 13,
+                level: 3,
+                type: "mcq",
+                question: "A 58-year-old female patient asks about tegaserod (Zelnorm) for her IBS-C. Why is this medication not appropriate for this patient?",
+                options: [
+                    "Tegaserod is only approved for men under 60 years old",
+                    "Tegaserod is only for women under 55 due to cardiovascular risks",
+                    "Tegaserod causes severe diarrhea in patients over 50",
+                    "Tegaserod is contraindicated in all patients with IBS-C"
+                ],
+                correct: 1,
+                rationale: "Tegaserod is a serotonin agonist approved only for IBS-C in women under 55 years of age. Its use is limited due to cardiovascular risks, making it inappropriate for older patients or men."
+            },
+            {
+                id: 14,
+                level: 3,
+                type: "mcq",
+                question: "Which characteristic distinguishes Irritable Bowel Syndrome (IBS) from other gastrointestinal disorders?",
+                options: [
+                    "Presence of visible inflammation on colonoscopy",
+                    "Functional disorder with abdominal pain and altered bowel pattern occurring 12 weeks over the past year",
+                    "Requires surgical intervention for definitive treatment",
+                    "Always causes significant weight loss and malnutrition"
+                ],
+                correct: 1,
+                rationale: "IBS is a functional disorder characterized by abdominal pain plus altered bowel pattern that must occur for at least 12 weeks over the past year. Unlike IBD, there is no visible inflammation or structural abnormality."
+            },
+            {
+                id: 15,
+                level: 3,
+                type: "sata",
+                question: "A nurse is reviewing ineffective historical treatments for IBS that are no longer recommended as primary therapy. Which medications fall into this category? (Select all that apply)",
+                options: [
+                    "Antispasmodics",
+                    "Tricyclic antidepressants",
+                    "Bulk-forming agents",
+                    "Alosetron",
+                    "Antidiarrheals"
+                ],
+                correct: [0, 1, 2, 4],
+                rationale: "Historically ineffective treatments for IBS include antispasmodics, tricyclic antidepressants, bulk-forming agents, and antidiarrheals. IBS-specific drugs like alosetron (for IBS-D), lubiprostone (for IBS-C), and tegaserod are the preferred targeted therapies."
+            },
+            
+            // LEVEL 4 - IBD Drugs (5 questions)
+            {
+                id: 16,
+                level: 4,
+                type: "case",
+                question: "A patient is diagnosed with Crohn's disease affecting the terminal ileum. Which assessment findings are most consistent with Crohn's disease versus ulcerative colitis?",
+                options: [
+                    "Continuous inflammation with bloody diarrhea containing mucus and pus",
+                    "Transmural inflammation with steatorrhea and patchy 'skip lesions'",
+                    "Inflammation limited to mucosa and submucosa starting at the rectum",
+                    "Superficial ulcerations with risk of toxic megacolon"
+                ],
+                correct: 1,
+                rationale: "Crohn's disease is characterized by transmural inflammation (all layers of the bowel wall) with deep fissures, fistulas, and abscesses. It presents with patchy 'skip lesions' and commonly affects the terminal ileum. Stool is typically steatorrhea (fatty) rather than bloody."
+            },
+            {
+                id: 17,
+                level: 4,
+                type: "mcq",
+                question: "A patient with ulcerative colitis is prescribed sulfasalazine. What is the mechanism of action of this 5-aminosalicylate (5-ASA) medication?",
+                options: [
+                    "Blocks TNF-alpha to prevent immune system activation",
+                    "Reduces inflammation by decreasing prostaglandins and WBC infiltration",
+                    "Suppresses bone marrow to decrease neutrophil production",
+                    "Activates glucocorticoid receptors to prevent cytokine release"
+                ],
+                correct: 1,
+                rationale: "Sulfasalazine is a 5-aminosalicylate (5-ASA) that reduces inflammation by decreasing prostaglandin synthesis and white blood cell infiltration. It is more effective for ulcerative colitis than Crohn's disease. Adverse effects include nausea, vomiting, anorexia, and headache, and it should be avoided in patients with sulfa allergies."
+            },
+            {
+                id: 18,
+                level: 4,
+                type: "sata",
+                question: "A patient with severe Crohn's disease is started on infliximab therapy. Which adverse effects should the nurse monitor for? (Select all that apply)",
+                options: [
+                    "Infusion reactions during administration",
+                    "Increased risk of infections",
+                    "Peripheral neuropathy",
+                    "Bone marrow suppression",
+                    "Anaphylactic reactions"
+                ],
+                correct: [0, 1, 4],
+                rationale: "Infliximab is an anti-TNF immunomodulator used for moderate-to-severe IBD. Major adverse effects include infusion reactions, increased risk of infections (due to immunosuppression), and potential anaphylactic reactions. Peripheral neuropathy is associated with metronidazole, and bone marrow suppression is more common with azathioprine/mercaptopurine."
+            },
+            {
+                id: 19,
+                level: 4,
+                type: "mcq",
+                question: "Azathioprine is prescribed for a patient with refractory Crohn's disease. What important teaching should the nurse provide about the onset of therapeutic effects?",
+                options: [
+                    "Effects begin within 24-48 hours of starting therapy",
+                    "Maximum benefit occurs after 1-2 weeks of treatment",
+                    "Therapeutic effects may take up to 6 months to develop",
+                    "Immediate relief occurs with the first dose"
+                ],
+                correct: 2,
+                rationale: "Azathioprine and mercaptopurine are immunosuppressants with a very slow onset of action - up to 6 months. They are reserved for refractory disease that hasn't responded to other therapies. Major adverse effects include neutropenia and pancreatitis, requiring regular monitoring."
+            },
+            {
+                id: 20,
+                level: 4,
+                type: "mcq",
+                question: "A patient with Crohn's disease is prescribed metronidazole. Which serious adverse effect requires immediate discontinuation of the medication?",
+                options: [
+                    "Mild nausea after meals",
+                    "Peripheral neuropathy with numbness and tingling",
+                    "Temporary metallic taste",
+                    "Mild headache"
+                ],
+                correct: 1,
+                rationale: "Peripheral neuropathy is a serious adverse effect of metronidazole that requires immediate discontinuation. Metronidazole and ciprofloxacin are antibiotics helpful for Crohn's disease but not effective for ulcerative colitis."
+            },
+            
+            // LEVEL 5 - Prokinetics, Pancreatic Enzymes, Gallstones (5 questions)
+            {
+                id: 21,
+                level: 5,
+                type: "mcq",
+                question: "A patient with GERD is prescribed metoclopramide. How does this medication help manage GERD symptoms?",
+                options: [
+                    "Neutralizes stomach acid to reduce esophageal irritation",
+                    "Blocks dopamine and increases acetylcholine to enhance gastric emptying and GI motility",
+                    "Forms a protective barrier over the esophageal lining",
+                    "Reduces acid production by blocking proton pumps"
+                ],
+                correct: 1,
+                rationale: "Metoclopramide is both a dopamine antagonist and prokinetic agent. It blocks D2 receptors in the CTZ to reduce nausea/vomiting and increases acetylcholine action to enhance gastric emptying and GI motility. It's used for post-op N/V, CINV, radiation-induced N/V, GERD, and diabetic gastroparesis."
+            },
+            {
+                id: 22,
+                level: 5,
+                type: "mcq",
+                question: "Cisapride was a commonly used prokinetic agent but has been removed from the market in many places. What serious adverse effect led to its withdrawal?",
+                options: [
+                    "Severe hepatotoxicity and liver failure",
+                    "QT prolongation and cardiac arrhythmias",
+                    "Irreversible tardive dyskinesia",
+                    "Severe bone marrow suppression"
+                ],
+                correct: 1,
+                rationale: "Cisapride was removed from the market in many places due to QT prolongation, which can lead to life-threatening cardiac arrhythmias. This is similar to the cardiac concerns with ondansetron but was severe enough to warrant market withdrawal."
+            },
+            {
+                id: 23,
+                level: 5,
+                type: "case",
+                question: "A patient with chronic pancreatitis has severe pancreatic insufficiency and malabsorption. The provider prescribes pancrelipase. When should the patient take this medication?",
+                options: [
+                    "Once daily in the morning on an empty stomach",
+                    "At bedtime to maximize overnight absorption",
+                    "With every meal to aid in digestion",
+                    "As needed when experiencing abdominal pain"
+                ],
+                correct: 2,
+                rationale: "Pancrelipase is a mixture of amylase, lipase, and protease used for pancreatic insufficiency. It MUST be taken with every meal to aid in digestion of nutrients. It can rarely irritate the mouth and may interact with iron or calcium carbonate."
+            },
+            {
+                id: 24,
+                level: 5,
+                type: "mcq",
+                question: "Ursodiol (ursodeoxycholic acid) is prescribed for a patient with gallstones. What is the mechanism by which this medication works?",
+                options: [
+                    "Directly dissolves calcium-based stones through acidification",
+                    "Reduces cholesterol content of bile for gradual stone dissolution",
+                    "Stimulates gallbladder contractions to expel stones",
+                    "Blocks bile acid production to prevent new stone formation"
+                ],
+                correct: 1,
+                rationale: "Ursodiol (ursodeoxycholic acid) works by reducing the cholesterol content of bile, which leads to gradual dissolution of gallstones. Chenodiol is another option that works best for radiolucent (non-calcium) stones by increasing bile acid production."
+            },
+            {
+                id: 25,
+                level: 5,
+                type: "sata",
+                question: "A patient with hemorrhoids asks about treatment options. Which anorectal preparations are appropriate for managing hemorrhoid symptoms? (Select all that apply)",
+                options: [
+                    "Local anesthetics for pain relief",
+                    "Hydrocortisone for inflammation",
+                    "Astringents to reduce swelling",
+                    "Emollients for soothing",
+                    "Oral antibiotics for infection prevention"
+                ],
+                correct: [0, 1, 2, 3],
+                rationale: "Anorectal drugs for hemorrhoids and anorectal discomfort include local anesthetics, hydrocortisone, astringents, and emollients. Oral antibiotics are not routinely used unless there is a documented infection."
+            },
+            
+            // LEVEL 6 - Laxatives Part 1 (5 questions)
+            {
+                id: 26,
+                level: 6,
+                type: "mcq",
+                question: "A patient asks why they are constipated despite drinking plenty of water. The nurse explains normal colon physiology. Approximately what percentage of fluid entering the colon daily is absorbed?",
+                options: [
+                    "50% of fluid is absorbed",
+                    "70% of fluid is absorbed",
+                    "90% of fluid is absorbed",
+                    "30% of fluid is absorbed"
+                ],
+                correct: 2,
+                rationale: "The colon normally absorbs approximately 90% of the 1500 mL of fluid that enters it daily. Low fiber intake leads to slow transit time, causing excessive water absorption and resulting in hard stool and constipation."
+            },
+            {
+                id: 27,
+                level: 6,
+                type: "sata",
+                question: "Which conditions are absolute contraindications for laxative use? (Select all that apply)",
+                options: [
+                    "Active ulcerative colitis flare",
+                    "Diverticulitis flare",
+                    "Bowel obstruction",
+                    "Chronic constipation",
+                    "Appendicitis"
+                ],
+                correct: [0, 1, 2, 4],
+                rationale: "Absolute contraindications for laxatives include UC flare, diverticulitis flare, abdominal pain of unknown cause, bowel obstruction, and appendicitis. Fecal impaction is generally a contraindication except for mineral oil enemas. Pregnancy requires caution but is not an absolute contraindication."
+            },
+            {
+                id: 28,
+                level: 6,
+                type: "mcq",
+                question: "Psyllium is prescribed for a patient with IBS. What is the mechanism of action of this bulk-forming laxative?",
+                options: [
+                    "Stimulates peristalsis through direct irritation of the intestinal wall",
+                    "Draws water into the intestine through osmotic force",
+                    "Functions like dietary fiber by forming a gel and increasing stool mass",
+                    "Softens stool by lowering surface tension"
+                ],
+                correct: 2,
+                rationale: "Psyllium is a bulk-forming laxative that functions like dietary fiber. It forms a gel that increases stool mass, which promotes bowel movements. Interestingly, it can also prevent diarrhea in IBS. A critical adverse effect is obstruction if insufficient fluids are consumed."
+            },
+            {
+                id: 29,
+                level: 6,
+                type: "mcq",
+                question: "Docusate (Colace) is prescribed for a postoperative patient to prevent straining. How does this surfactant laxative work?",
+                options: [
+                    "Stimulates intestinal secretion of water and electrolytes",
+                    "Creates osmotic pressure to draw fluid into the bowel",
+                    "Softens stool by lowering surface tension and may increase fluid secretion",
+                    "Lubricates the intestinal tract to ease stool passage"
+                ],
+                correct: 2,
+                rationale: "Docusate is a surfactant laxative that softens stool by lowering surface tension. It may also slightly increase the secretion of water and electrolytes into the intestine. It's commonly used post-operatively to prevent straining."
+            },
+            {
+                id: 30,
+                level: 6,
+                type: "case",
+                question: "A patient taking bisacodyl (Dulcolax) for chronic constipation reports taking it with milk. What important teaching should the nurse provide?",
+                options: [
+                    "Taking bisacodyl with milk enhances its effectiveness",
+                    "Do not take bisacodyl with milk or antacids as it may cause premature dissolution",
+                    "Milk helps prevent the cramping associated with bisacodyl",
+                    "This is the recommended method of administration"
+                ],
+                correct: 1,
+                rationale: "Bisacodyl is a stimulant laxative that should NOT be taken with milk or antacids because they can cause premature dissolution of the enteric coating, reducing effectiveness and causing stomach irritation. Senna is another stimulant laxative that can cause yellow-brown or amber-colored urine."
+            },
+            
+            // LEVEL 7 - Laxatives Part 2 (5 questions)
+            {
+                id: 31,
+                level: 7,
+                type: "mcq",
+                question: "A patient is prescribed milk of magnesia (MOM) for constipation. What is the mechanism of action of this osmotic laxative?",
+                options: [
+                    "Stimulates peristalsis through neural activation",
+                    "Draws water into the intestine by osmotic force",
+                    "Softens stool by coating it with a protective layer",
+                    "Increases bulk by absorbing water and forming a gel"
+                ],
+                correct: 1,
+                rationale: "Milk of magnesia (MOM) and sodium phosphate are osmotic laxatives that draw water into the intestine by osmotic force. Low doses produce semi-fluid stool in 6-12 hours, while high doses produce watery stool in 2-6 hours. Adverse effects include dehydration, magnesium toxicity (especially in renal insufficiency), and sodium retention leading to HTN, edema, or HF exacerbation."
+            },
+            {
+                id: 32,
+                level: 7,
+                type: "sata",
+                question: "A nurse is teaching a patient about the adverse effects of osmotic laxatives. Which complications should be included in the teaching? (Select all that apply)",
+                options: [
+                    "Dehydration from excessive fluid loss",
+                    "Magnesium toxicity in patients with renal insufficiency",
+                    "Sodium retention leading to hypertension and edema",
+                    "Irreversible tardive dyskinesia",
+                    "Heart failure exacerbation from fluid overload"
+                ],
+                correct: [0, 1, 2, 4],
+                rationale: "Osmotic laxatives can cause dehydration, magnesium toxicity (especially dangerous in renal insufficiency), sodium retention (leading to hypertension, edema), and heart failure exacerbation. Tardive dyskinesia is associated with metoclopramide, not laxatives."
+            },
+            {
+                id: 33,
+                level: 7,
+                type: "mcq",
+                question: "Mineral oil is prescribed for a patient with constipation. Which serious adverse effect should the nurse warn the patient about?",
+                options: [
+                    "Severe electrolyte imbalances",
+                    "Lipid pneumonia from aspiration",
+                    "Irreversible cardiac arrhythmias",
+                    "Bone marrow suppression"
+                ],
+                correct: 1,
+                rationale: "Mineral oil is a lubricant laxative, but it carries risks of lipid pneumonia (from aspiration), anal leakage, and liver oil deposits. It should be used cautiously, particularly in patients at risk for aspiration."
+            },
+            {
+                id: 34,
+                level: 7,
+                type: "mcq",
+                question: "A patient asks about lubiprostone for chronic constipation. How quickly can they expect this medication to work?",
+                options: [
+                    "Within 5 minutes",
+                    "Within 30 minutes",
+                    "Within 24 hours",
+                    "Within 5-7 days"
+                ],
+                correct: 2,
+                rationale: "Lubiprostone is a chloride channel activator that increases intestinal fluid and motility. It has an onset of approximately 24 hours. It's used for IBS-C and chronic idiopathic constipation (CIC)."
+            },
+            {
+                id: 35,
+                level: 7,
+                type: "case",
+                question: "An elderly patient has been using laxatives daily for years because they believe they need a daily bowel movement. What serious consequence of laxative abuse should the nurse discuss?",
+                options: [
+                    "Increased muscle strength and improved reflexes",
+                    "Diminished reflexes, severe dehydration, electrolyte imbalance, and colitis",
+                    "Enhanced nutrient absorption and weight gain",
+                    "Improved bowel tone and function"
+                ],
+                correct: 1,
+                rationale: "Laxative abuse is often caused by the misconception that daily bowel movements are necessary. Consequences include diminished bowel reflexes, severe dehydration, electrolyte imbalances, and colitis. Patient education about normal bowel patterns is essential."
+            },
+            
+            // LEVEL 8 - Bowel Prep & Loop Diuretics (5 questions)
+            {
+                id: 36,
+                level: 8,
+                type: "sata",
+                question: "A patient is prescribed sodium phosphate bowel preparation for a colonoscopy. Which serious risks should the nurse monitor for? (Select all that apply)",
+                options: [
+                    "Dehydration from excessive fluid loss",
+                    "Electrolyte imbalances",
+                    "Hyperphosphatemia",
+                    "Renal damage",
+                    "Improved kidney function"
+                ],
+                correct: [0, 1, 2, 3],
+                rationale: "Sodium phosphate bowel prep is a small-volume preparation with serious risks including dehydration, electrolyte imbalances, hyperphosphatemia, and potential renal damage. PEG solutions (GoLytely) are isotonic but require large volume (4 liters) and can cause nausea and bloating."
+            },
+            {
+                id: 37,
+                level: 8,
+                type: "mcq",
+                question: "A patient is prescribed Prepopik for colonoscopy preparation. Which serious adverse effects require immediate intervention?",
+                options: [
+                    "Mild nausea and bloating",
+                    "Seizures, arrhythmias, and renal impairment",
+                    "Temporary changes in taste",
+                    "Mild abdominal cramping"
+                ],
+                correct: 1,
+                rationale: "Prepopik contains magnesium oxide, citric acid, and sodium picosulfate. Serious risks include seizures, arrhythmias, and renal impairment. These are medical emergencies requiring immediate intervention."
+            },
+            {
+                id: 38,
+                level: 8,
+                type: "mcq",
+                question: "A patient in acute pulmonary edema is prescribed IV furosemide (Lasix). What is the expected onset of action for IV administration?",
+                options: [
+                    "5 minutes - used in emergency situations",
+                    "30 minutes",
+                    "60 minutes",
+                    "2-4 hours"
+                ],
+                correct: 0,
+                rationale: "IV furosemide has an onset of approximately 5 minutes, making it ideal for emergency situations like acute pulmonary edema. Oral furosemide takes about 60 minutes. Furosemide is a loop diuretic that blocks Na/Cl reabsorption in the ascending loop of Henle and works even with low GFR."
+            },
+            {
+                id: 39,
+                level: 8,
+                type: "sata",
+                question: "A patient on chronic furosemide therapy is being monitored for adverse effects. Which electrolyte imbalances should the nurse assess for? (Select all that apply)",
+                options: [
+                    "Hyponatremia",
+                    "Hypochloremia",
+                    "Hypokalemia",
+                    "Hyperkalemia",
+                    "Hypocalcemia and hypomagnesemia"
+                ],
+                correct: [0, 1, 2, 4],
+                rationale: "Loop diuretics like furosemide cause hyponatremia, hypochloremia, hypokalemia, hypocalcemia, and hypomagnesemia. They also cause dehydration, hypotension, ototoxicity, hyperglycemia, and hyperuricemia (gout risk). Hyperkalemia is associated with potassium-sparing diuretics, not loop diuretics."
+            },
+            {
+                id: 40,
+                level: 8,
+                type: "case",
+                question: "A patient on furosemide is also taking digoxin for heart failure. Why is this drug combination particularly concerning?",
+                options: [
+                    "Furosemide increases digoxin absorption leading to overdose",
+                    "Furosemide-induced hypokalemia increases the risk of digoxin toxicity",
+                    "Digoxin blocks the diuretic effect of furosemide",
+                    "The combination causes severe hyperkalemia"
+                ],
+                correct: 1,
+                rationale: "Furosemide causes hypokalemia (low potassium), which significantly increases the risk of digoxin toxicity. This is a critical drug interaction. Other important interactions include lithium retention (due to low sodium) and NSAIDs blunting the diuretic effect."
+            },
+            
+            // LEVEL 9 - Thiazide & Potassium-Sparing Diuretics (5 questions)
+            {
+                id: 41,
+                level: 9,
+                type: "mcq",
+                question: "Hydrochlorothiazide (HCTZ) is prescribed for a patient with hypertension. Where in the nephron does this thiazide diuretic work?",
+                options: [
+                    "Proximal convoluted tubule",
+                    "Ascending loop of Henle",
+                    "Early distal convoluted tubule",
+                    "Collecting duct"
+                ],
+                correct: 2,
+                rationale: "Hydrochlorothiazide blocks Na/Cl reabsorption in the early distal convoluted tubule (DCT). Unlike loop diuretics, thiazides are NOT effective when GFR is low. They are used for hypertension, mild edema, and diabetes insipidus (DI)."
+            },
+            {
+                id: 42,
+                level: 9,
+                type: "mcq",
+                question: "A patient with chronic kidney disease (CKD) and low GFR is being considered for diuretic therapy. Which diuretic would still be effective despite reduced kidney function?",
+                options: [
+                    "Hydrochlorothiazide",
+                    "Chlorthalidone",
+                    "Furosemide",
+                    "Metolazone"
+                ],
+                correct: 2,
+                rationale: "Loop diuretics like furosemide work even when GFR (glomerular filtration rate) is low, unlike thiazide diuretics which become ineffective with reduced kidney function. This makes loop diuretics the preferred choice for patients with renal failure."
+            },
+            {
+                id: 43,
+                level: 9,
+                type: "sata",
+                question: "A patient on hydrochlorothiazide therapy requires monitoring for which adverse effects? (Select all that apply)",
+                options: [
+                    "Hyponatremia",
+                    "Hypokalemia",
+                    "Hyperglycemia",
+                    "Hyperuricemia (gout risk)",
+                    "Hyperkalemia"
+                ],
+                correct: [0, 1, 2, 3],
+                rationale: "Thiazide diuretics cause hyponatremia, hypokalemia, hyperglycemia, hyperuricemia, decreased placental perfusion (fetal risk), and dehydration. Like loop diuretics, they interact with digoxin and lithium. However, unlike loop diuretics, thiazides are safe with ototoxic agents."
+            },
+            {
+                id: 44,
+                level: 9,
+                type: "mcq",
+                question: "Spironolactone (Aldactone) is prescribed for a patient with heart failure. What is the unique mechanism of action of this potassium-sparing diuretic?",
+                options: [
+                    "Directly blocks sodium channels in the collecting duct",
+                    "Blocks aldosterone receptors, causing potassium retention and sodium excretion",
+                    "Inhibits carbonic anhydrase in the proximal tubule",
+                    "Creates osmotic force to pull water into tubules"
+                ],
+                correct: 1,
+                rationale: "Spironolactone blocks aldosterone receptors, which causes the kidneys to retain potassium and excrete sodium. It's used for HTN, heart failure (with mortality benefit), hyperaldosteronism, PCOS, PMS, and acne. Major adverse effects include hyperkalemia, gynecomastia, erectile dysfunction, and menstrual irregularities."
+            },
+            {
+                id: 45,
+                level: 9,
+                type: "case",
+                question: "A patient on spironolactone is also prescribed an ACE inhibitor for heart failure. What critical complication must be closely monitored with this combination?",
+                options: [
+                    "Severe hypokalemia requiring supplementation",
+                    "Life-threatening hyperkalemia from dual potassium retention",
+                    "Acute hypoglycemia",
+                    "Severe dehydration"
+                ],
+                correct: 1,
+                rationale: "Both spironolactone and ACE inhibitors/ARBs increase potassium levels, creating a serious risk of hyperkalemia when used together. Patients should avoid salt substitutes and potassium supplements, and potassium levels must be monitored closely."
+            },
+            
+            // LEVEL 10 - Osmotic Diuretics & Advanced Cases (5 questions)
+            {
+                id: 46,
+                level: 10,
+                type: "mcq",
+                question: "Mannitol is prescribed for a patient with increased intracranial pressure (ICP) following a traumatic brain injury. What is the mechanism of action of this osmotic diuretic?",
+                options: [
+                    "Blocks sodium reabsorption in the loop of Henle",
+                    "Creates osmotic force in the nephron to pull water into tubules, causing diuresis",
+                    "Inhibits aldosterone to promote sodium excretion",
+                    "Activates chloride channels to increase fluid secretion"
+                ],
+                correct: 1,
+                rationale: "Mannitol creates osmotic force in the nephron that pulls water into the tubules, causing diuresis. It MUST be given IV and is used to prevent renal failure during shock, decrease intracranial pressure (ICP), and decrease intraocular pressure (IOP). If crystals appear in the solution, it must be warmed and redissolved before administration."
+            },
+            {
+                id: 47,
+                level: 10,
+                type: "sata",
+                question: "A patient receiving mannitol for increased ICP develops adverse effects. Which symptoms indicate mannitol toxicity? (Select all that apply)",
+                options: [
+                    "Edema from fluid overload",
+                    "Nausea and vomiting",
+                    "Headache",
+                    "Electrolyte imbalances",
+                    "Severe hyperkalemia"
+                ],
+                correct: [0, 1, 2, 3],
+                rationale: "Adverse effects of mannitol include edema, nausea/vomiting, headache, and electrolyte imbalances. The edema occurs paradoxically despite its use as a diuretic. Hyperkalemia is not associated with osmotic diuretics."
+            },
+            {
+                id: 48,
+                level: 10,
+                type: "priority",
+                question: "A nurse is caring for four patients. Which patient requires the MOST immediate intervention?\n\nA) Patient on ondansetron with a new headache\nB) Patient on furosemide with digoxin toxicity symptoms and potassium level of 2.8 mEq/L\nC) Patient on spironolactone with mild gynecomastia\nD) Patient on docusate reporting softer stools",
+                options: [
+                    "Patient A - The headache indicates serious ondansetron toxicity",
+                    "Patient B - Life-threatening hypokalemia with digoxin toxicity risk",
+                    "Patient C - Gynecomastia requires immediate hormone therapy",
+                    "Patient D - Soft stools indicate laxative overdose"
+                ],
+                correct: 1,
+                rationale: "Patient B requires immediate intervention. Furosemide causes hypokalemia (K+ 2.8 is critically low; normal is 3.5-5.0 mEq/L), which dramatically increases the risk of life-threatening digoxin toxicity and cardiac arrhythmias. This is a medical emergency. Headache is a common, expected side effect of ondansetron. Gynecomastia is an expected side effect of spironolactone. Soft stools are the desired therapeutic effect of docusate."
+            },
+            {
+                id: 49,
+                level: 10,
+                type: "case",
+                question: "A patient with ulcerative colitis experiencing a severe flare presents to the ED with bloody diarrhea. The patient states they've been taking senna daily for the past week. What is the nurse's priority action?",
+                options: [
+                    "Increase the senna dose to promote bowel clearance",
+                    "Immediately discontinue senna as it is contraindicated in UC flares",
+                    "Add a second laxative for more effective treatment",
+                    "Continue senna and add antidiarrheal therapy"
+                ],
+                correct: 1,
+                rationale: "Active ulcerative colitis flare is an absolute contraindication for laxative use. Laxatives can worsen inflammation, increase bleeding, and potentially cause perforation during UC flares. The senna must be stopped immediately. Other absolute contraindications include diverticulitis flare, bowel obstruction, appendicitis, and abdominal pain of unknown cause."
+            },
+            {
+                id: 50,
+                level: 10,
+                type: "case",
+                question: "A patient on long-term metoclopramide therapy for gastroparesis develops involuntary facial movements and tongue protrusion that persist even after medication discontinuation. What condition has developed?",
+                options: [
+                    "Reversible extrapyramidal symptoms that will resolve in days",
+                    "Temporary akathisia requiring only dose adjustment",
+                    "Irreversible tardive dyskinesia from long-term high-dose use",
+                    "Acute dystonic reaction treatable with diphenhydramine"
+                ],
+                correct: 2,
+                rationale: "Irreversible tardive dyskinesia is a serious adverse effect of long-term, high-dose metoclopramide use. It presents with involuntary movements that can persist even after discontinuation. This is why metoclopramide should be used at the lowest effective dose for the shortest duration possible. Metoclopramide is also contraindicated in GI obstruction, perforation, or hemorrhage."
+            }
+        ];
+        
+        // Level scenes and recaps
+        const levelData = {
+            1: {
+                scene: "⚗️ LEVEL 1: THE NAUSEA CHAMBER ⚗️\n\nYou wake up strapped to a cold metal table. Dr. Doom's voice crackles through ancient speakers: 'MWAHAHAHA! Welcome to my LAB OF PHARMACEUTICAL HORRORS! Your first test: the Vomiting Vortex! Patients are spinning in anti-gravity pods, desperately nauseated from chemotherapy. Only your knowledge of ANTIEMETICS can stop the spinning and free them! Answer correctly... or join them in eternal nausea! HAHAHA!'",
+                recap: [
+                    "Ondansetron (Zofran) blocks 5-HT3 receptors; gold standard for CINV; MAJOR RISK: QT prolongation → torsades de pointes",
+                    "Dexamethasone potentiates serotonin blockers (mechanism unknown); watch for hyperglycemia with long-term use",
+                    "Metoclopramide blocks D2 AND increases ACh → ↑ gastric emptying; CRITICAL: irreversible tardive dyskinesia with chronic use",
+                    "NVP treatment: First-line = doxylamine + B6; methylprednisolone ONLY after 10 weeks gestation",
+                    "Hyperemesis gravidarum → dehydration, ketonuria, hypokalemia requiring aggressive monitoring"
+                ]
+            },
+            2: {
+                scene: "🌊 LEVEL 2: THE MOTION SICKNESS MAZE 🌊\n\nThe room tilts violently! Dr. Doom cackles: 'Now you enter the PERPETUAL MOTION CHAMBER! The walls spin, the floor rotates, victims vomit endlessly! You must navigate through the DIARRHEA DUNGEON while everything moves! Only understanding motion sickness meds and antidiarrheals will stabilize your world! Fail, and you'll spin FOREVER in my vortex of vertigo!'",
+                recap: [
+                    "Scopolamine patch = muscarinic antagonist for motion sickness; AE: dry mouth, blurred vision, drowsiness",
+                    "Antihistamines (dimenhydrinate, meclizine) = anticholinergic effects: sedation, urinary retention, constipation",
+                    "Diphenoxylate formulated with atropine to PREVENT ABUSE (high doses → morphine-like euphoria)",
+                    "Loperamide (Imodium) = most effective opioid antidiarrheal with MINIMAL abuse risk",
+                    "Diarrhea complications: dehydration, hypokalemia, metabolic acidosis, skin breakdown; bismuth subsalicylate → salicylate toxicity risk in children"
+                ]
+            },
+            3: {
+                scene: "🔥 LEVEL 3: THE IBS INFERNO 🔥\n\nFlames erupt around cramping patients! Dr. Doom shrieks: 'BEHOLD THE BURNING BOWELS OF DESPAIR! These poor souls have Irritable Bowel Syndrome—some with diarrhea, some with constipation, ALL in agony! The old treatments FAILED them! Only the NEW IBS-specific drugs can extinguish these flames! But choose wrong... and the ISCHEMIC COLITIS will consume you ALL!'",
+                recap: [
+                    "IBS = functional disorder with abd pain + altered bowel pattern for 12+ weeks over past year",
+                    "Alosetron (Lotronex) for IBS-D in WOMEN ONLY; BLACK BOX: ischemic colitis & severe constipation → perforation; restricted program",
+                    "Lubiprostone activates Cl⁻ channels → ↑ fluid secretion → ↑ motility; for IBS-C and CIC",
+                    "Tegaserod for IBS-C in women <55 ONLY due to cardiovascular risks",
+                    "Historical failures: antispasmodics, tricyclics, bulk-forming agents, antidiarrheals (ineffective for IBS)"
+                ]
+            },
+            4: {
+                scene: "💣 LEVEL 4: THE IBD BATTLEFIELD 💣\n\nExplosions rock the lab! Dr. Doom roars: 'WELCOME TO THE INFLAMMATORY WARZONE! Crohn's disease attacks from within—transmural destruction, fistulas, abscesses! Ulcerative colitis spreads like wildfire—bloody mucus, toxic megacolon! You need the BIG GUNS: 5-ASAs, steroids, immunosuppressants, anti-TNF agents! But TNF blockers have DEADLY infections... choose your weapons wisely!'",
+                recap: [
+                    "Crohn's: transmural, skip lesions, terminal ileum, steatorrhea, fistulas/abscesses; UC: continuous from rectum, mucosa/submucosa, bloody diarrhea with mucus",
+                    "Sulfasalazine (5-ASA) ↓ prostaglandins & WBC infiltration; better for UC than Crohn's; avoid in sulfa allergy",
+                    "Budesonide targets ileum/ascending colon; risks: adrenal suppression, infection, osteoporosis",
+                    "Azathioprine/mercaptopurine: slow onset (up to 6 months!); AE: neutropenia, pancreatitis; for refractory disease",
+                    "Infliximab (anti-TNF): moderate-severe disease; AE: infusion reactions, INFECTIONS; Metronidazole: peripheral neuropathy (discontinue immediately)"
+                ]
+            },
+            5: {
+                scene: "🧬 LEVEL 5: THE ENZYME CHAMBER 🧬\n\nBubbling beakers surround you! Dr. Doom hisses: 'My MALABSORPTION MACHINE! Patients can't digest food—their pancreases are DESTROYED! Gallstones block bile ducts! Gastroparesis leaves stomachs PARALYZED! You need prokinetics, pancreatic enzymes, bile acids... but some were pulled from the market for LETHAL ARRHYTHMIAS! Can you remember which ones are SAFE?'",
+                recap: [
+                    "Metoclopramide: D2 antagonist + ↑ ACh → ↑ gastric emptying; uses: GERD, gastroparesis, CINV; IRREVERSIBLE tardive dyskinesia",
+                    "Cisapride: REMOVED from market due to QT prolongation (cardiac arrest risk)",
+                    "Pancrelipase = amylase + lipase + protease; MUST take with EVERY MEAL; can irritate mouth",
+                    "Ursodiol reduces cholesterol in bile → gradual gallstone dissolution; chenodiol best for radiolucent stones",
+                    "Anorectal preparations: local anesthetics, hydrocortisone, astringents, emollients for hemorrhoid relief"
+                ]
+            },
+            6: {
+                scene: "⛓️ LEVEL 6: THE CONSTIPATION CRYPT ⛓️\n\nChains rattle in the darkness! Dr. Doom moans: 'OHHH, the AGONY OF OBSTRUCTION! These victims haven't had a bowel movement in WEEKS! Their colons are CEMENT! But BEWARE—some laxatives will KILL them if they have obstruction, appendicitis, or UC flares! You must know the contraindications... or cause PERFORATION and DEATH!'",
+                recap: [
+                    "Colon absorbs 90% of 1500 mL daily fluid; low fiber → slow transit → excessive absorption → hard stool",
+                    "ABSOLUTE CONTRAINDICATIONS: UC flare, diverticulitis flare, obstruction, appendicitis, abdominal pain of unknown cause",
+                    "Psyllium (bulk-forming): functions like fiber, forms gel, ↑ stool mass; RISK: obstruction without adequate fluids; also prevents diarrhea in IBS",
+                    "Docusate (surfactant): softens stool by ↓ surface tension; gentle for post-op patients",
+                    "Bisacodyl (stimulant): DO NOT take with milk/antacids (premature dissolution); Senna → yellow-brown/amber urine"
+                ]
+            },
+            7: {
+                scene: "💧 LEVEL 7: THE OSMOTIC ABYSS 💧\n\nWater floods the chamber! Dr. Doom laughs maniacally: 'DROWN IN THE OSMOTIC OCEAN! These laxatives pull MASSIVE amounts of water into the intestines! Magnesium TOXICITY in renal patients! Sodium OVERLOAD causing heart failure! DEHYDRATION unto DEATH! You must balance the forces of osmosis... or be swept away in a watery GRAVE!'",
+                recap: [
+                    "MOM & sodium phosphate = osmotic laxatives drawing water into intestine; low dose = 6-12 hrs, high dose = 2-6 hrs",
+                    "RISKS: dehydration, Mg toxicity (renal insufficiency), Na retention → HTN/edema/HF exacerbation",
+                    "Mineral oil (lubricant): RISKS = lipid pneumonia (aspiration!), anal leakage, liver deposits",
+                    "Lubiprostone (Cl⁻ activator): onset ~24 hrs; for IBS-C and CIC",
+                    "LAXATIVE ABUSE: misconception of needing daily BM → diminished reflexes, severe dehydration, electrolyte chaos, colitis"
+                ]
+            },
+            8: {
+                scene: "🚽 LEVEL 8: THE BOWEL PREP TORTURE CHAMBER 🚽\n\nToilets line the walls! Dr. Doom screams: 'PURGE EVERYTHING! My colonoscopy patients drink GALLONS of vile solutions! Sodium phosphate causes KIDNEY FAILURE! PEG makes them BLOAT! Prepopik triggers SEIZURES! And then... the LOOP DIURETICS begin! FUROSEMIDE floods their bodies, stripping electrolytes, DESTROYING their ears! HAHAHAHA!'",
+                recap: [
+                    "Sodium phosphate prep: small volume BUT risks = dehydration, electrolyte chaos, hyperphosphatemia, RENAL DAMAGE",
+                    "PEG (GoLytely): isotonic, 4 liters, causes nausea/bloating; Prepopik: Mg oxide + citric acid + sodium picosulfate; RISKS = seizures, arrhythmias, renal impairment",
+                    "Furosemide (STRONGEST diuretic): blocks Na/Cl in ascending loop; IV onset = 5 min (emergencies!); PO = 60 min; works even with LOW GFR",
+                    "FUROSEMIDE AEs: hypoNa, hypoCl, hypoK, dehydration, hypotension, OTOTOXICITY, hyperglycemia, hyperuricemia (gout), ↓Mg/Ca",
+                    "CRITICAL INTERACTIONS: Digoxin toxicity (low K!), lithium retention (low Na), NSAIDs blunt effect, additive ototoxicity with gentamicin"
+                ]
+            },
+            9: {
+                scene: "⚡ LEVEL 9: THE THIAZIDE THUNDER DOME ⚡\n\nLightning strikes! Dr. Doom bellows: 'ELECTROLYTES SHATTER LIKE GLASS! Thiazides steal sodium, potassium, EVERYTHING! But they FAIL when kidneys are damaged! Meanwhile, my POTASSIUM-SPARING agents do the OPPOSITE—they RETAIN potassium until hearts STOP from hyperkalemia! Mixed with ACE inhibitors, it's a LETHAL COCKTAIL!'",
+                recap: [
+                    "HCTZ blocks Na/Cl in early DCT; NOT effective if GFR low (unlike loops!); uses: HTN, mild edema, DI",
+                    "HCTZ AEs: hypoNa, hypoK, hyperglycemia, hyperuricemia, ↓placental perfusion (fetal risk), dehydration",
+                    "Spironolactone: blocks aldosterone → retains K, excretes Na; uses: HTN, HF (mortality benefit!), hyperaldosteronism, PCOS, PMS, acne",
+                    "Spironolactone AEs: HYPERKALEMIA, gynecomastia, ED, menstrual irregularities",
+                    "DEADLY COMBO: Spironolactone + ACE/ARBs = ↑↑↑ K (life-threatening!); avoid salt substitutes & K supplements"
+                ]
+            },
+            10: {
+                scene: "💀 LEVEL 10: DR. DOOM'S FINAL CHALLENGE 💀\n\nThe lab shakes violently! Dr. Doom appears in person, eyes glowing: 'IMPRESSIVE! You've survived my gauntlet! But THIS is your FINAL EXAM! Brain swelling crushes victims' skulls—only MANNITOL can save them! Patients teeter on the edge of DEATH from drug interactions, contraindications, and LETHAL combinations! ONE mistake and everyone DIES! Prove your mastery... OR JOIN MY COLLECTION OF FAILED NURSES FOREVER!'",
+                recap: [
+                    "Mannitol = osmotic diuretic creating osmotic force in nephron → pulls water into tubules; MUST give IV",
+                    "Mannitol uses: prevent renal failure in shock, ↓ ICP, ↓ IOP; AEs: edema, N/V, headache, electrolyte imbalance",
+                    "CRITICAL: If crystals appear → warm & redissolve before giving!",
+                    "PRIORITY PRINCIPLE: Hypokalemia + digoxin = LIFE-THREATENING; UC flare = STOP laxatives immediately",
+                    "METOCLOPRAMIDE: Long-term use → IRREVERSIBLE tardive dyskinesia (facial movements, tongue protrusion persist after d/c)"
+                ]
+            }
+        };
+        
+        function MadScientistEscapeRoom() {
+            const [gameState, setGameState] = useState('title'); // title, playing, complete
+            const [currentLevel, setCurrentLevel] = useState(1);
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [selectedSATA, setSelectedSATA] = useState([]);
+            const [showFeedback, setShowFeedback] = useState(false);
+            const [score, setScore] = useState(0);
+            const [questionsAnswered, setQuestionsAnswered] = useState(0);
+            const [shuffledOptions, setShuffledOptions] = useState([]);
+            const [showRecap, setShowRecap] = useState(false);
+            
+            const currentQuestions = questionBank.filter(q => q.level === currentLevel);
+            const currentQuestion = currentQuestions[currentQuestionIndex];
+            const totalQuestions = 50;
+            const questionsPerLevel = 5;
+            
+            useEffect(() => {
+                if (currentQuestion) {
+                    // Shuffle options for MCQ and case questions
+                    if (currentQuestion.type === 'mcq' || currentQuestion.type === 'case' || currentQuestion.type === 'priority') {
+                        const optionsWithIndex = currentQuestion.options.map((opt, idx) => ({
+                            text: opt,
+                            originalIndex: idx
+                        }));
+                        const shuffled = [...optionsWithIndex].sort(() => Math.random() - 0.5);
+                        setShuffledOptions(shuffled);
+                    } else if (currentQuestion.type === 'sata') {
+                        // Shuffle SATA options
+                        const optionsWithIndex = currentQuestion.options.map((opt, idx) => ({
+                            text: opt,
+                            originalIndex: idx
+                        }));
+                        const shuffled = [...optionsWithIndex].sort(() => Math.random() - 0.5);
+                        setShuffledOptions(shuffled);
+                    }
+                }
+            }, [currentQuestion]);
+            
+            const startGame = () => {
+                setGameState('playing');
+                setCurrentLevel(1);
+                setCurrentQuestionIndex(0);
+                setScore(0);
+                setQuestionsAnswered(0);
+                setShowRecap(false);
+            };
+            
+            const handleAnswer = () => {
+                let isCorrect = false;
+                
+                if (currentQuestion.type === 'sata') {
+                    // Check if SATA answer is correct
+                    const correctSet = new Set(currentQuestion.correct);
+                    const selectedSet = new Set(selectedSATA);
+                    isCorrect = correctSet.size === selectedSet.size && 
+                                [...correctSet].every(x => selectedSet.has(x));
+                } else {
+                    // Check if MCQ/case/priority answer is correct
+                    isCorrect = selectedAnswer === currentQuestion.correct;
+                }
+                
+                if (isCorrect) {
+                    setScore(score + 1);
+                }
+                
+                setQuestionsAnswered(questionsAnswered + 1);
+                setShowFeedback(true);
+            };
+            
+            const nextQuestion = () => {
+                setShowFeedback(false);
+                setSelectedAnswer(null);
+                setSelectedSATA([]);
+                
+                if (currentQuestionIndex < questionsPerLevel - 1) {
+                    setCurrentQuestionIndex(currentQuestionIndex + 1);
+                } else {
+                    // Show recap at end of level
+                    setShowRecap(true);
+                }
+            };
+            
+            const nextLevel = () => {
+                setShowRecap(false);
+                if (currentLevel < 10) {
+                    setCurrentLevel(currentLevel + 1);
+                    setCurrentQuestionIndex(0);
+                } else {
+                    setGameState('complete');
+                }
+            };
+            
+            const handleSATAChange = (originalIndex) => {
+                if (selectedSATA.includes(originalIndex)) {
+                    setSelectedSATA(selectedSATA.filter(i => i !== originalIndex));
+                } else {
+                    setSelectedSATA([...selectedSATA, originalIndex]);
+                }
+            };
+            
+            if (gameState === 'title') {
+                return (
+                    <div className="game-container">
+                        <div className="title-screen">
+                            <h1>🧪 DR. DOOM'S PHARMACOLOGY LAB 🧪</h1>
+                            <div style={{ fontSize: '1.2em', margin: '30px 0', color: '#00ffff' }}>
+                                <p style={{ marginBottom: '15px' }}>💀 10 LEVELS OF HORROR 💀</p>
+                                <p style={{ marginBottom: '15px' }}>⚗️ 50 NCLEX-STYLE QUESTIONS ⚗️</p>
+                                <p style={{ marginBottom: '15px' }}>🧬 ESCAPE THE MAD SCIENTIST 🧬</p>
+                            </div>
+                            <div style={{ fontSize: '0.9em', color: '#ffccff', lineHeight: '1.8', maxWidth: '800px', margin: '0 auto 20px' }}>
+                                <p style={{ marginBottom: '10px' }}>You've been kidnapped by the insane Dr. Doom and trapped in his pharmaceutical horror lab!</p>
+                                <p style={{ marginBottom: '10px' }}>Navigate through 10 terrifying chambers testing your knowledge of:</p>
+                                <p>Antiemetics • Motion Sickness Meds • Antidiarrheals • IBS/IBD Drugs • Laxatives • Diuretics</p>
+                            </div>
+                            <button className="start-btn" onClick={startGame}>
+                                ENTER THE LAB
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+            
+            if (gameState === 'complete') {
+                const percentage = ((score / totalQuestions) * 100).toFixed(1);
+                let message = "";
+                if (percentage >= 92) message = "🏆 PERFECT MASTERY! You've defeated Dr. Doom and escaped with FULL honors!";
+                else if (percentage >= 85) message = "⭐ EXCELLENT! You escaped Dr. Doom's lab with expert-level knowledge!";
+                else if (percentage >= 75) message = "✅ PASS! You survived the horror and proved your nursing skills!";
+                else message = "💀 Dr. Doom claims another victim... Review the material and try again!";
+                
+                return (
+                    <div className="game-container">
+                        <div className="completion-screen">
+                            <div className="completion-title">
+                                {percentage >= 75 ? "🎉 ESCAPED! 🎉" : "💀 CAPTURED 💀"}
+                            </div>
+                            <div className="score-display">
+                                FINAL SCORE: {score}/{totalQuestions}
+                            </div>
+                            <div className="score-display" style={{ fontSize: '1.5em', color: percentage >= 75 ? '#00ff00' : '#ff0000' }}>
+                                {percentage}%
+                            </div>
+                            <div style={{ fontSize: '1em', color: '#ffccff', margin: '30px 0', lineHeight: '1.8' }}>
+                                {message}
+                            </div>
+                            <div className="stats">
+                                <div className="stat-row">
+                                    <span>Questions Answered:</span>
+                                    <span>{questionsAnswered}</span>
+                                </div>
+                                <div className="stat-row">
+                                    <span>Correct Answers:</span>
+                                    <span>{score}</span>
+                                </div>
+                                <div className="stat-row">
+                                    <span>Incorrect Answers:</span>
+                                    <span>{totalQuestions - score}</span>
+                                </div>
+                                <div className="stat-row">
+                                    <span>Levels Completed:</span>
+                                    <span>10/10</span>
+                                </div>
+                            </div>
+                            <button className="start-btn" onClick={startGame} style={{ marginTop: '30px' }}>
+                                TRY AGAIN
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+            
+            if (showRecap) {
+                return (
+                    <div className="game-container">
+                        <div className="level-container">
+                            <div className="recap-section">
+                                <div className="recap-title">
+                                    💀 LEVEL {currentLevel} COMPLETE! 💀
+                                </div>
+                                <div style={{ fontSize: '1.2em', color: '#00ffff', margin: '20px 0', textAlign: 'center' }}>
+                                    You've survived the chamber! Here are the key concepts to remember:
+                                </div>
+                                <ul className="recap-list">
+                                    {levelData[currentLevel].recap.map((item, idx) => (
+                                        <li key={idx}>{item}</li>
+                                    ))}
+                                </ul>
+                                <div style={{ textAlign: 'center', marginTop: '30px' }}>
+                                    <button className="next-btn" onClick={nextLevel}>
+                                        {currentLevel < 10 ? `ENTER LEVEL ${currentLevel + 1}` : 'SEE FINAL RESULTS'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+            
+            const progressPercentage = (questionsAnswered / totalQuestions) * 100;
+            
+            let isCorrect = false;
+            if (showFeedback) {
+                if (currentQuestion.type === 'sata') {
+                    const correctSet = new Set(currentQuestion.correct);
+                    const selectedSet = new Set(selectedSATA);
+                    isCorrect = correctSet.size === selectedSet.size && 
+                                [...correctSet].every(x => selectedSet.has(x));
+                } else {
+                    isCorrect = selectedAnswer === currentQuestion.correct;
+                }
+            }
+            
+            const correctAnimation = "⚗️ SUCCESS! ⚗️\n\nThe lab equipment sparks and whirs! A secret door slides open with a hiss of green smoke! The mad scientist screams in frustration as you escape to the next chamber! Pixel skulls glow green in approval!";
+            
+            const incorrectAnimation = "💀 OH NO! 💀\n\nRed alarms blare! Dr. Doom cackles maniacally as toxic gas fills the chamber! You cough and stumble, but survive... barely. The correct path reveals itself through the purple mist. Study the answer and try the next question!";
+            
+            return (
+                <div className="game-container">
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${progressPercentage}%` }}>
+                            {questionsAnswered}/{totalQuestions}
+                        </div>
+                    </div>
+                    
+                    <div style={{ textAlign: 'center', color: '#00ff00', fontSize: '1.5em', margin: '20px 0', fontFamily: 'Creepster, cursive' }}>
+                        LEVEL {currentLevel} - QUESTION {currentQuestionIndex + 1}/{questionsPerLevel}
+                    </div>
+                    
+                    {currentQuestionIndex === 0 && (
+                        <div className="lab-scene">
+                            <div className="scientist-text">
+                                {levelData[currentLevel].scene}
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="level-container">
+                        <div className="question-card">
+                            <div style={{ fontSize: '0.8em', color: '#ff00ff', marginBottom: '10px', textTransform: 'uppercase' }}>
+                                {currentQuestion.type === 'mcq' ? '📝 Multiple Choice' : 
+                                 currentQuestion.type === 'sata' ? '☑️ Select All That Apply' :
+                                 currentQuestion.type === 'case' ? '🏥 Case Study' :
+                                 '⚡ Priority Question'}
+                            </div>
+                            <div className="question-text">
+                                {currentQuestion.question}
+                            </div>
+                            
+                            {currentQuestion.type === 'sata' ? (
+                                <div>
+                                    {shuffledOptions.map((option, idx) => (
+                                        <div key={idx} className={`answer-option ${
+                                            showFeedback && currentQuestion.correct.includes(option.originalIndex) ? 'correct' :
+                                            showFeedback && selectedSATA.includes(option.originalIndex) && !currentQuestion.correct.includes(option.originalIndex) ? 'incorrect' : ''
+                                        }`}>
+                                            <div className="checkbox-container">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedSATA.includes(option.originalIndex)}
+                                                    onChange={() => handleSATAChange(option.originalIndex)}
+                                                    disabled={showFeedback}
+                                                />
+                                                <label>{option.text}</label>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div>
+                                    {shuffledOptions.map((option, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`answer-option ${selectedAnswer === option.originalIndex ? 'selected' : ''} ${
+                                                showFeedback && option.originalIndex === currentQuestion.correct ? 'correct' :
+                                                showFeedback && selectedAnswer === option.originalIndex && selectedAnswer !== currentQuestion.correct ? 'incorrect' : ''
+                                            }`}
+                                            onClick={() => !showFeedback && setSelectedAnswer(option.originalIndex)}
+                                        >
+                                            {option.text}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {!showFeedback && (
+                                <button
+                                    className="submit-btn"
+                                    onClick={handleAnswer}
+                                    disabled={currentQuestion.type === 'sata' ? selectedSATA.length === 0 : selectedAnswer === null}
+                                >
+                                    SUBMIT ANSWER
+                                </button>
+                            )}
+                            
+                            {showFeedback && (
+                                <div className={`feedback ${isCorrect ? 'correct' : 'incorrect'}`}>
+                                    <div className="animation-text">
+                                        {isCorrect ? correctAnimation : incorrectAnimation}
+                                    </div>
+                                    <div className="rationale">
+                                        <strong>📚 RATIONALE:</strong><br />
+                                        {currentQuestion.rationale}
+                                    </div>
+                                    <button className="next-btn" onClick={nextQuestion}>
+                                        {currentQuestionIndex < questionsPerLevel - 1 ? 'NEXT QUESTION' : 'VIEW LEVEL RECAP'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<MadScientistEscapeRoom />, document.getElementById('root'));
+    </script>
+</body>
+</html>

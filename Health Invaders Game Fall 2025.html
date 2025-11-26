@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Promotion Invaders</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .game-container {
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        
+        #gameCanvas {
+            border: 4px solid white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #1a1a2e;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid white;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .game-over.show {
+            display: block;
+        }
+        
+        .game-over h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        
+        .game-over button {
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .game-over button:hover {
+            background: #45b7aa;
+            transform: scale(1.05);
+        }
+        
+        .question-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #4ecdc4;
+            display: none;
+            z-index: 1000;
+            max-width: 600px;
+        }
+        
+        .question-popup.show {
+            display: block;
+        }
+        
+        .answer-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 10px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            width: calc(50% - 10px);
+        }
+        
+        .answer-btn:hover {
+            background: #5568d3;
+        }
+        
+        .answer-btn.correct {
+            background: #51cf66;
+        }
+        
+        .answer-btn.wrong {
+            background: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌙 Health Promotion Invaders 💉</h1>
+        <div class="instructions">
+            Use ← → Arrow Keys to move | SPACE to shoot | Destroy health risks and answer questions to win!
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="stats">
+            <div class="stat-box">Score: <span id="score">0</span></div>
+            <div class="stat-box">Lives: <span id="lives">3</span></div>
+            <div class="stat-box">Level: <span id="level">1</span></div>
+        </div>
+    </div>
+    
+    <div class="game-over" id="gameOver">
+        <h2>Game Over!</h2>
+        <p style="font-size: 1.5em;">Final Score: <span id="finalScore">0</span></p>
+        <p style="margin-top: 15px;">You've learned about health promotion!</p>
+        <button onclick="restartGame()">Play Again</button>
+    </div>
+    
+    <div class="question-popup" id="questionPopup">
+        <h3 style="margin-bottom: 20px; color: #4ecdc4;" id="questionText"></h3>
+        <div id="answerButtons"></div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game variables
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = true;
+        let gamePaused = false;
+        let questionsAnswered = 0;
+        let enemiesKilled = 0;
+        
+        // Player
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 60,
+            width: 50,
+            height: 40,
+            speed: 5,
+            color: '#4ecdc4'
+        };
+        
+        // Controls
+        const keys = {};
+        
+        // Bullets
+        let bullets = [];
+        
+        // Enemies (Health Risks)
+        let enemies = [];
+        const enemyTypes = [
+            { name: 'Insomnia', color: '#ff6b6b', points: 10 },
+            { name: 'Sleep Apnea', color: '#ffd93d', points: 15 },
+            { name: 'Poor Hygiene', color: '#a8e6cf', points: 10 },
+            { name: 'Sedentary Life', color: '#fab1a0', points: 10 },
+            { name: 'Stress', color: '#74b9ff', points: 15 }
+        ];
+        
+        // Questions
+        const questions = [
+            {
+                q: "What type of prevention is a mammogram?",
+                answers: ["Primary", "Secondary", "Tertiary", "Primordial"],
+                correct: 1
+            },
+            {
+                q: "How many hours of sleep do adults need?",
+                answers: ["5-6 hours", "7-9 hours", "10-12 hours", "4-5 hours"],
+                correct: 1
+            },
+            {
+                q: "What is the FIRST-LINE treatment for sleep issues?",
+                answers: ["Medications", "Surgery", "Sleep hygiene", "Coffee restriction only"],
+                correct: 2
+            },
+            {
+                q: "Vaccines are what type of prevention?",
+                answers: ["Primary", "Secondary", "Tertiary", "None"],
+                correct: 0
+            },
+            {
+                q: "What should be assessed FIRST per Maslow?",
+                answers: ["Self-esteem", "Safety", "Physiological needs", "Love"],
+                correct: 2
+            },
+            {
+                q: "Cardiac rehab is what prevention level?",
+                answers: ["Primary", "Secondary", "Tertiary", "Primordial"],
+                correct: 2
+            },
+            {
+                q: "What worsens sleep apnea?",
+                answers: ["Exercise", "Benzodiazepines", "Water", "Fruits"],
+                correct: 1
+            },
+            {
+                q: "Adolescents need how many hours of sleep?",
+                answers: ["6-7 hours", "8-10 hours", "11-13 hours", "7-8 hours"],
+                correct: 1
+            }
+        ];
+        
+        let currentQuestion = null;
+        
+        // Initialize enemies
+        function createEnemies() {
+            enemies = [];
+            const rows = 3 + level;
+            const cols = 6;
+            const padding = 15;
+            const enemyWidth = 60;
+            const enemyHeight = 40;
+            const offsetX = 80;
+            const offsetY = 50;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+                    enemies.push({
+                        x: offsetX + col * (enemyWidth + padding),
+                        y: offsetY + row * (enemyHeight + padding),
+                        width: enemyWidth,
+                        height: enemyHeight,
+                        ...type,
+                        active: true,
+                        moveRight: true
+                    });
+                }
+            }
+        }
+        
+        // Draw player
+        function drawPlayer() {
+            // Body
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x + 10, player.y + 10, 30, 30);
+            
+            // Cross symbol (nurse)
+            ctx.fillStyle = 'white';
+            ctx.fillRect(player.x + 20, player.y + 5, 10, 30);
+            ctx.fillRect(player.x + 10, player.y + 15, 30, 10);
+        }
+        
+        // Draw enemy
+        function drawEnemy(enemy) {
+            if (!enemy.active) return;
+            
+            ctx.fillStyle = enemy.color;
+            ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(enemy.name, enemy.x + enemy.width/2, enemy.y + enemy.height/2 + 3);
+        }
+        
+        // Draw bullet
+        function drawBullet(bullet) {
+            ctx.fillStyle = '#51cf66';
+            ctx.fillRect(bullet.x, bullet.y, 4, 15);
+        }
+        
+        // Update game
+        function update() {
+            if (!gameRunning || gamePaused) return;
+            
+            // Move player
+            if (keys['ArrowLeft'] && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight'] && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+            
+            // Move bullets
+            bullets = bullets.filter(bullet => {
+                bullet.y -= 7;
+                return bullet.y > 0;
+            });
+            
+            // Move enemies
+            let moveDown = false;
+            enemies.forEach(enemy => {
+                if (!enemy.active) return;
+                
+                if (enemy.moveRight) {
+                    enemy.x += 1;
+                    if (enemy.x + enemy.width > canvas.width - 20) {
+                        moveDown = true;
+                    }
+                } else {
+                    enemy.x -= 1;
+                    if (enemy.x < 20) {
+                        moveDown = true;
+                    }
+                }
+            });
+            
+            if (moveDown) {
+                enemies.forEach(enemy => {
+                    enemy.y += 20;
+                    enemy.moveRight = !enemy.moveRight;
+                    
+                    // Check if enemies reached player
+                    if (enemy.active && enemy.y + enemy.height > player.y) {
+                        lives--;
+                        updateStats();
+                        if (lives <= 0) {
+                            endGame();
+                        } else {
+                            enemies.forEach(e => e.y = 50);
+                        }
+                    }
+                });
+            }
+            
+            // Check collisions
+            bullets.forEach((bullet, bIndex) => {
+                enemies.forEach((enemy, eIndex) => {
+                    if (enemy.active &&
+                        bullet.x < enemy.x + enemy.width &&
+                        bullet.x + 4 > enemy.x &&
+                        bullet.y < enemy.y + enemy.height &&
+                        bullet.y + 15 > enemy.y) {
+                        
+                        enemy.active = false;
+                        bullets.splice(bIndex, 1);
+                        score += enemy.points;
+                        enemiesKilled++;
+                        updateStats();
+                        
+                        // Show question every 5 enemies killed
+                        if (enemiesKilled % 5 === 0) {
+                            gamePaused = true;
+                            showQuestion();
+                        }
+                        
+                        // Check if level complete
+                        if (enemies.every(e => !e.active)) {
+                            levelUp();
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Draw everything
+        function draw() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw stars
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 50; i++) {
+                const x = (i * 37) % canvas.width;
+                const y = (i * 17) % canvas.height;
+                ctx.fillRect(x, y, 2, 2);
+            }
+            
+            drawPlayer();
+            enemies.forEach(drawEnemy);
+            bullets.forEach(drawBullet);
+        }
+        
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Controls
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            if (e.key === ' ' && gameRunning && !gamePaused) {
+                e.preventDefault();
+                bullets.push({
+                    x: player.x + player.width / 2 - 2,
+                    y: player.y
+                });
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Update stats display
+        function updateStats() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('level').textContent = level;
+        }
+        
+        // Level up
+        function levelUp() {
+            level++;
+            gamePaused = true;
+            // Don't show question on level up since we're showing them periodically now
+            createEnemies();
+            gamePaused = false;
+            updateStats();
+        }
+        
+        // Show question
+        function showQuestion() {
+            const popup = document.getElementById('questionPopup');
+            const questionText = document.getElementById('questionText');
+            const answerButtons = document.getElementById('answerButtons');
+            
+            currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            questionText.textContent = currentQuestion.q;
+            
+            answerButtons.innerHTML = '';
+            currentQuestion.answers.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = answer;
+                btn.onclick = () => checkAnswer(index);
+                answerButtons.appendChild(btn);
+            });
+            
+            popup.classList.add('show');
+        }
+        
+        // Check answer
+        function checkAnswer(index) {
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            if (index === currentQuestion.correct) {
+                buttons[index].classList.add('correct');
+                score += 50;
+                questionsAnswered++;
+                setTimeout(() => {
+                    document.getElementById('questionPopup').classList.remove('show');
+                    gamePaused = false;
+                    updateStats();
+                }, 1000);
+            } else {
+                buttons[index].classList.add('wrong');
+                buttons[currentQuestion.correct].classList.add('correct');
+                lives--;
+                updateStats();
+                setTimeout(() => {
+                    document.getElementById('questionPopup').classList.remove('show');
+                    if (lives <= 0) {
+                        endGame();
+                    } else {
+                        gamePaused = false;
+                    }
+                }, 1500);
+            }
+        }
+        
+        // End game
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').classList.add('show');
+        }
+        
+        // Restart game
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            level = 1;
+            gameRunning = true;
+            gamePaused = false;
+            bullets = [];
+            questionsAnswered = 0;
+            enemiesKilled = 0;
+            player.x = canvas.width / 2 - 25;
+            
+            createEnemies();
+            updateStats();
+            
+            document.getElementById('gameOver').classList.remove('show');
+        }
+        
+        // Start game
+        createEnemies();
+        updateStats();
+        gameLoop();
+    </script>
+</body>
+</html>

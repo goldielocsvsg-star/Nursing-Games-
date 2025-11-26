@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Nursing Quiz Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1F4E78 0%, #2E75B5 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #2E75B5;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2E75B5;
+        }
+
+        .game-menu {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .game-mode {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .game-mode:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .game-mode h3 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .game-mode p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .quiz-area {
+            padding: 40px;
+            display: none;
+        }
+
+        .quiz-area.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #2E75B5;
+        }
+
+        .question-number {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.4em;
+            color: #1F4E78;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .answer-btn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin: 15px 0;
+            background: white;
+            border: 3px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .answer-btn:hover:not(:disabled) {
+            border-color: #2E75B5;
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .answer-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .answer-btn.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .answer-btn::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(46, 117, 181, 0.1));
+            transition: width 0.3s ease;
+        }
+
+        .answer-btn:hover::before {
+            width: 100%;
+        }
+
+        .explanation {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            display: none;
+        }
+
+        .next-btn.show {
+            display: inline-block;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .results {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .results h2 {
+            font-size: 2.5em;
+            color: #1F4E78;
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 4em;
+            font-weight: bold;
+            color: #28a745;
+            margin: 30px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .performance-meter {
+            width: 200px;
+            height: 200px;
+            margin: 30px auto;
+            position: relative;
+        }
+
+        .meter-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#28a745 0deg, #28a745 var(--percentage), #e9ecef var(--percentage));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .meter-inner {
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #1F4E78;
+        }
+
+        .achievement {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 25px;
+            margin: 10px;
+            font-size: 1.2em;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .action-buttons {
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2E75B5 0%, #5B9BD5 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            color: #dc3545;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .streak {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            border-radius: 20px;
+            margin: 10px;
+            font-weight: bold;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.8); }
+        }
+
+        .flashcard {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+
+        .matching-game {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .matching-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .matching-card:hover {
+            transform: scale(1.05);
+        }
+
+        .matching-card.selected {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            transform: scale(1.1);
+        }
+
+        .matching-card.matched {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            cursor: default;
+            animation: matchPulse 0.5s ease;
+        }
+
+        @keyframes matchPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .hint-btn {
+            background: #ffc107;
+            color: #333;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn:hover {
+            background: #ffb300;
+            transform: scale(1.05);
+        }
+
+        .hint-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .score-board {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .question-text {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🎮 Nursing Quiz Challenge</h1>
+            <p>Master Your Knowledge Through Fun Games!</p>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="totalScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Streak</div>
+                <div class="score-value" id="streak">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Best</div>
+                <div class="score-value" id="bestScore">0</div>
+            </div>
+        </div>
+
+        <!-- Game Menu -->
+        <div class="game-menu" id="gameMenu">
+            <h2 style="color: #1F4E78; margin-bottom: 30px; font-size: 2em;">Choose Your Game Mode</h2>
+            
+            <div class="game-mode" onclick="startQuiz('multiple-choice')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h3>📝 Multiple Choice Quiz</h3>
+                <p>Test your knowledge with challenging questions</p>
+            </div>
+
+            <div class="game-mode" onclick="startQuiz('rapid-fire')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h3>⚡ Rapid Fire</h3>
+                <p>Beat the clock! 15 seconds per question</p>
+            </div>
+
+            <div class="game-mode" onclick="startQuiz('flashcards')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <h3>🃏 Flashcard Review</h3>
+                <p>Study mnemonics and key concepts</p>
+            </div>
+
+            <div class="game-mode" onclick="startQuiz('matching')" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <h3>🎯 Matching Game</h3>
+                <p>Match electrolytes with their signs & symptoms</p>
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="quiz-area" id="quizArea">
+            <div class="timer" id="timer" style="display: none;"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div id="questionContainer"></div>
+
+            <div style="text-align: center;">
+                <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 Use Hint (3 left)</button>
+                <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <h2>🎉 Game Complete!</h2>
+            <div class="final-score" id="finalScore">0/0</div>
+            <div class="performance-meter" id="performanceMeter">
+                <div class="meter-circle" style="--percentage: 0deg;">
+                    <div class="meter-inner" id="percentage">0%</div>
+                </div>
+            </div>
+            <div id="achievements"></div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="restartGame()">🔄 Play Again</button>
+                <button class="btn btn-secondary" onclick="backToMenu()">🏠 Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let currentMode = '';
+        let currentQuestion = 0;
+        let score = 0;
+        let streak = 0;
+        let bestStreak = 0;
+        let questions = [];
+        let timer = null;
+        let timeLeft = 15;
+        let hintsLeft = 3;
+        let bestScore = localStorage.getItem('bestScore') || 0;
+        document.getElementById('bestScore').textContent = bestScore;
+
+        // Question Bank
+        const questionBank = [
+            {
+                question: "What is the normal range for serum potassium (K⁺)?",
+                answers: ["3.5-5.0 mEq/L", "2.5-4.0 mEq/L", "4.5-6.0 mEq/L", "3.0-4.5 mEq/L"],
+                correct: 0,
+                explanation: "The normal range for potassium is 3.5-5.0 mEq/L. Values below 3.5 indicate hypokalemia, and above 5.0 indicate hyperkalemia.",
+                category: "Electrolytes"
+            },
+            {
+                question: "Which mnemonic helps remember the signs of HYPOkalemia?",
+                answers: ["WAVES", "SLOW HUG", "CATS", "DROPS"],
+                correct: 1,
+                explanation: "SLOW HUG helps remember hypokalemia signs: Skeletal weakness, Low energy, Oxygen impaired, Weak T waves, Hypertension risk, U waves, GI losses.",
+                category: "Mnemonics"
+            },
+            {
+                question: "What is the FIRST-LINE medication for osteoporosis?",
+                answers: ["Calcitonin", "Bisphosphonates", "Denosumab", "Calcium supplements"],
+                correct: 1,
+                explanation: "Bisphosphonates (like alendronate, risedronate) are the first-line treatment for osteoporosis. They inhibit osteoclast-mediated bone resorption.",
+                category: "Pharmacology"
+            },
+            {
+                question: "In hyperkalemia, peaked T waves on ECG are part of which mnemonic?",
+                answers: ["SLOW HUG", "WAVES", "TWITCH", "DROPS"],
+                correct: 1,
+                explanation: "WAVES helps remember hyperkalemia: Weakness, Abdominal cramps, Ventricular dysrhythmias, ECG changes (peaked T waves), Sensory changes.",
+                category: "Mnemonics"
+            },
+            {
+                question: "What is the most serious consequence of hyperkalemia?",
+                answers: ["Constipation", "Cardiac arrest", "Muscle weakness", "Confusion"],
+                correct: 1,
+                explanation: "Cardiac arrest is the most serious consequence of hyperkalemia. The peaked T waves and dysrhythmias can lead to ventricular fibrillation and cardiac arrest.",
+                category: "Critical Concepts"
+            },
+            {
+                question: "Chvostek sign and tetany are symptoms of which electrolyte imbalance?",
+                answers: ["Hypocalcemia", "Hypercalcemia", "Hypokalemia", "Hyperkalemia"],
+                correct: 0,
+                explanation: "Chvostek sign and tetany indicate hypocalcemia, remembered by the mnemonic CATS (Chvostek, Altered reflexes, Tetany, Seizures).",
+                category: "Electrolytes"
+            },
+            {
+                question: "What is a critical nursing action when administering bisphosphonates?",
+                answers: ["Give with milk", "Patient must remain upright for 30-60 min", "Administer at bedtime", "Mix with food"],
+                correct: 1,
+                explanation: "Patients must remain upright for 30-60 minutes after taking bisphosphonates to prevent esophagitis. Give on empty stomach with full glass of water.",
+                category: "Nursing Actions"
+            },
+            {
+                question: "The normal range for serum calcium is:",
+                answers: ["7.0-9.0 mg/dL", "9.0-10.5 mg/dL", "11.0-12.5 mg/dL", "8.0-9.5 mg/dL"],
+                correct: 1,
+                explanation: "Normal serum calcium is 9.0-10.5 mg/dL. Below 9.0 is hypocalcemia, above 10.5 is hypercalcemia.",
+                category: "Lab Values"
+            },
+            {
+                question: "Which medication requires TB screening before starting?",
+                answers: ["Methotrexate", "Biologic DMARDs", "Hydroxychloroquine", "NSAIDs"],
+                correct: 1,
+                explanation: "Biologic DMARDs (like etanercept, adalimumab) that block TNF-alpha require TB screening before starting due to increased infection risk.",
+                category: "Pharmacology"
+            },
+            {
+                question: "What is the maximum rate for IV potassium infusion?",
+                answers: ["20 mEq/h", "5 mEq/h", "10 mEq/h", "15 mEq/h"],
+                correct: 2,
+                explanation: "IV potassium should be infused at a maximum rate of 10 mEq/h to prevent cardiac complications. NEVER give as IV push.",
+                category: "Nursing Actions"
+            },
+            {
+                question: "Decreased DTRs and respiratory depression indicate which imbalance?",
+                answers: ["Hypomagnesemia", "Hypermagnesemia", "Hypocalcemia", "Hypokalemia"],
+                correct: 1,
+                explanation: "Hypermagnesemia causes DROPS: Decreased DTRs, Respiratory depression, Output decreased, PR prolonged, Sedation.",
+                category: "Electrolytes"
+            },
+            {
+                question: "What dietary intake is recommended for osteoporosis prevention?",
+                answers: ["Calcium 500mg/day", "Calcium 1000-1200mg/day", "Calcium 1500-2000mg/day", "Calcium 800-900mg/day"],
+                correct: 1,
+                explanation: "Recommended calcium intake is 1000-1200 mg/day, along with vitamin D 800-1000 IU/day for osteoporosis prevention.",
+                category: "Patient Teaching"
+            },
+            {
+                question: "Methotrexate requires which important patient teaching?",
+                answers: ["Take daily", "Avoid pregnancy", "Take with antacids", "No lab monitoring needed"],
+                correct: 1,
+                explanation: "Methotrexate is TERATOGENIC - patients must avoid pregnancy. It requires weekly dosing, CBC/LFT monitoring, and folic acid supplementation.",
+                category: "Patient Teaching"
+            },
+            {
+                question: "Which condition is characterized by pannus formation?",
+                answers: ["Osteoporosis", "Osteoarthritis", "Rheumatoid Arthritis", "Osteopenia"],
+                correct: 2,
+                explanation: "Rheumatoid arthritis involves pannus formation (inflammatory tissue) that erodes cartilage and bone in joints.",
+                category: "Pathophysiology"
+            },
+            {
+                question: "The normal range for serum magnesium is:",
+                answers: ["1.3-2.1 mEq/L", "2.5-3.5 mEq/L", "0.8-1.2 mEq/L", "1.8-2.8 mEq/L"],
+                correct: 0,
+                explanation: "Normal serum magnesium is 1.3-2.1 mEq/L. Below 1.3 is hypomagnesemia, above 2.1 is hypermagnesemia.",
+                category: "Lab Values"
+            },
+            {
+                question: "What percentage of total body water is INTRAcellular?",
+                answers: ["20%", "40%", "60%", "80%"],
+                correct: 1,
+                explanation: "Intracellular fluid (ICF) makes up about 2/3 or 40% of total body water. Extracellular fluid (ECF) is about 1/3 or 20%.",
+                category: "Fluids"
+            },
+            {
+                question: "In HYPERtonic dehydration, water moves:",
+                answers: ["Into cells", "Out of cells", "Stays the same", "Into blood vessels only"],
+                correct: 1,
+                explanation: "In hypertonic states (too salty), water is drawn OUT of cells to try to dilute the hypertonic pool, causing cell dehydration.",
+                category: "Fluids"
+            },
+            {
+                question: "Which adverse effect requires eye exams every 6-12 months?",
+                answers: ["Methotrexate", "Hydroxychloroquine", "Leflunomide", "Sulfasalazine"],
+                correct: 1,
+                explanation: "Hydroxychloroquine can cause retinopathy, so patients require eye exams every 6-12 months.",
+                category: "Pharmacology"
+            },
+            {
+                question: "What is the gold standard test for diagnosing osteoporosis?",
+                answers: ["X-ray", "DEXA scan", "MRI", "CT scan"],
+                correct: 1,
+                explanation: "DEXA scan (Bone Mineral Density) is the gold standard. T-score ≤ -2.5 indicates osteoporosis, -1 to -2.5 indicates osteopenia.",
+                category: "Diagnostics"
+            },
+            {
+                question: "Which electrolyte is the principal electrolyte OUTSIDE cells?",
+                answers: ["Potassium", "Calcium", "Sodium", "Magnesium"],
+                correct: 2,
+                explanation: "Sodium (Na⁺) is the principal electrolyte outside cells (in ECF). Potassium (K⁺) is the most abundant inside cells (ICF).",
+                category: "Electrolytes"
+            },
+            {
+                question: "Lethargy and shortened ST segment indicate which imbalance?",
+                answers: ["Hypocalcemia", "Hypercalcemia", "Hypokalemia", "Hyperkalemia"],
+                correct: 1,
+                explanation: "Hypercalcemia causes LAD SCALE symptoms: Lethargy, Anorexia, Diminished DTRs, Shortened ST, Confusion, Arrest risk, Loss of focus, ECG block.",
+                category: "Electrolytes"
+            },
+            {
+                question: "What is the priority treatment for severe hyperkalemia?",
+                answers: ["Oral potassium binders", "Dialysis first", "Calcium gluconate IV", "Furosemide PO"],
+                correct: 2,
+                explanation: "First: STOP all K⁺ intake. Then give calcium gluconate IV to immediately offset cardiotoxicity, followed by insulin/glucose to shift K⁺ into cells.",
+                category: "Treatment"
+            },
+            {
+                question: "NSAIDs for osteoarthritis should be taken:",
+                answers: ["On empty stomach", "With food or milk", "At bedtime only", "With antacids"],
+                correct: 1,
+                explanation: "NSAIDs should be taken with food or milk to reduce GI upset and bleeding risk. Monitor for GI symptoms and renal function.",
+                category: "Nursing Actions"
+            },
+            {
+                question: "Twitching and hyperactive reflexes indicate which imbalance?",
+                answers: ["Hypermagnesemia", "Hypomagnesemia", "Hypercalcemia", "Hyperkalemia"],
+                correct: 1,
+                explanation: "Hypomagnesemia causes TWITCH: Tetany, Weakness, Insomnia, Tachycardia, Chvostek, Hyperactive DTRs.",
+                category: "Mnemonics"
+            },
+            {
+                question: "Which type of arthritis is degenerative (wear and tear)?",
+                answers: ["Rheumatoid Arthritis", "Osteoarthritis", "Gouty Arthritis", "Psoriatic Arthritis"],
+                correct: 1,
+                explanation: "Osteoarthritis (OA) is degenerative joint disease caused by repeated stress and mechanical wear on cartilage.",
+                category: "Pathophysiology"
+            }
+        ];
+
+        // Flashcard Bank
+        const flashcards = [
+            { front: "SLOW HUG", back: "HYPOkalemia Signs:\nS - Skeletal weakness\nL - Low energy\nO - Oxygen impaired\nW - Weak T waves\nH - Hypertension risk\nU - U waves\nG - GI losses" },
+            { front: "W.A.V.E.S.", back: "HYPERkalemia Signs:\nW - Weakness\nA - Abdominal cramps\nV - Ventricular dysrhythmias\nE - ECG changes (peaked T)\nS - Sensory changes" },
+            { front: "C.A.T.S.", back: "HYPOcalcemia Signs:\nC - Chvostek sign\nA - Altered (hyperactive) reflexes\nT - Tetany\nS - Seizures" },
+            { front: "LAD SCALE", back: "HYPERcalcemia Signs:\nL - Lethargy\nA - Anorexia\nD - Diminished DTRs\nS - Shortened ST\nC - Confusion\nA - Arrest risk\nL - Loss of focus\nE - ECG block" },
+            { front: "T.W.I.T.C.H.", back: "HYPOmagnesemia Signs:\nT - Tetany\nW - Weakness\nI - Insomnia\nT - Tachycardia\nC - Chvostek sign\nH - Hyperactive DTRs" },
+            { front: "D.R.O.P.S.", back: "HYPERmagnesemia Signs:\nD - Decreased DTRs\nR - Respiratory depression\nO - Output decreased\nP - PR prolonged\nS - Sedation" },
+            { front: "Normal K⁺", back: "3.5-5.0 mEq/L" },
+            { front: "Normal Ca²⁺", back: "9.0-10.5 mg/dL" },
+            { front: "Normal Mg²⁺", back: "1.3-2.1 mEq/L" },
+            { front: "Normal Na⁺", back: "136-145 mEq/L" }
+        ];
+
+        // Matching Game Pairs
+        const matchingPairs = [
+            { id: 1, term: "HYPOkalemia", match: "SLOW HUG" },
+            { id: 2, term: "HYPERkalemia", match: "W.A.V.E.S." },
+            { id: 3, term: "HYPOcalcemia", match: "C.A.T.S." },
+            { id: 4, term: "HYPERcalcemia", match: "LAD SCALE" },
+            { id: 5, term: "HYPOmagnesemia", match: "T.W.I.T.C.H." },
+            { id: 6, term: "HYPERmagnesemia", match: "D.R.O.P.S." }
+        ];
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            document.getElementById('gameMenu').style.display = 'none';
+            document.getElementById('quizArea').classList.add('active');
+            
+            if (mode === 'flashcards') {
+                startFlashcards();
+            } else if (mode === 'matching') {
+                startMatching();
+            } else {
+                // Shuffle and select questions
+                questions = [...questionBank].sort(() => Math.random() - 0.5).slice(0, 10);
+                currentQuestion = 0;
+                score = 0;
+                streak = 0;
+                hintsLeft = 3;
+                
+                if (mode === 'rapid-fire') {
+                    document.getElementById('timer').style.display = 'block';
+                }
+                
+                showQuestion();
+            }
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const question = questions[currentQuestion];
+            const progress = ((currentQuestion) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            document.getElementById('hintBtn').disabled = false;
+            document.getElementById('hintBtn').textContent = `💡 Use Hint (${hintsLeft} left)`;
+
+            let html = `
+                <div class="question-card">
+                    <div class="question-number">Question ${currentQuestion + 1} of ${questions.length}</div>
+                    <div class="question-text">${question.question}</div>
+                    ${question.answers.map((answer, index) => `
+                        <button class="answer-btn" onclick="checkAnswer(${index})">${answer}</button>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="explanation">
+                    <strong>💡 Explanation:</strong><br>
+                    ${question.explanation}
+                </div>
+            `;
+
+            document.getElementById('questionContainer').innerHTML = html;
+            document.getElementById('nextBtn').classList.remove('show');
+
+            if (currentMode === 'rapid-fire') {
+                startTimer();
+            }
+        }
+
+        function checkAnswer(selected) {
+            clearInterval(timer);
+            const question = questions[currentQuestion];
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (selected === question.correct) {
+                buttons[selected].classList.add('correct');
+                score += 10;
+                streak++;
+                if (streak > bestStreak) bestStreak = streak;
+                
+                // Bonus for rapid fire
+                if (currentMode === 'rapid-fire' && timeLeft > 10) {
+                    score += 5;
+                }
+                
+                playSound('correct');
+            } else {
+                buttons[selected].classList.add('incorrect');
+                buttons[question.correct].classList.add('correct');
+                streak = 0;
+                playSound('incorrect');
+            }
+
+            updateScore();
+            document.getElementById('explanation').classList.add('show');
+            document.getElementById('nextBtn').classList.add('show');
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            showQuestion();
+        }
+
+        function showHint() {
+            if (hintsLeft <= 0) return;
+            
+            hintsLeft--;
+            const question = questions[currentQuestion];
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            // Eliminate 2 wrong answers
+            let eliminated = 0;
+            buttons.forEach((btn, index) => {
+                if (index !== question.correct && eliminated < 2) {
+                    btn.style.opacity = '0.3';
+                    btn.disabled = true;
+                    eliminated++;
+                }
+            });
+
+            document.getElementById('hintBtn').disabled = true;
+            document.getElementById('hintBtn').textContent = `💡 Hint Used (${hintsLeft} left)`;
+        }
+
+        function startTimer() {
+            timeLeft = 15;
+            document.getElementById('timer').textContent = `⏱️ ${timeLeft}s`;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `⏱️ ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    const question = questions[currentQuestion];
+                    const buttons = document.querySelectorAll('.answer-btn');
+                    buttons.forEach(btn => btn.disabled = true);
+                    buttons[question.correct].classList.add('correct');
+                    document.getElementById('explanation').classList.add('show');
+                    document.getElementById('nextBtn').classList.add('show');
+                    streak = 0;
+                    updateScore();
+                }
+            }, 1000);
+        }
+
+        function updateScore() {
+            document.getElementById('totalScore').textContent = score;
+            document.getElementById('streak').textContent = streak;
+            
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('bestScore', bestScore);
+                document.getElementById('bestScore').textContent = bestScore;
+            }
+        }
+
+        function showResults() {
+            clearInterval(timer);
+            document.getElementById('quizArea').classList.remove('active');
+            document.getElementById('results').classList.add('show');
+
+            const percentage = Math.round((score / (questions.length * 10)) * 100);
+            document.getElementById('finalScore').textContent = `${score}/${questions.length * 10}`;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            
+            const meter = document.querySelector('.meter-circle');
+            meter.style.setProperty('--percentage', (percentage * 3.6) + 'deg');
+
+            // Show achievements
+            let achievements = '';
+            if (percentage === 100) achievements += '<div class="achievement">🏆 Perfect Score!</div>';
+            if (percentage >= 90) achievements += '<div class="achievement">⭐ Excellent!</div>';
+            if (percentage >= 80) achievements += '<div class="achievement">🎯 Great Job!</div>';
+            if (bestStreak >= 5) achievements += '<div class="achievement">🔥 Hot Streak!</div>';
+            if (currentMode === 'rapid-fire') achievements += '<div class="achievement">⚡ Speed Demon!</div>';
+            
+            document.getElementById('achievements').innerHTML = achievements;
+        }
+
+        function restartGame() {
+            document.getElementById('results').classList.remove('show');
+            startQuiz(currentMode);
+        }
+
+        function backToMenu() {
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('quizArea').classList.remove('active');
+            document.getElementById('gameMenu').style.display = 'block';
+            currentQuestion = 0;
+            score = 0;
+            streak = 0;
+            updateScore();
+        }
+
+        function playSound(type) {
+            // Audio feedback (using Web Audio API for simple beeps)
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'correct') {
+                oscillator.frequency.value = 800;
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            } else {
+                oscillator.frequency.value = 200;
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            }
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // Flashcard Mode
+        let currentFlashcard = 0;
+        function startFlashcards() {
+            currentFlashcard = 0;
+            showFlashcard();
+        }
+
+        function showFlashcard() {
+            if (currentFlashcard >= flashcards.length) {
+                alert('🎉 You\'ve reviewed all flashcards!');
+                backToMenu();
+                return;
+            }
+
+            const card = flashcards[currentFlashcard];
+            const progress = ((currentFlashcard) / flashcards.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            document.getElementById('questionContainer').innerHTML = `
+                <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                    <div class="flashcard-front">
+                        <h2 style="color: #2E75B5;">Click to Flip</h2>
+                        <div style="font-size: 2em; margin-top: 30px; font-weight: bold; color: #1F4E78;">
+                            ${card.front}
+                        </div>
+                    </div>
+                    <div class="flashcard-back">
+                        <div style="font-size: 1.3em; white-space: pre-line; color: #1F4E78;">
+                            ${card.back}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('hintBtn').style.display = 'none';
+            document.getElementById('nextBtn').classList.add('show');
+            document.getElementById('nextBtn').onclick = () => {
+                currentFlashcard++;
+                showFlashcard();
+            };
+        }
+
+        // Matching Game
+        let selectedCards = [];
+        let matchedPairs = 0;
+        let matchingCards = [];
+
+        function startMatching() {
+            matchedPairs = 0;
+            selectedCards = [];
+            
+            // Create array of all cards (terms + matches)
+            matchingCards = [];
+            matchingPairs.forEach(pair => {
+                matchingCards.push({ id: pair.id, text: pair.term, type: 'term' });
+                matchingCards.push({ id: pair.id, text: pair.match, type: 'match' });
+            });
+            
+            // Shuffle cards
+            matchingCards.sort(() => Math.random() - 0.5);
+            
+            showMatchingCards();
+        }
+
+        function showMatchingCards() {
+            document.getElementById('progressBar').style.width = ((matchedPairs / matchingPairs.length) * 100) + '%';
+            
+            let html = '<div class="matching-game">';
+            matchingCards.forEach((card, index) => {
+                if (!card.matched) {
+                    html += `<div class="matching-card" onclick="selectMatchingCard(${index})">${card.text}</div>`;
+                } else {
+                    html += `<div class="matching-card matched">${card.text}</div>`;
+                }
+            });
+            html += '</div>';
+            
+            document.getElementById('questionContainer').innerHTML = html;
+            document.getElementById('hintBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectMatchingCard(index) {
+            if (matchingCards[index].matched) return;
+            if (selectedCards.length === 2) return;
+            
+            const cards = document.querySelectorAll('.matching-card');
+            cards[index].classList.add('selected');
+            selectedCards.push(index);
+            
+            if (selectedCards.length === 2) {
+                setTimeout(checkMatch, 800);
+            }
+        }
+
+        function checkMatch() {
+            const card1 = matchingCards[selectedCards[0]];
+            const card2 = matchingCards[selectedCards[1]];
+            const cards = document.querySelectorAll('.matching-card');
+            
+            if (card1.id === card2.id) {
+                // Match found!
+                matchingCards[selectedCards[0]].matched = true;
+                matchingCards[selectedCards[1]].matched = true;
+                matchedPairs++;
+                score += 20;
+                updateScore();
+                playSound('correct');
+                
+                if (matchedPairs === matchingPairs.length) {
+                    setTimeout(() => {
+                        alert('🎉 Perfect! All matched!');
+                        showResults();
+                    }, 500);
+                }
+            } else {
+                // No match
+                cards[selectedCards[0]].classList.remove('selected');
+                cards[selectedCards[1]].classList.remove('selected');
+                playSound('incorrect');
+            }
+            
+            selectedCards = [];
+            showMatchingCards();
+        }
+    </script>
+</body>
+</html>

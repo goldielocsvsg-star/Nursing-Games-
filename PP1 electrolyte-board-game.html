@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡💖 Electrolyte Carnival Board Game! 💖⚡</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Fredoka:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Fredoka', 'Comic Sans MS', cursive;
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 25%, #da70d6 50%, #ba55d3 75%, #9370db 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Floating bubbles background */
+        .bubble {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 182, 193, 0.4));
+            animation: float 20s infinite ease-in-out;
+            pointer-events: none;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(100px) scale(1); opacity: 0; }
+        }
+        
+        /* Stars and sparkles */
+        .sparkle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        #root {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .board-space {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            border: 4px solid white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.7rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .board-space:hover {
+            transform: scale(1.05);
+        }
+        
+        .player-token {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 5px solid white;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            animation: bounce 1s infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+            50% { transform: translate(-50%, -50%) translateY(-10px); }
+        }
+        
+        .fun-house-border {
+            border: 6px dashed #fff;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.8), 
+                        inset 0 0 30px rgba(255, 255, 255, 0.3),
+                        0 0 60px rgba(218, 112, 214, 0.6);
+            animation: borderGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes borderGlow {
+            0%, 100% { box-shadow: 0 0 30px rgba(255, 105, 180, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 50px rgba(255, 20, 147, 1), inset 0 0 50px rgba(255, 255, 255, 0.5); }
+        }
+        
+        .bubble-button {
+            background: linear-gradient(135deg, #ff69b4, #ff1493, #da70d6);
+            border: 4px solid white;
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.5),
+                        inset 0 -3px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bubble-button:before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .bubble-button:hover {
+            transform: scale(1.1) rotate(-2deg);
+            box-shadow: 0 12px 35px rgba(255, 20, 147, 0.8),
+                        inset 0 -3px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .bubble-button:active {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.6),
+                        inset 0 -3px 10px rgba(0, 0, 0, 0.4);
+        }
+        
+        .carnival-header {
+            background: linear-gradient(180deg, #ff1493 0%, #ff69b4 50%, #ffb6c1 100%);
+            border: 8px solid #fff;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(255, 20, 147, 0.6),
+                        inset 0 0 50px rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .carnival-header:before {
+            content: '🎪🎡🎠🎢🎪';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            font-size: 2rem;
+            animation: marquee 10s linear infinite;
+            opacity: 0.3;
+        }
+        
+        @keyframes marquee {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .wave-text {
+            animation: wave 2s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-10px); }
+            75% { transform: translateY(10px); }
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .rainbow-text {
+            background: linear-gradient(90deg, #ff0080, #ff8c00, #ffff00, #00ff00, #00ffff, #0080ff, #ff00ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 3s linear infinite;
+            font-weight: bold;
+        }
+        
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            animation: confettiFall 3s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes confettiFall {
+            to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .points-popup {
+            position: fixed;
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: pointsFloat 2s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @keyframes pointsFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { transform: translateY(-50px) scale(1.5); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- Background decorations -->
+    <script>
+        // Create floating bubbles
+        for (let i = 0; i < 15; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.style.width = Math.random() * 100 + 50 + 'px';
+            bubble.style.height = bubble.style.width;
+            bubble.style.left = Math.random() * 100 + '%';
+            bubble.style.animationDelay = Math.random() * 20 + 's';
+            bubble.style.animationDuration = Math.random() * 10 + 15 + 's';
+            document.body.appendChild(bubble);
+        }
+        
+        // Create sparkles
+        for (let i = 0; i < 30; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.animationDelay = Math.random() * 3 + 's';
+            document.body.appendChild(sparkle);
+        }
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const ElectrolyteBoardGame = () => {
+            const [currentSpace, setCurrentSpace] = useState(0);
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [totalPoints, setTotalPoints] = useState(0);
+            const [selectedAnswers, setSelectedAnswers] = useState([]);
+            const [showRationale, setShowRationale] = useState(false);
+            const [isCorrect, setIsCorrect] = useState(null);
+            const [gameComplete, setGameComplete] = useState(false);
+            const [answeredQuestions, setAnsweredQuestions] = useState(0);
+            const [shuffledOptions, setShuffledOptions] = useState([]);
+            const [streak, setStreak] = useState(0);
+            const [pointsEarned, setPointsEarned] = useState(0);
+
+            const shuffleArray = (array) => {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            };
+
+            // Point values for different question types
+            const getPointValue = (questionType) => {
+                switch(questionType) {
+                    case 'mcq': return 100;
+                    case 'case-study': return 150;
+                    case 'sata': return 200;
+                    case 'priority': return 250;
+                    default: return 100;
+                }
+            };
+
+            const getBonusMultiplier = () => {
+                if (streak >= 5) return 3;
+                if (streak >= 3) return 2;
+                return 1;
+            };
+
+            // All questions from all levels combined
+            const allQuestions = [
+                {
+                    id: 1,
+                    type: "case-study",
+                    level: "🎪 Mild",
+                    scenario: "You receive report on Mr. Johnson, a 68-year-old male admitted 2 days ago for pneumonia. He's been on IV antibiotics and has received furosemide (Lasix) 40 mg IV twice daily. During your morning assessment, you notice he seems lethargic and reports feeling 'weak all over.' His vital signs: BP 118/76, HR 58 (irregular), RR 18, T 98.6°F. He states his legs feel 'heavy' and he's had decreased appetite.",
+                    question: "Based on these findings, which electrolyte imbalance should you MOST suspect?",
+                    options: ["Hypokalemia", "Hyperkalemia", "Hypocalcemia", "Hypomagnesemia"],
+                    correctAnswers: ["Hypokalemia"],
+                    rationale: "The combination of loop diuretic use (Lasix), muscle weakness, lethargy, bradycardia with irregular rhythm, and GI changes (decreased appetite) are classic signs of hypokalemia. Loop diuretics cause significant potassium loss. The 'SLOW HUG' mnemonic helps remember hypokalemia signs: Skeletal muscle weakness, Low energy, Oxygen impaired (respiratory weakness), Weak/flattened T waves, Hyperactive reflexes initially, U waves, and GI losses. This patient shows multiple indicators of low potassium."
+                },
+                {
+                    id: 2,
+                    type: "sata",
+                    level: "🎪 Mild",
+                    scenario: "You're continuing to assess Mr. Johnson for hypokalemia. Which additional assessment findings would SUPPORT your suspicion of hypokalemia?",
+                    question: "Which findings are consistent with hypokalemia? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Decreased bowel sounds with abdominal distention",
+                        "Positive Chvostek sign",
+                        "Flattened T waves on ECG",
+                        "Hyperactive deep tendon reflexes",
+                        "ST segment depression on ECG",
+                        "Peaked T waves on ECG"
+                    ],
+                    correctAnswers: [
+                        "Decreased bowel sounds with abdominal distention",
+                        "Flattened T waves on ECG",
+                        "ST segment depression on ECG"
+                    ],
+                    rationale: "Hypokalemia causes multiple ECG changes and GI symptoms. CORRECT: (1) Decreased bowel sounds with distention occurs because low potassium decreases smooth muscle contractility in the GI tract, leading to constipation and ileus. (2) Flattened or inverted T waves are hallmark ECG findings in hypokalemia. (3) ST segment depression is another ECG change seen with low potassium. INCORRECT: Positive Chvostek sign indicates hypocalcemia, not hypokalemia. Hyperactive reflexes can occur early in hypokalemia but are not as reliable. Peaked T waves indicate HYPERkalemia, not hypokalemia."
+                },
+                {
+                    id: 3,
+                    type: "mcq",
+                    level: "🎪 Mild",
+                    scenario: "After assessing Mr. Johnson, you review his most recent lab results: K+ 2.9 mEq/L, confirming hypokalemia.",
+                    question: "Which complication should you monitor for as the PRIORITY concern with this potassium level?",
+                    options: [
+                        "Respiratory muscle weakness leading to respiratory failure",
+                        "Severe constipation and bowel obstruction",
+                        "Digoxin toxicity if patient is on cardiac glycosides",
+                        "Muscle cramping and spasms"
+                    ],
+                    correctAnswers: ["Digoxin toxicity if patient is on cardiac glycosides"],
+                    rationale: "While all options are concerns with hypokalemia, the PRIORITY is digoxin toxicity. Hypokalemia is the principal cause of digoxin toxicity - low potassium levels enhance the binding of digoxin to cardiac tissue, dramatically increasing the risk of fatal dysrhythmias and cardiac arrest. This is a life-threatening complication that requires immediate intervention. The other complications are serious but not as immediately life-threatening. Remember: hypokalemia + digoxin = DANGER!"
+                },
+                {
+                    id: 4,
+                    type: "case-study",
+                    level: "🎡 Moderate",
+                    scenario: "Ms. Garcia, 55 years old, was admitted for acute renal failure secondary to dehydration. She has a history of chronic kidney disease (Stage 3). Labs this morning show: K+ 6.2 mEq/L, BUN 45, Creatinine 2.8. The telemetry monitor shows a regular rhythm with tall, narrow, peaked T waves. She reports feeling 'tingling' in her fingers and around her mouth and states her muscles feel 'twitchy.'",
+                    question: "What is the MOST serious consequence of this patient's electrolyte imbalance?",
+                    options: [
+                        "Disruption of electrical activity in the heart leading to dysrhythmias or cardiac arrest",
+                        "Severe muscle weakness and paralysis",
+                        "Neuromuscular irritability causing seizures",
+                        "Gastrointestinal disturbances and diarrhea"
+                    ],
+                    correctAnswers: ["Disruption of electrical activity in the heart leading to dysrhythmias or cardiac arrest"],
+                    rationale: "This patient has hyperkalemia (K+ 6.2 mEq/L) with classic ECG changes (peaked T waves). The MOST serious consequence is disruption of cardiac electrical activity. Hyperkalemia affects the heart's conduction system - at 5-7 mEq/L, you see peaked T waves and prolonged PR interval. At 8-9 mEq/L, cardiac arrest may occur, possibly preceded by ventricular tachycardia or fibrillation. The 'WAVES' mnemonic helps: Weakness, Abdominal cramps/Altered mental status, Ventricular dysrhythmias, ECG changes (peaked T waves, prolonged PR), Sensory changes (numbness/tingling). Cardiac arrest is the priority life-threatening risk."
+                },
+                {
+                    id: 5,
+                    type: "sata",
+                    level: "🎡 Moderate",
+                    scenario: "You're performing a focused assessment on Ms. Garcia for hyperkalemia manifestations.",
+                    question: "Which assessment findings would you expect with a potassium level of 6.2 mEq/L? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Bilateral muscle weakness starting in the quadriceps",
+                        "Numbness and tingling of hands, feet, and circumoral area",
+                        "Hyperactive deep tendon reflexes",
+                        "Diarrhea and increased bowel sounds",
+                        "Prolonged PR interval on ECG",
+                        "U waves on ECG"
+                    ],
+                    correctAnswers: [
+                        "Bilateral muscle weakness starting in the quadriceps",
+                        "Numbness and tingling of hands, feet, and circumoral area",
+                        "Diarrhea and increased bowel sounds",
+                        "Prolonged PR interval on ECG"
+                    ],
+                    rationale: "CORRECT findings in hyperkalemia: (1) Bilateral muscle weakness that begins in quadriceps and may ascend to respiratory muscles - this is a hallmark sign. (2) Numbness/tingling of extremities and circumoral region are sensory changes from hyperkalemia. (3) Diarrhea occurs due to increased GI motility from excess potassium. (4) Prolonged PR interval is an ECG change that occurs with K+ 5-7 mEq/L, along with peaked T waves. INCORRECT: Hyperactive reflexes and U waves are seen in HYPOkalemia, not hyperkalemia. Hyperkalemia typically causes decreased or absent reflexes due to muscle weakness."
+                },
+                {
+                    id: 6,
+                    type: "priority",
+                    level: "🎡 Moderate",
+                    scenario: "Ms. Garcia's potassium is now 7.1 mEq/L and the monitor shows widening QRS complexes.",
+                    question: "What is the PRIORITY nursing action?",
+                    options: [
+                        "Administer sodium polystyrene sulfonate (Kayexalate) as ordered",
+                        "Prepare for immediate administration of IV calcium gluconate",
+                        "Increase IV fluid rate to promote renal excretion",
+                        "Administer insulin and glucose as ordered"
+                    ],
+                    correctAnswers: ["Prepare for immediate administration of IV calcium gluconate"],
+                    rationale: "With K+ 7.1 mEq/L and widening QRS complexes, this patient is at IMMEDIATE risk for cardiac arrest. The PRIORITY is IV calcium gluconate (or calcium chloride), which stabilizes the cardiac membrane and protects the heart from the cardiotoxic effects of hyperkalemia. Calcium doesn't lower potassium levels, but it immediately offsets cardiotoxicity. After cardiac protection, you would give insulin + glucose to shift potassium into cells, then consider Kayexalate for removal. But cardiac stabilization comes FIRST when ECG changes indicate imminent dysrhythmia risk. This is a medical emergency!"
+                },
+                {
+                    id: 7,
+                    type: "case-study",
+                    level: "🎡 Moderate",
+                    scenario: "Mr. Patel, 42 years old, presents to the ED with severe vomiting and diarrhea for 3 days. He appears severely ill. VS: BP 92/58, HR 110, RR 22, T 99.1°F. He's disoriented and agitated, has tetanic contractions of his hands, visible muscle fasciculations, and when you take his blood pressure, his hand spasms into flexion. He has a history of chronic alcoholism.",
+                    question: "Based on these findings, which electrolyte imbalance is MOST likely?",
+                    options: [
+                        "Hypomagnesemia",
+                        "Hypocalcemia",
+                        "Hyponatremia",
+                        "Hypokalemia"
+                    ],
+                    correctAnswers: ["Hypomagnesemia"],
+                    rationale: "This patient shows classic signs of hypomagnesemia. The 'TWITCH' mnemonic applies: Tetany/muscle twitching, Weakness/dysphagia, Insomnia/CNS irritability (confusion, irritability, seizure risk), Tachycardia & hypertension, Chvostek sign, Hyperactive reflexes. GI losses (vomiting/diarrhea) are common causes. While hypocalcemia can present similarly, hypomagnesemia frequently coexists with and causes hypocalcemia (magnesium is needed for PTH secretion). The combination of GI losses, neuromuscular hyperexcitability, positive Chvostek sign, and altered mental status point to magnesium deficiency."
+                },
+                {
+                    id: 8,
+                    type: "sata",
+                    level: "🎡 Moderate",
+                    scenario: "You're continuing to assess Mr. Patel for hypomagnesemia.",
+                    question: "Which additional findings would support hypomagnesemia? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Seizures or increased seizure risk",
+                        "Prolonged PR interval and heart block",
+                        "Tachycardia with dysrhythmias",
+                        "Decreased deep tendon reflexes",
+                        "Dysphagia (difficulty swallowing)",
+                        "Lethargy and drowsiness"
+                    ],
+                    correctAnswers: [
+                        "Seizures or increased seizure risk",
+                        "Tachycardia with dysrhythmias",
+                        "Dysphagia (difficulty swallowing)"
+                    ],
+                    rationale: "CORRECT for hypomagnesemia: (1) Seizures occur due to increased CNS irritability - magnesium has a sedative effect on the nervous system, so low levels cause hyperexcitability. (2) Tachycardia and dysrhythmias (including potentially fatal ventricular dysrhythmias) occur because magnesium is essential for cardiac conduction. (3) Dysphagia results from impaired smooth muscle function. INCORRECT: Prolonged PR interval and heart block are seen in HYPERmagnesemia, not hypomagnesemia. Decreased reflexes and lethargy also indicate HYPERmagnesemia. Hypomagnesemia causes the OPPOSITE: hyperactive reflexes, insomnia, and irritability."
+                },
+                {
+                    id: 9,
+                    type: "case-study",
+                    level: "🎢 Severe",
+                    scenario: "Mrs. Thompson, 71 years old, was admitted to ICU post-thyroidectomy. It's now 18 hours post-op. She suddenly reports severe muscle cramps in her hands and feet. You notice her fingers are spasming into flexion. VS: BP 145/92, HR 98, RR 24. She appears anxious and reports feeling 'numb and tingly' around her mouth. When you inflate the BP cuff, her hand goes into carpal spasm.",
+                    question: "What critical complication should you anticipate NEXT?",
+                    options: [
+                        "Laryngospasm and airway obstruction",
+                        "Seizure from low calcium levels",
+                        "Cardiac dysrhythmia from prolonged QT interval",
+                        "Respiratory muscle tetany causing hypoventilation"
+                    ],
+                    correctAnswers: ["Laryngospasm and airway obstruction"],
+                    rationale: "This patient has hypocalcemia (likely from accidental parathyroid removal during thyroidectomy). The symptoms - tetany, carpopedal spasm, circumoral numbness, positive Trousseau sign (spasm with BP cuff) - indicate severe hypocalcemia. The MOST immediate life-threatening complication is laryngospasm. Low calcium increases neuromuscular excitability, and the laryngeal muscles can spasm, causing complete airway obstruction. This is a TRUE EMERGENCY requiring immediate IV calcium gluconate. The 'CATS' mnemonic: Chvostek & Circumoral tingling, Altered reflexes (hyperactive), Tetany & spasms, Seizures & ST prolongation. Airway protection is the priority!"
+                },
+                {
+                    id: 10,
+                    type: "sata",
+                    level: "🎢 Severe",
+                    scenario: "Mrs. Thompson's calcium level returns at 7.2 mg/dL. You're preparing for treatment.",
+                    question: "Which interventions are appropriate for severe hypocalcemia? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Administer IV calcium gluconate slowly",
+                        "Place patient on continuous cardiac monitor",
+                        "Have emergency airway equipment at bedside",
+                        "Administer vitamin D supplementation",
+                        "Monitor for shortened ST segments on ECG",
+                        "Assess for Chvostek and Trousseau signs every 2 hours"
+                    ],
+                    correctAnswers: [
+                        "Administer IV calcium gluconate slowly",
+                        "Place patient on continuous cardiac monitor",
+                        "Have emergency airway equipment at bedside",
+                        "Administer vitamin D supplementation",
+                        "Assess for Chvostek and Trousseau signs every 2 hours"
+                    ],
+                    rationale: "CORRECT interventions: (1) IV calcium gluconate is the treatment - must give SLOWLY as rapid infusion can cause cardiac arrest. (2) Continuous cardiac monitoring is essential because hypocalcemia causes prolonged ST segments and can lead to dysrhythmias. (3) Emergency airway equipment is critical due to laryngospasm risk. (4) Vitamin D helps calcium absorption. (5) Serial assessment of Chvostek/Trousseau signs monitors treatment effectiveness. INCORRECT: Hypocalcemia causes PROLONGED ST segments, not shortened. Shortened ST segments occur in HYPERcalcemia. This is a key distinction!"
+                },
+                {
+                    id: 11,
+                    type: "case-study",
+                    level: "🎢 Severe",
+                    scenario: "Mr. Davis, 58 years old, is admitted with severe hyperparathyroidism. He reports feeling extremely fatigued, confused about the date, and has been constipated for a week. His wife says he's been drinking water constantly and urinating frequently. VS: BP 102/68, HR 72, RR 14, T 98.4°F. He appears lethargic and has difficulty staying focused during your questions. Labs show Ca2+ 13.5 mg/dL.",
+                    question: "This presentation is MOST consistent with which condition?",
+                    options: [
+                        "Severe hypercalcemia",
+                        "Hypernatremia",
+                        "Hypermagnesemia",
+                        "Diabetic ketoacidosis"
+                    ],
+                    correctAnswers: ["Severe hypercalcemia"],
+                    rationale: "This is severe hypercalcemia (Ca2+ 13.5 mg/dL, normal 9.0-10.5). The 'LAD SCALE' mnemonic captures the symptoms: Lethargy & fatigue, Anorexia/GI slowdown (constipation), Diminished DTRs, Shortened ST segment, Confusion & LOC decrease, Arrest (cardiac) risk, Loss of focus, ECG block. High calcium DEPRESSES neuromuscular function - causing lethargy, confusion, muscle weakness, constipation, and diminished reflexes. The polyuria and polydipsia occur because high calcium impairs the kidney's concentrating ability. Severe hypercalcemia can progress to coma and cardiac arrest if untreated."
+                },
+                {
+                    id: 12,
+                    type: "sata",
+                    level: "🎢 Severe",
+                    scenario: "You're continuing to monitor Mr. Davis for complications of his severe hypercalcemia.",
+                    question: "Which findings indicate worsening hypercalcemia requiring immediate intervention? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Progressive lethargy declining toward stupor",
+                        "ECG showing heart block",
+                        "Worsening confusion and personality changes",
+                        "Development of increased deep tendon reflexes",
+                        "Anorexia, nausea, and vomiting",
+                        "Muscle twitching and hyperactive reflexes"
+                    ],
+                    correctAnswers: [
+                        "Progressive lethargy declining toward stupor",
+                        "ECG showing heart block",
+                        "Worsening confusion and personality changes",
+                        "Anorexia, nausea, and vomiting"
+                    ],
+                    rationale: "CORRECT signs of severe hypercalcemia: (1) Progressive lethargy to stupor indicates worsening CNS depression - can progress to coma. (2) Heart block on ECG is a critical finding; hypercalcemia causes shortened ST segments and can cause complete heart block or cardiac arrest. (3) Confusion and personality changes reflect neurotoxicity. (4) GI symptoms (anorexia, nausea, vomiting) worsen as calcium rises. INCORRECT: Increased DTRs, muscle twitching, and hyperactive reflexes indicate HYPOcalcemia, not hypercalcemia. Hypercalcemia causes DECREASED neuromuscular function (weakness, diminished reflexes, lethargy)."
+                },
+                {
+                    id: 13,
+                    type: "priority",
+                    level: "🎢 Severe",
+                    scenario: "Mr. Davis's calcium is now 14.2 mg/dL and he's increasingly lethargic with new heart block on ECG.",
+                    question: "What is the PRIORITY treatment?",
+                    options: [
+                        "Administer calcitonin to lower calcium levels",
+                        "Infuse isotonic IV fluids (0.9% saline) and administer furosemide",
+                        "Prepare for hemodialysis",
+                        "Hold all calcium-containing medications"
+                    ],
+                    correctAnswers: ["Infuse isotonic IV fluids (0.9% saline) and administer furosemide"],
+                    rationale: "The PRIORITY for severe hypercalcemia is aggressive fluid resuscitation with isotonic IV fluids (0.9% saline), followed by loop diuretics like furosemide. High calcium causes polyuria and dehydration, concentrating calcium further. IV fluids dilute serum calcium and enhance renal excretion. Loop diuretics then promote calcium excretion in urine. This combination provides the most rapid initial reduction. Calcitonin is used but acts more slowly. Hemodialysis is reserved for severe, refractory cases. Holding calcium medications is appropriate but doesn't actively lower dangerously high levels. Hydration + diuresis = first-line emergency treatment."
+                },
+                {
+                    id: 14,
+                    type: "case-study",
+                    level: "🎢 Severe",
+                    scenario: "Ms. Lee, 63 years old, has end-stage renal disease and missed her last two dialysis appointments. She presents to the ED feeling 'exhausted and out of it.' VS: BP 88/52, HR 48 (bradycardic), RR 10 (slow, shallow), T 97.8°F. She appears drowsy and confused. Physical exam reveals severely decreased deep tendon reflexes, muscle weakness, and flushed, warm skin. The monitor shows bradycardia with a prolonged PR interval.",
+                    question: "Which electrolyte imbalance is MOST likely causing these symptoms?",
+                    options: [
+                        "Hypermagnesemia",
+                        "Hyperkalemia",
+                        "Hypercalcemia",
+                        "Hypernatremia"
+                    ],
+                    correctAnswers: ["Hypermagnesemia"],
+                    rationale: "This is classic hypermagnesemia, most commonly seen in renal failure patients. The 'DROPS' mnemonic: Decreased DTRs (hypoactive reflexes), Respiratory depression/paralysis, Output decreased (hypotension, bradycardia), PR interval prolonged/heart block, Sedation (lethargy, drowsiness, confusion). Magnesium has a sedative effect on the neuromuscular system - excess levels cause decreased neuromuscular function. At 12-15 mEq/L, respiratory paralysis can occur. This is OPPOSITE of hypomagnesemia, which causes hyperactivity. The combination of severe CNS/respiratory depression, hypoactive reflexes, bradycardia with heart block, and renal failure history points to high magnesium."
+                },
+                {
+                    id: 15,
+                    type: "sata",
+                    level: "🎢 Severe",
+                    scenario: "Ms. Lee's magnesium level returns at 11.8 mEq/L (critical - normal 1.3-2.1).",
+                    question: "Which findings are consistent with this severe hypermagnesemia? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Respiratory rate of 10 with shallow breathing",
+                        "Absent or severely diminished deep tendon reflexes",
+                        "Hypotension and bradycardia",
+                        "Muscle twitching and tremors",
+                        "Risk for complete heart block and cardiac arrest",
+                        "Hyperactive reflexes with positive Chvostek sign"
+                    ],
+                    correctAnswers: [
+                        "Respiratory rate of 10 with shallow breathing",
+                        "Absent or severely diminished deep tendon reflexes",
+                        "Hypotension and bradycardia",
+                        "Risk for complete heart block and cardiac arrest"
+                    ],
+                    rationale: "CORRECT for severe hypermagnesemia: (1) Respiratory depression occurs because excess magnesium suppresses the CNS and neuromuscular function - can progress to respiratory arrest. (2) Absent/diminished DTRs are a hallmark - this is often the first sign detected. (3) Hypotension and bradycardia result from magnesium's effects on cardiac conduction and vascular tone. (4) Cardiac arrest risk is very real - magnesium levels >15 mEq/L can cause complete heart block and asystole. INCORRECT: Muscle twitching, tremors, hyperactive reflexes, and Chvostek sign indicate HYPOmagnesemia. Hypermagnesemia causes the OPPOSITE - sedation, not excitation."
+                },
+                {
+                    id: 16,
+                    type: "case-study",
+                    level: "🎠 Complex",
+                    scenario: "Mr. Wilson, 45 years old, arrives via ambulance after being found unconscious. He has a history of alcoholism. VS: BP 94/60, HR 118, RR 26, T 99.8°F. He's now awake but extremely confused and agitated. Physical exam shows tremors, hyperactive reflexes, and a positive Trousseau sign. He has several episodes of vomiting. Labs: K+ 2.8 mEq/L, Mg2+ 0.9 mEq/L, Ca2+ 7.8 mg/dL.",
+                    question: "This patient has multiple electrolyte imbalances. Which imbalance is MOST likely contributing to the others?",
+                    options: [
+                        "Hypomagnesemia is causing the hypocalcemia and hypokalemia",
+                        "Hypokalemia is the primary problem causing other imbalances",
+                        "Hypocalcemia is causing the magnesium and potassium depletion",
+                        "These are three independent imbalances without relationship"
+                    ],
+                    correctAnswers: ["Hypomagnesemia is causing the hypocalcemia and hypokalemia"],
+                    rationale: "Hypomagnesemia is the PRIMARY problem here. Magnesium deficiency causes BOTH hypocalcemia and hypokalemia. Here's why: (1) Low magnesium impairs parathyroid hormone (PTH) secretion, which is needed to maintain calcium levels - causing hypocalcemia. (2) Low magnesium also increases renal potassium wasting and allows potassium to shift out of cells - causing hypokalemia. You CANNOT correct hypocalcemia or hypokalemia if magnesium remains low. Chronic alcoholism commonly causes magnesium depletion through poor nutrition, increased GI losses (vomiting, diarrhea), and increased renal losses. Always check magnesium in patients with refractory hypokalemia or hypocalcemia!"
+                },
+                {
+                    id: 17,
+                    type: "sata",
+                    level: "🎠 Complex",
+                    scenario: "You're assessing Mr. Wilson's combined electrolyte disturbances.",
+                    question: "Which symptoms could be attributed to his multiple electrolyte imbalances? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Tremors and hyperactive reflexes from hypomagnesemia",
+                        "Positive Trousseau sign from hypocalcemia",
+                        "Tachycardia and irregular rhythm from hypokalemia",
+                        "Confusion and agitation from magnesium depletion",
+                        "Muscle weakness from low potassium",
+                        "Decreased respiratory rate from calcium deficit"
+                    ],
+                    correctAnswers: [
+                        "Tremors and hyperactive reflexes from hypomagnesemia",
+                        "Positive Trousseau sign from hypocalcemia",
+                        "Tachycardia and irregular rhythm from hypokalemia",
+                        "Confusion and agitation from magnesium depletion",
+                        "Muscle weakness from low potassium"
+                    ],
+                    rationale: "CORRECT findings: (1) Tremors and hyperactive reflexes are part of the TWITCH mnemonic for hypomagnesemia - indicates neuromuscular irritability. (2) Positive Trousseau sign (carpopedal spasm with BP cuff) is a hallmark of hypocalcemia (CATS mnemonic). (3) Tachycardia and dysrhythmias occur with hypokalemia due to cardiac conduction disturbances. (4) CNS irritability (confusion, agitation, insomnia) is part of hypomagnesemia presentation. (5) Muscle weakness is classic for hypokalemia (SLOW HUG). INCORRECT: Decreased respiratory rate doesn't match these deficiencies - hypocalcemia can actually cause respiratory muscle tetany/spasm, while hypokalemia can cause respiratory muscle weakness but not typically decreased rate initially."
+                },
+                {
+                    id: 18,
+                    type: "priority",
+                    level: "🎠 Complex",
+                    scenario: "Mr. Wilson's magnesium is being corrected. He suddenly develops worsening muscle twitching and his hand goes into tetanic spasm. His airway sounds slightly stridorous.",
+                    question: "What is your PRIORITY action?",
+                    options: [
+                        "Administer IV magnesium sulfate immediately",
+                        "Prepare for emergency intubation and administer IV calcium gluconate",
+                        "Administer oral potassium supplements",
+                        "Notify provider and continue monitoring"
+                    ],
+                    correctAnswers: ["Prepare for emergency intubation and administer IV calcium gluconate"],
+                    rationale: "The stridor indicates potential laryngospasm from severe hypocalcemia - this is a LIFE-THREATENING EMERGENCY. The PRIORITY is airway protection. Prepare for emergency intubation while administering IV calcium gluconate to reverse the neuromuscular irritability and prevent complete laryngeal closure. Laryngospasm can progress to complete airway obstruction within minutes. While continuing magnesium is important for long-term correction, the immediate threat is airway compromise from hypocalcemic tetany. Remember: AIRWAY is always the first priority in any emergency. Calcium acts quickly to stabilize neuromuscular function."
+                },
+                {
+                    id: 19,
+                    type: "case-study",
+                    level: "🎠 Complex",
+                    scenario: "Mrs. Rodriguez, 72 years old, presents with progressive weakness over 3 days. She takes multiple medications for hypertension and heart failure, including lisinopril, metoprolol, and spironolactone. Her last hospitalization included IV potassium supplementation. VS: BP 128/82, HR 54 (irregular), RR 16, T 98.2°F. She reports numbness in her hands and feet and feeling 'extremely weak' - she can barely lift her arms. ECG shows peaked, narrow T waves and a prolonged PR interval. Labs: K+ 7.4 mEq/L.",
+                    question: "What medication is MOST likely contributing to this dangerous hyperkalemia?",
+                    options: [
+                        "Spironolactone (potassium-sparing diuretic)",
+                        "Lisinopril (ACE inhibitor)",
+                        "Metoprolol (beta blocker)",
+                        "All of the above in combination"
+                    ],
+                    correctAnswers: ["All of the above in combination"],
+                    rationale: "The BEST answer is all three medications in combination. Here's why: (1) Spironolactone is a potassium-SPARING diuretic that directly prevents potassium excretion. (2) ACE inhibitors like lisinopril decrease aldosterone, which normally promotes potassium excretion - so they cause potassium retention. (3) While beta blockers have less effect, they can impair the cellular uptake of potassium. The COMBINATION of potassium-sparing diuretic + ACE inhibitor is especially dangerous. Add recent IV potassium supplementation, and you have a perfect storm for life-threatening hyperkalemia. This is a common and preventable medication-related problem in elderly patients with renal impairment."
+                },
+                {
+                    id: 20,
+                    type: "sata",
+                    level: "🎠 Complex",
+                    scenario: "Mrs. Rodriguez's hyperkalemia requires immediate treatment. The physician orders multiple interventions.",
+                    question: "Which treatments are appropriate for hyperkalemia of 7.4 mEq/L with ECG changes? SELECT ALL THAT APPLY.",
+                    options: [
+                        "IV calcium gluconate to stabilize cardiac membrane",
+                        "Regular insulin with dextrose to shift K+ into cells",
+                        "Sodium bicarbonate if acidosis is present",
+                        "Loop diuretics to promote renal excretion",
+                        "IV fluids with potassium supplementation",
+                        "Sodium polystyrene sulfonate (Kayexalate) to remove potassium"
+                    ],
+                    correctAnswers: [
+                        "IV calcium gluconate to stabilize cardiac membrane",
+                        "Regular insulin with dextrose to shift K+ into cells",
+                        "Sodium bicarbonate if acidosis is present",
+                        "Loop diuretics to promote renal excretion",
+                        "Sodium polystyrene sulfonate (Kayexalate) to remove potassium"
+                    ],
+                    rationale: "CORRECT treatments (multi-pronged approach): (1) IV calcium gluconate - FIRST priority to immediately protect the heart from dysrhythmias (doesn't lower K+ but prevents cardiac toxicity). (2) Insulin + glucose shifts potassium INTO cells temporarily, lowering serum K+ quickly. (3) Sodium bicarbonate also shifts K+ intracellularly, especially helpful if patient is acidotic. (4) Loop diuretics (if kidney function adequate) promote urinary potassium excretion. (5) Kayexalate binds potassium in the GI tract for elimination. INCORRECT: IV fluids with potassium would WORSEN hyperkalemia! Never give potassium when levels are already high."
+                },
+                {
+                    id: 21,
+                    type: "case-study",
+                    level: "🎯 Critical",
+                    scenario: "Mrs. Anderson, 65 years old, is post-op day 1 from total thyroidectomy for thyroid cancer. At 0200, she uses her call light reporting severe muscle cramps. You find her with rigid hands drawn into flexion (carpopedal spasm), facial twitching, and circumoral numbness. Suddenly, she makes a high-pitched inspiratory sound (stridor) and appears panicked, clutching her throat. VS: BP 168/98, HR 118, RR 28, SpO2 91%.",
+                    question: "What is the MOST immediate life-threatening complication occurring?",
+                    options: [
+                        "Laryngospasm from severe hypocalcemia causing airway obstruction",
+                        "Seizure from low calcium levels",
+                        "Cardiac dysrhythmia from prolonged QT interval",
+                        "Respiratory muscle tetany causing hypoventilation"
+                    ],
+                    correctAnswers: ["Laryngospasm from severe hypocalcemia causing airway obstruction"],
+                    rationale: "This is laryngospasm - the MOST immediate life-threatening complication of severe post-thyroidectomy hypocalcemia. The stridor (high-pitched inspiratory sound) indicates partial airway obstruction from laryngeal muscle spasm. This can progress to COMPLETE airway obstruction within seconds to minutes, causing respiratory arrest. Post-thyroidectomy hypocalcemia occurs when parathyroid glands are accidentally removed or damaged, causing precipitous calcium drops. The neuromuscular hyperexcitability affects all muscles, including laryngeal muscles. This is a TRUE AIRWAY EMERGENCY requiring IMMEDIATE IV calcium gluconate and preparation for emergency intubation. All other complications are serious but laryngospasm is the MOST immediately fatal."
+                },
+                {
+                    id: 22,
+                    type: "priority",
+                    level: "🎯 Critical",
+                    scenario: "Mrs. Anderson's stridor is worsening and she's struggling to breathe. You have seconds to act.",
+                    question: "What is your FIRST priority action?",
+                    options: [
+                        "Call a code blue for respiratory arrest",
+                        "Administer IV calcium gluconate while preparing emergency airway equipment",
+                        "Encourage slow deep breaths and position patient upright",
+                        "Administer supplemental oxygen via non-rebreather mask"
+                    ],
+                    correctAnswers: ["Administer IV calcium gluconate while preparing emergency airway equipment"],
+                    rationale: "The FIRST action is to push IV calcium gluconate IMMEDIATELY while simultaneously preparing for emergency intubation. Calcium gluconate acts within minutes to reverse neuromuscular hyperexcitability and relax the laryngeal spasm. Have emergency airway equipment (intubation supplies, bag-valve-mask) AT THE BEDSIDE because laryngospasm can cause complete obstruction before calcium takes effect. You should also call for help/activate emergency response, but administering calcium is the definitive treatment that will reverse the laryngospasm. Time is critical - every second counts. Oxygen and positioning won't help if the airway is physically obstructed by muscle spasm. This is why post-thyroidectomy patients must be monitored extremely closely for hypocalcemia signs."
+                },
+                {
+                    id: 23,
+                    type: "sata",
+                    level: "🎯 Critical",
+                    scenario: "After emergency treatment, Mrs. Anderson is stabilized. Her calcium was 6.8 mg/dL. You're educating the nursing staff on recognizing hypocalcemia crisis.",
+                    question: "Which signs indicate impending hypocalcemic crisis requiring IMMEDIATE intervention? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Positive Chvostek sign (facial twitching with nerve tap)",
+                        "Positive Trousseau sign (carpopedal spasm with BP cuff)",
+                        "Stridor or voice changes indicating laryngeal involvement",
+                        "Hyperactive deep tendon reflexes",
+                        "Prolonged ST segment on ECG",
+                        "Circumoral tingling and numbness"
+                    ],
+                    correctAnswers: [
+                        "Positive Chvostek sign (facial twitching with nerve tap)",
+                        "Positive Trousseau sign (carpopedal spasm with BP cuff)",
+                        "Stridor or voice changes indicating laryngeal involvement",
+                        "Circumoral tingling and numbness"
+                    ],
+                    rationale: "All selected options indicate significant hypocalcemia, but some are more critical: (1) Positive Chvostek sign shows facial nerve hyperexcitability - tap facial nerve and facial muscles twitch. This indicates risk for tetany. (2) Positive Trousseau sign (inflate BP cuff above systolic for 3 min → hand spasms) is THE most reliable sign of latent tetany and impending crisis. (3) Stridor or voice changes indicate laryngeal involvement - THIS IS AN EMERGENCY requiring immediate calcium. (4) Circumoral numbness/tingling is an early warning sign. While hyperactive reflexes and prolonged ST are concerning findings, they're less immediately predictive of laryngospasm. TROUSSEAU'S SIGN and any airway symptoms = CRITICAL."
+                },
+                {
+                    id: 24,
+                    type: "case-study",
+                    level: "🎯 Critical",
+                    scenario: "Mr. Franklin, 52 years old, is in the ICU with acute renal failure following rhabdomyolysis from a crush injury. He's oliguric despite aggressive fluid resuscitation. Continuous cardiac monitoring shows progressive ECG changes: peaked T waves evolved to flattened P waves, now showing widening QRS complexes. He appears confused and reports severe muscle weakness - he can't lift his arms. VS: BP 88/54, HR 42 (bradycardic), RR 22. Stat labs: K+ 8.1 mEq/L, Ca2+ 7.1 mg/dL, Phos 7.8 mg/dL, Mg2+ 3.2 mEq/L.",
+                    question: "With these multiple critical imbalances, which represents the MOST immediately life-threatening condition?",
+                    options: [
+                        "Severe hyperkalemia with cardiac conduction abnormalities",
+                        "Hypocalcemia with neuromuscular complications",
+                        "Hyperphosphatemia causing calcium precipitation",
+                        "Hypermagnesemia causing respiratory depression"
+                    ],
+                    correctAnswers: ["Severe hyperkalemia with cardiac conduction abnormalities"],
+                    rationale: "While ALL of these imbalances are critical, the severe hyperkalemia (8.1 mEq/L) with progressive ECG changes represents the MOST immediate lethal threat. The ECG evolution - peaked T waves → flat P waves → wide QRS → indicates the heart is failing to conduct properly and is on the verge of CARDIAC ARREST. At K+ >8.0 mEq/L with wide QRS complexes, ventricular fibrillation or asystole can occur at ANY MOMENT. This patient needs IMMEDIATE IV calcium gluconate (to protect the heart), followed by insulin + glucose, sodium bicarbonate, and likely emergency dialysis. The other imbalances are serious but hyperkalemia kills FASTEST via lethal dysrhythmias. In crush injury/rhabdomyolysis, massive potassium release from damaged muscle cells can be rapidly fatal."
+                },
+                {
+                    id: 25,
+                    type: "sata",
+                    level: "🎯 Critical",
+                    scenario: "Emergency treatment is initiated for Mr. Franklin's life-threatening hyperkalemia and multiple imbalances.",
+                    question: "Which interventions are appropriate for this critical situation? SELECT ALL THAT APPLY.",
+                    options: [
+                        "STAT IV calcium gluconate or calcium chloride",
+                        "Regular insulin 10 units IV with 50% dextrose",
+                        "Sodium bicarbonate IV to shift potassium intracellularly",
+                        "Prepare for emergency hemodialysis",
+                        "Sodium polystyrene sulfonate (Kayexalate) via retention enema",
+                        "IV magnesium sulfate to treat hypermagnesemia"
+                    ],
+                    correctAnswers: [
+                        "STAT IV calcium gluconate or calcium chloride",
+                        "Regular insulin 10 units IV with 50% dextrose",
+                        "Sodium bicarbonate IV to shift potassium intracellularly",
+                        "Prepare for emergency hemodialysis",
+                        "Sodium polystyrene sulfonate (Kayexalate) via retention enema"
+                    ],
+                    rationale: "CORRECT emergency interventions: (1) IV calcium is FIRST - immediately stabilizes cardiac membrane against potassium's cardiotoxic effects (acts in minutes). (2) Insulin + glucose shifts K+ into cells temporarily, lowering serum levels (acts in 15-30 min). (3) Sodium bicarb also shifts K+ intracellularly, especially if patient is acidotic. (4) With K+ 8.1 and renal failure (oliguric), emergency dialysis is likely needed for definitive potassium removal. (5) Kayexalate removes K+ via GI tract (acts in hours). INCORRECT: DO NOT give IV magnesium - he already has HYPERmagnesemia (3.2). This would worsen bradycardia and respiratory depression. Always identify what's HIGH vs LOW before treating!"
+                },
+                {
+                    id: 26,
+                    type: "priority",
+                    level: "🎯 Critical",
+                    scenario: "While treating Mr. Franklin's hyperkalemia, his respiratory rate suddenly drops to 8/min with shallow breathing. His magnesium level was 3.2 mEq/L.",
+                    question: "What is the PRIORITY intervention for this new development?",
+                    options: [
+                        "Prepare for emergency intubation and mechanical ventilation",
+                        "Administer IV calcium gluconate for magnesium toxicity",
+                        "Increase oxygen via high-flow nasal cannula",
+                        "Administer naloxone for possible opioid effect"
+                    ],
+                    correctAnswers: ["Administer IV calcium gluconate for magnesium toxicity"],
+                    rationale: "The sudden respiratory depression indicates magnesium toxicity is now critical (Mg 3.2 mEq/L). While preparing for possible intubation, the PRIORITY is to administer IV calcium gluconate - calcium is the ANTIDOTE for magnesium toxicity. Calcium directly antagonizes magnesium's neuromuscular blocking effects and can reverse respiratory depression quickly. Hypermagnesemia causes progressive neuromuscular depression: first DTRs disappear (>4 mEq/L), then respiratory paralysis occurs (12-15 mEq/L). At 3.2 mEq/L with respiratory depression, he's heading toward respiratory arrest. Give calcium WHILE preparing airway equipment. If kidney function allows, dialysis will also remove excess magnesium. Remember: Calcium is the antidote for BOTH hyperkalemia cardiotoxicity AND hypermagnesemia neurotoxicity!"
+                },
+                {
+                    id: 27,
+                    type: "case-study",
+                    level: "🎉 Ultimate",
+                    scenario: "Ms. Chen, 44 years old, presents to ED after 5 days of severe viral gastroenteritis with intractable vomiting and diarrhea. She appears severely ill. VS: BP 78/48, HR 138, RR 28, T 99.8°F. She's disoriented and agitated, has tetanic contractions of her hands, visible muscle fasciculations, and when you take her blood pressure, her hand spasms into flexion. She has a history of chronic alcoholism. Initial labs: K+ 2.2 mEq/L, Ca2+ 6.8 mg/dL, Mg2+ 0.6 mEq/L, Na+ 124 mEq/L, Phos 1.8 mg/dL.",
+                    question: "Given these multiple critical electrolyte derangements, which should be corrected FIRST to allow correction of the others?",
+                    options: [
+                        "Magnesium - it must be repleted before calcium or potassium can normalize",
+                        "Sodium - the hyponatremia is causing the altered mental status",
+                        "Calcium - to prevent laryngospasm and seizures",
+                        "Potassium - it's the most critically low and affecting cardiac function"
+                    ],
+                    correctAnswers: ["Magnesium - it must be repleted before calcium or potassium can normalize"],
+                    rationale: "While ALL of these are critical, MAGNESIUM must be repleted FIRST. Here's why this is the KEY electrolyte: (1) Low magnesium BLOCKS parathyroid hormone (PTH) release → hypocalcemia that CANNOT be corrected until magnesium is normal. (2) Low magnesium causes renal potassium wasting and prevents cellular potassium uptake → hypokalemia that CANNOT be corrected until magnesium is normal. (3) Chronic alcoholism commonly causes magnesium deficiency through poor intake, increased GI/renal losses. You could give calcium and potassium all day, but levels won't improve without magnesium! This is called refractory hypokalemia and refractory hypocalcemia. Treat magnesium FIRST, then the others will respond to treatment. This is a critical clinical pearl: Mg → Ca and K."
+                },
+                {
+                    id: 28,
+                    type: "sata",
+                    level: "🎉 Ultimate",
+                    scenario: "Ms. Chen is being treated for her multiple electrolyte imbalances. You're monitoring for complications.",
+                    question: "Which symptoms in this patient could be attributed to her MULTIPLE electrolyte derangements? SELECT ALL THAT APPLY.",
+                    options: [
+                        "Tetanic hand contractions and positive Trousseau sign from hypocalcemia",
+                        "Altered mental status from severe hyponatremia causing cerebral edema",
+                        "Tachycardia and dysrhythmia risk from severe hypokalemia",
+                        "Muscle fasciculations and hyperactive reflexes from hypomagnesemia",
+                        "Seizure risk from combined hypocalcemia, hypomagnesemia, and hyponatremia",
+                        "Respiratory muscle weakness from phosphate depletion"
+                    ],
+                    correctAnswers: [
+                        "Tetanic hand contractions and positive Trousseau sign from hypocalcemia",
+                        "Altered mental status from severe hyponatremia causing cerebral edema",
+                        "Tachycardia and dysrhythmia risk from severe hypokalemia",
+                        "Muscle fasciculations and hyperactive reflexes from hypomagnesemia",
+                        "Seizure risk from combined hypocalcemia, hypomagnesemia, and hyponatremia",
+                        "Respiratory muscle weakness from phosphate depletion"
+                    ],
+                    rationale: "ALL options are correct - this patient has MULTIPLE life-threatening imbalances causing overlapping symptoms: (1) Hypocalcemia (6.8) causes tetany and positive Trousseau sign (CATS). (2) Severe hyponatremia (124) causes confusion, disorientation, and risk for cerebral edema and seizures. (3) Critical hypokalemia (2.2) causes tachycardia and puts her at high risk for fatal dysrhythmias, especially with possible digoxin use (SLOW HUG). (4) Hypomagnesemia (0.6) causes muscle fasciculations and hyperreflexia (TWITCH). (5) The COMBINATION of low calcium, magnesium, and sodium creates EXTREME seizure risk. (6) Hypophosphatemia (1.8) causes muscle weakness including respiratory muscles. This patient is a medical emergency requiring intensive, coordinated electrolyte replacement in proper sequence!"
+                },
+                {
+                    id: 29,
+                    type: "priority",
+                    level: "🎉 Ultimate",
+                    scenario: "While receiving IV magnesium sulfate, Ms. Chen develops new high-pitched stridor and appears to be choking.",
+                    question: "What is your IMMEDIATE priority action?",
+                    options: [
+                        "Stop the magnesium infusion immediately",
+                        "Call for emergency airway support and prepare to administer IV calcium gluconate",
+                        "Increase oxygen and suction the airway",
+                        "Check magnesium level for potential toxicity"
+                    ],
+                    correctAnswers: ["Call for emergency airway support and prepare to administer IV calcium gluconate"],
+                    rationale: "The stridor indicates LARYNGOSPASM from severe hypocalcemia - this is an AIRWAY EMERGENCY that supersedes everything else. Despite receiving magnesium, her calcium is still critically low (6.8) and causing laryngeal muscle spasm. IMMEDIATE actions: (1) Call for emergency airway team - may need emergency intubation. (2) Administer IV calcium gluconate IMMEDIATELY - this will reverse the laryngospasm. (3) Have bag-valve-mask ready. DO NOT stop the magnesium - she needs it to correct the calcium! The problem isn't magnesium toxicity (she has LOW magnesium), it's that the calcium hasn't corrected yet. Calcium works in minutes to reverse laryngospasm, but every second counts. This could progress to complete airway obstruction and respiratory arrest. Airway is ALWAYS the priority!"
+                },
+                {
+                    id: 30,
+                    type: "case-study",
+                    level: "🎉 Ultimate",
+                    scenario: "Mr. Bishop, 67 years old, is post-op day 3 from extensive bowel resection for Crohn's disease. He's had high-output ileostomy drainage (2-3 liters/day) and has been on TPN. Over the past 12 hours, he's become increasingly confused and agitated. Nursing notes document: 'Patient pulling at IV lines, doesn't recognize family, combative with care.' VS: BP 108/64, HR 94, RR 20, T 100.2°F. Physical exam shows muscle weakness, hyperactive deep tendon reflexes, positive Chvostek sign, and tremors. He suddenly has a generalized seizure. Labs: Na+ 118 mEq/L, K+ 2.8 mEq/L, Ca2+ 7.2 mg/dL, Mg2+ 0.9 mEq/L, Phos 1.5 mg/dL.",
+                    question: "What is the PRIMARY electrolyte causing this patient's acute neurological deterioration and seizure?",
+                    options: [
+                        "Severe hyponatremia causing cerebral edema",
+                        "Hypocalcemia from vitamin D deficiency",
+                        "Combined effect of hypomagnesemia and hypocalcemia",
+                        "Hypokalemia affecting nerve conduction"
+                    ],
+                    correctAnswers: ["Severe hyponatremia causing cerebral edema"],
+                    rationale: "While this patient has MULTIPLE dangerous imbalances, the severe hyponatremia (Na+ 118) is the PRIMARY cause of acute neurological symptoms and seizure. Sodium <120 mEq/L causes significant cerebral edema - water moves into brain cells to equalize osmotic pressure, causing brain swelling. Symptoms: confusion, agitation, combativeness, seizures, coma, death. The GI losses from high-output ileostomy caused massive sodium and water losses. While hypocalcemia (7.2) and hypomagnesemia (0.9) contribute to seizure risk through neuromuscular hyperexcitability, the acute severe altered mental status and seizure are primarily from hyponatremic encephalopathy. This is a medical emergency - severe hyponatremia has HIGH mortality. Treatment requires CAREFUL, SLOW sodium correction to prevent osmotic demyelination syndrome."
+                }
+            ];
+
+            // Board game spaces configuration
+            const boardSpaces = [
+                { name: "START", color: "#00ff00", emoji: "🎪" },
+                ...allQuestions.map((q, i) => ({
+                    name: `Q${i + 1}`,
+                    color: q.type === 'sata' ? '#ff1493' :
+                           q.type === 'case-study' ? '#9370db' :
+                           q.type === 'priority' ? '#ff4500' :
+                           '#00bfff',
+                    emoji: q.level.split(' ')[0],
+                    questionIndex: i
+                })),
+                { name: "FINISH", color: "#ffd700", emoji: "🏆" }
+            ];
+
+            // Shuffle options once when question changes
+            useEffect(() => {
+                if (currentQuestion < allQuestions.length) {
+                    const question = allQuestions[currentQuestion];
+                    const shuffled = shuffleArray(question.options);
+                    setShuffledOptions(shuffled);
+                }
+            }, [currentQuestion]);
+
+            const getCurrentQuestion = () => {
+                if (currentQuestion >= allQuestions.length) return null;
+                
+                const question = allQuestions[currentQuestion];
+                
+                // Map correct answers to their new shuffled positions
+                if (question.correctAnswers && shuffledOptions.length > 0) {
+                    const correctIndexes = shuffledOptions
+                        .map((option, idx) => question.correctAnswers.includes(option) ? idx : -1)
+                        .filter(idx => idx !== -1);
+                    return { ...question, options: shuffledOptions, correct: correctIndexes };
+                }
+                return { ...question, options: shuffledOptions, correct: [] };
+            };
+
+            const currentQuestionData = getCurrentQuestion();
+
+            const handleAnswerSelect = (index) => {
+                if (!currentQuestionData) return;
+                
+                if (currentQuestionData.type === 'sata') {
+                    if (selectedAnswers.includes(index)) {
+                        setSelectedAnswers(selectedAnswers.filter(i => i !== index));
+                    } else {
+                        setSelectedAnswers([...selectedAnswers, index]);
+                    }
+                } else {
+                    setSelectedAnswers([index]);
+                }
+            };
+
+            const showPointsPopup = (points) => {
+                const popup = document.createElement('div');
+                popup.className = 'points-popup';
+                popup.textContent = `+${points} pts!`;
+                popup.style.left = '50%';
+                popup.style.top = '30%';
+                popup.style.transform = 'translateX(-50%)';
+                document.body.appendChild(popup);
+                setTimeout(() => popup.remove(), 2000);
+            };
+
+            const checkAnswer = () => {
+                if (!currentQuestionData) return;
+                
+                const correctAnswers = currentQuestionData.correct.sort();
+                const userAnswers = [...selectedAnswers].sort();
+                
+                const correct = JSON.stringify(correctAnswers) === JSON.stringify(userAnswers);
+                setIsCorrect(correct);
+                setShowRationale(true);
+                
+                if (correct) {
+                    const basePoints = getPointValue(currentQuestionData.type);
+                    const multiplier = getBonusMultiplier();
+                    const earnedPoints = basePoints * multiplier;
+                    
+                    setPointsEarned(earnedPoints);
+                    setTotalPoints(totalPoints + earnedPoints);
+                    setStreak(streak + 1);
+                    
+                    showPointsPopup(earnedPoints);
+                    
+                    // Create confetti
+                    for (let i = 0; i < 30; i++) {
+                        setTimeout(() => {
+                            const confetti = document.createElement('div');
+                            confetti.className = 'confetti';
+                            confetti.style.left = Math.random() * 100 + '%';
+                            confetti.style.top = '-10px';
+                            confetti.style.background = ['#ff0080', '#00ff80', '#0080ff', '#ff8000', '#ff0080'][Math.floor(Math.random() * 5)];
+                            document.body.appendChild(confetti);
+                            setTimeout(() => confetti.remove(), 3000);
+                        }, i * 30);
+                    }
+                } else {
+                    setStreak(0);
+                    setPointsEarned(0);
+                }
+                
+                setAnsweredQuestions(answeredQuestions + 1);
+            };
+
+            const nextQuestion = () => {
+                if (currentQuestion < allQuestions.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                    setCurrentSpace(currentSpace + 1);
+                } else {
+                    setGameComplete(true);
+                }
+                
+                setSelectedAnswers([]);
+                setShowRationale(false);
+                setIsCorrect(null);
+            };
+
+            const restartGame = () => {
+                setCurrentSpace(0);
+                setCurrentQuestion(0);
+                setTotalPoints(0);
+                setSelectedAnswers([]);
+                setShowRationale(false);
+                setIsCorrect(null);
+                setGameComplete(false);
+                setAnsweredQuestions(0);
+                setStreak(0);
+                setPointsEarned(0);
+            };
+
+            if (gameComplete) {
+                const maxPoints = allQuestions.reduce((sum, q) => sum + getPointValue(q.type), 0);
+                const percentage = ((totalPoints / maxPoints) * 100).toFixed(1);
+                
+                return (
+                    <div style={{ minHeight: '100vh', padding: '2rem' }}>
+                        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <div className="fun-house-border bounce-in" style={{ 
+                                background: 'linear-gradient(135deg, #fff 0%, #ffe6f0 100%)',
+                                borderRadius: '30px',
+                                padding: '3rem',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{ fontSize: '6rem', marginBottom: '1rem' }}>🏆✨🎉</div>
+                                <h1 className="rainbow-text" style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>
+                                    GAME COMPLETE!
+                                </h1>
+                                <h2 style={{ 
+                                    fontSize: '2rem',
+                                    background: 'linear-gradient(90deg, #ff1493, #ff69b4)',
+                                    WebkitBackgroundClip: 'text',
+                                    backgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    fontWeight: 'bold',
+                                    marginBottom: '2rem'
+                                }}>
+                                    You've Conquered the Board!
+                                </h2>
+                                
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #ff69b4, #da70d6)',
+                                    borderRadius: '20px',
+                                    padding: '2rem',
+                                    marginBottom: '2rem',
+                                    color: 'white'
+                                }}>
+                                    <div style={{ fontSize: '5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                                        {totalPoints.toLocaleString()}
+                                    </div>
+                                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+                                        TOTAL POINTS
+                                    </div>
+                                    <div style={{ fontSize: '1.2rem' }}>
+                                        {percentage}% of Max Score
+                                    </div>
+                                </div>
+                                
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #ffb6c1, #ffc0cb)',
+                                    borderRadius: '20px',
+                                    padding: '1.5rem',
+                                    marginBottom: '2rem'
+                                }}>
+                                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                                        {totalPoints >= 4000 ? "🌟 LEGENDARY!" : 
+                                         totalPoints >= 3500 ? "⭐ OUTSTANDING!" :
+                                         totalPoints >= 3000 ? "💫 EXCELLENT!" :
+                                         totalPoints >= 2500 ? "✨ GREAT JOB!" :
+                                         "📚 Keep Practicing!"}
+                                    </div>
+                                </div>
+                                
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                                    <div style={{ background: '#fff', borderRadius: '15px', padding: '1rem', border: '3px solid #ff69b4' }}>
+                                        <div style={{ fontSize: '0.9rem', color: '#666' }}>Questions</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ff1493' }}>{allQuestions.length}</div>
+                                    </div>
+                                    <div style={{ background: '#fff', borderRadius: '15px', padding: '1rem', border: '3px solid #da70d6' }}>
+                                        <div style={{ fontSize: '0.9rem', color: '#666' }}>Max Points</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#9370db' }}>{maxPoints}</div>
+                                    </div>
+                                </div>
+                                
+                                <button
+                                    onClick={restartGame}
+                                    className="bubble-button"
+                                    style={{
+                                        padding: '1rem 3rem',
+                                        fontSize: '1.5rem',
+                                        fontWeight: 'bold',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        fontFamily: 'Fredoka'
+                                    }}
+                                >
+                                    🎮 Play Again!
+                                </button>
+                                
+                                <div style={{ marginTop: '2rem', fontSize: '1.2rem', color: '#666' }}>
+                                    You're HESI ready! 💪💕✨
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!currentQuestionData) return null;
+
+            return (
+                <div style={{ minHeight: '100vh', padding: '1rem' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                        {/* Game Board */}
+                        <div className="carnival-header bounce-in" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '1.5rem', position: 'relative', zIndex: 2 }}>
+                                <h1 className="wave-text" style={{ 
+                                    fontSize: '2.5rem',
+                                    fontWeight: 'bold',
+                                    color: 'white',
+                                    textShadow: '3px 3px 6px rgba(0,0,0,0.3)',
+                                    marginBottom: '0.5rem'
+                                }}>
+                                    🎪 Electrolyte Board Game! 🎪
+                                </h1>
+                                <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'white', textShadow: '3px 3px 6px rgba(0,0,0,0.5)' }}>
+                                    {totalPoints.toLocaleString()} POINTS
+                                </div>
+                                {streak >= 3 && (
+                                    <div style={{ 
+                                        fontSize: '1.2rem', 
+                                        color: '#ffff00', 
+                                        fontWeight: 'bold',
+                                        textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                                        marginTop: '0.5rem'
+                                    }}>
+                                        🔥 {streak} STREAK! {getBonusMultiplier()}x MULTIPLIER! 🔥
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Mini Board View */}
+                            <div style={{
+                                background: 'rgba(255,255,255,0.2)',
+                                borderRadius: '15px',
+                                padding: '1rem',
+                                display: 'flex',
+                                gap: '0.5rem',
+                                overflowX: 'auto',
+                                position: 'relative',
+                                zIndex: 2
+                            }}>
+                                {boardSpaces.slice(Math.max(0, currentSpace - 2), Math.min(boardSpaces.length, currentSpace + 8)).map((space, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="board-space"
+                                        style={{
+                                            background: space.color,
+                                            opacity: space.questionIndex !== undefined && space.questionIndex < currentQuestion ? 0.5 : 1,
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        <div style={{ fontSize: '1.5rem' }}>{space.emoji}</div>
+                                        <div style={{ fontSize: '0.7rem', color: '#333' }}>{space.name}</div>
+                                        
+                                        {space.questionIndex === currentQuestion && (
+                                            <div className="player-token" style={{ background: 'linear-gradient(135deg, #ff69b4, #ff1493)' }}>
+                                                👩‍⚕️
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                marginTop: '1rem',
+                                gap: '1rem',
+                                position: 'relative',
+                                zIndex: 2
+                            }}>
+                                <div style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '10px', padding: '0.5rem 1rem', flex: 1 }}>
+                                    <div style={{ fontSize: '0.7rem', color: '#666' }}>Progress</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ff1493' }}>
+                                        {currentQuestion + 1}/{allQuestions.length}
+                                    </div>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '10px', padding: '0.5rem 1rem', flex: 1 }}>
+                                    <div style={{ fontSize: '0.7rem', color: '#666' }}>Correct</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#00cc00' }}>
+                                        {answeredQuestions > 0 ? Math.round((totalPoints / (answeredQuestions * 100)) * 100 / getBonusMultiplier()) : 0}%
+                                    </div>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '10px', padding: '0.5rem 1rem', flex: 1 }}>
+                                    <div style={{ fontSize: '0.7rem', color: '#666' }}>Level</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#9370db' }}>
+                                        {currentQuestionData.level}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Question Card */}
+                        <div className="fun-house-border pop-in" style={{
+                            background: 'linear-gradient(135deg, #fff 0%, #ffe6f0 100%)',
+                            borderRadius: '30px',
+                            padding: '2rem'
+                        }}>
+                            {/* Question Type Badge with Point Value */}
+                            <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                    <span style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '25px',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 'bold',
+                                        color: 'white',
+                                        background: currentQuestionData.type === 'sata' ? 'linear-gradient(135deg, #ff1493, #ff69b4)' :
+                                                   currentQuestionData.type === 'case-study' ? 'linear-gradient(135deg, #9370db, #ba55d3)' :
+                                                   currentQuestionData.type === 'priority' ? 'linear-gradient(135deg, #ff0000, #ff4500)' :
+                                                   'linear-gradient(135deg, #00bfff, #1e90ff)',
+                                        border: '3px solid white',
+                                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                                    }}>
+                                        {currentQuestionData.type === 'sata' ? '📋 SELECT ALL' :
+                                         currentQuestionData.type === 'case-study' ? '🏥 CASE STUDY' :
+                                         currentQuestionData.type === 'priority' ? '⚠️ PRIORITY' :
+                                         '❓ MULTIPLE CHOICE'}
+                                    </span>
+                                    <span style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '25px',
+                                        fontSize: '1rem',
+                                        fontWeight: 'bold',
+                                        background: 'linear-gradient(135deg, #ffd700, #ff8c00)',
+                                        color: 'white',
+                                        border: '3px solid white',
+                                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                                    }}>
+                                        💎 {getPointValue(currentQuestionData.type)} pts
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Scenario */}
+                            {currentQuestionData.scenario && (
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #ffe6f0, #ffd6e8)',
+                                    borderRadius: '20px',
+                                    padding: '1.5rem',
+                                    marginBottom: '1.5rem',
+                                    border: '4px solid #ffb6c1'
+                                }}>
+                                    <h3 style={{ color: '#ff1493', fontWeight: 'bold', marginBottom: '0.75rem', fontSize: '1.1rem' }}>
+                                        💝 Patient Scenario:
+                                    </h3>
+                                    <p style={{ color: '#333', lineHeight: '1.6' }}>{currentQuestionData.scenario}</p>
+                                </div>
+                            )}
+
+                            {/* Question */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h2 style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#333', marginBottom: '0.75rem' }}>
+                                    {currentQuestionData.question}
+                                </h2>
+                                {currentQuestionData.type === 'sata' && (
+                                    <p style={{ color: '#ff1493', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                        ⚠️ Select ALL correct answers!
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Options */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                {currentQuestionData.options.map((option, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => !showRationale && handleAnswerSelect(index)}
+                                        disabled={showRationale}
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: '1rem',
+                                            marginBottom: '0.75rem',
+                                            borderRadius: '15px',
+                                            border: showRationale
+                                                ? currentQuestionData.correct.includes(index)
+                                                    ? '4px solid #00ff00'
+                                                    : selectedAnswers.includes(index)
+                                                    ? '4px solid #ff0000'
+                                                    : '4px solid #ccc'
+                                                : selectedAnswers.includes(index)
+                                                ? '4px solid #ff1493'
+                                                : '4px solid #ddd',
+                                            background: showRationale
+                                                ? currentQuestionData.correct.includes(index)
+                                                    ? '#ccffcc'
+                                                    : selectedAnswers.includes(index)
+                                                    ? '#ffcccc'
+                                                    : '#f5f5f5'
+                                                : selectedAnswers.includes(index)
+                                                ? 'linear-gradient(135deg, #ffe6f0, #ffd6e8)'
+                                                : 'white',
+                                            cursor: showRationale ? 'default' : 'pointer',
+                                            fontWeight: 'bold',
+                                            color: '#333',
+                                            transition: 'all 0.2s',
+                                            fontFamily: 'Fredoka'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{
+                                                width: '30px',
+                                                height: '30px',
+                                                borderRadius: '50%',
+                                                border: '3px solid #ff1493',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0,
+                                                background: showRationale
+                                                    ? currentQuestionData.correct.includes(index)
+                                                        ? '#00ff00'
+                                                        : selectedAnswers.includes(index)
+                                                        ? '#ff0000'
+                                                        : 'white'
+                                                    : selectedAnswers.includes(index)
+                                                    ? '#ff1493'
+                                                    : 'white'
+                                            }}>
+                                                {showRationale && currentQuestionData.correct.includes(index) && '✓'}
+                                                {showRationale && !currentQuestionData.correct.includes(index) && selectedAnswers.includes(index) && '✗'}
+                                                {!showRationale && selectedAnswers.includes(index) && (
+                                                    <div style={{ width: '15px', height: '15px', background: 'white', borderRadius: '50%' }} />
+                                                )}
+                                            </div>
+                                            <span>{option}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Rationale */}
+                            {showRationale && (
+                                <div className="bounce-in" style={{
+                                    borderRadius: '20px',
+                                    padding: '1.5rem',
+                                    marginBottom: '1.5rem',
+                                    border: isCorrect ? '5px solid #00ff00' : '5px solid #ff0000',
+                                    background: isCorrect ? '#e6ffe6' : '#ffe6e6'
+                                }}>
+                                    <h3 style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: 'bold',
+                                        marginBottom: '0.75rem',
+                                        color: isCorrect ? '#006600' : '#cc0000'
+                                    }}>
+                                        {isCorrect ? `✅ +${pointsEarned} Points!` : '❌ +0 Points'}
+                                    </h3>
+                                    <p style={{ color: '#333', fontWeight: 'bold', marginBottom: '1rem', fontSize: '1.1rem' }}>
+                                        {isCorrect ? `🎉 Awesome! ${streak > 1 ? `${streak} in a row!` : ''}` : 'Review the rationale!'}
+                                    </p>
+                                    
+                                    <div style={{
+                                        background: 'white',
+                                        borderRadius: '15px',
+                                        padding: '1.25rem',
+                                        border: '3px solid #ddd'
+                                    }}>
+                                        <h4 style={{ color: '#9370db', fontWeight: 'bold', marginBottom: '0.75rem', fontSize: '1.1rem' }}>
+                                            🧠 Rationale & Clinical Pearls:
+                                        </h4>
+                                        <p style={{ color: '#333', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                                            {currentQuestionData.rationale}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            {!showRationale ? (
+                                <button
+                                    onClick={checkAnswer}
+                                    disabled={selectedAnswers.length === 0}
+                                    className={selectedAnswers.length > 0 ? 'bubble-button' : ''}
+                                    style={{
+                                        width: '100%',
+                                        padding: '1rem',
+                                        fontSize: '1.3rem',
+                                        fontWeight: 'bold',
+                                        borderRadius: '25px',
+                                        border: '4px solid white',
+                                        cursor: selectedAnswers.length === 0 ? 'not-allowed' : 'pointer',
+                                        background: selectedAnswers.length === 0 ? '#ccc' : undefined,
+                                        color: 'white',
+                                        fontFamily: 'Fredoka'
+                                    }}
+                                >
+                                    Submit Answer
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={nextQuestion}
+                                    className="bubble-button"
+                                    style={{
+                                        width: '100%',
+                                        padding: '1rem',
+                                        fontSize: '1.3rem',
+                                        fontWeight: 'bold',
+                                        borderRadius: '25px',
+                                        border: '4px solid white',
+                                        cursor: 'pointer',
+                                        background: 'linear-gradient(135deg, #00ff00, #00cc00)',
+                                        color: 'white',
+                                        fontFamily: 'Fredoka'
+                                    }}
+                                >
+                                    {currentQuestion < allQuestions.length - 1 
+                                        ? 'Next Question →' 
+                                        : '🏆 Finish Game!'}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, #fff, #ffe6f0)',
+                            borderRadius: '20px',
+                            padding: '1.5rem',
+                            marginTop: '1.5rem',
+                            border: '4px solid #ffb6c1'
+                        }}>
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'start' }}>
+                                <div style={{ fontSize: '1.5rem' }}>💡</div>
+                                <div>
+                                    <h3 style={{ color: '#9370db', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                                        Point System:
+                                    </h3>
+                                    <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                                        MCQ = 100pts • Case Study = 150pts • SATA = 200pts • Priority = 250pts<br/>
+                                        🔥 Streak Bonus: 3+ correct = 2x points • 5+ correct = 3x points!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<ElectrolyteBoardGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neptune Renal Research Facility - Underwater Escape Room</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Lucide React icons as SVG components
+        const Waves = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const Droplets = ({ className, style }) => (
+            <svg className={className} style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+            </svg>
+        );
+
+        const AlertCircle = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const CheckCircle = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const Fish = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        );
+
+        const Anchor = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+            </svg>
+        );
+
+        const NeptuneRenalEscape = () => {
+          const [gameState, setGameState] = useState('start');
+          const [currentChamber, setCurrentChamber] = useState(0);
+          const [currentQuestion, setCurrentQuestion] = useState(0);
+          const [score, setScore] = useState(0);
+          const [selectedAnswers, setSelectedAnswers] = useState([]);
+          const [showFeedback, setShowFeedback] = useState(false);
+          const [isCorrect, setIsCorrect] = useState(false);
+          const [character, setCharacter] = useState(null);
+
+          const characters = [
+            { name: 'Marina', color: '#FF69B4', emoji: '🧜‍♀️' },
+            { name: 'Coral', color: '#DDA0DD', emoji: '🐚' },
+            { name: 'Pearl', color: '#B0E0E6', emoji: '💎' },
+            { name: 'Nixie', color: '#FFB6C1', emoji: '🌸' }
+          ];
+
+          const chambers = [
+            {
+              name: "The Glomerular Gateway",
+              description: "The entrance chamber pulses with filtered blood. Master nephron anatomy to unlock the pathway forward.",
+              color: "#FF1493"
+            },
+            {
+              name: "Loop of Henle Labyrinth",
+              description: "Ascending and descending passages twist through this chamber. Loop diuretics guard the way.",
+              color: "#DA70D6"
+            },
+            {
+              name: "The Furosemide Falls",
+              description: "Cascading water echoes the drug's powerful effects. Navigate its adverse currents.",
+              color: "#BA55D3"
+            },
+            {
+              name: "Thiazide Tide Pools",
+              description: "Shallow waters where HCTZ reigns. Moderate diuresis flows here.",
+              color: "#9370DB"
+            },
+            {
+              name: "Aldactone Abyss",
+              description: "Potassium-rich depths where spironolactone holds sway. Tread carefully.",
+              color: "#8A2BE2"
+            },
+            {
+              name: "Mannitol Maelstrom",
+              description: "Osmotic forces swirl in this chamber. Only IV access penetrates these waters.",
+              color: "#9932CC"
+            },
+            {
+              name: "The Toxicity Trench",
+              description: "Danger lurks here—ototoxicity, hypokalemia, and drug interactions await.",
+              color: "#8B008B"
+            },
+            {
+              name: "Clinical Command Center",
+              description: "The final chamber. Apply all knowledge to escape Neptune's grasp.",
+              color: "#4B0082"
+            }
+          ];
+
+          const questions = [
+            // Chamber 1: Nephron Anatomy (5 questions)
+            {
+              chamber: 0,
+              type: 'mcq',
+              question: "A nursing student asks where the majority of filtered water and electrolytes are reabsorbed in the nephron. Which structure should the nurse identify?",
+              options: [
+                "Proximal convoluted tubule",
+                "Distal convoluted tubule",
+                "Loop of Henle",
+                "Collecting duct"
+              ],
+              correct: [0],
+              rationale: "The proximal convoluted tubule reabsorbs most of the filtered water, sodium, electrolytes, glucose, and bicarbonate back into circulation. According to the slides, 99% of water, electrolytes, and nutrients undergo reabsorption, with the proximal tubule handling the majority."
+            },
+            {
+              chamber: 0,
+              type: 'mcq',
+              question: "The nurse is teaching about renal physiology. Which process occurs at the glomerulus?",
+              options: [
+                "Filtration of blood while retaining cells and proteins",
+                "Reabsorption of glucose and bicarbonate",
+                "Secretion of potassium and hydrogen ions",
+                "Concentration of urine through osmotic gradients"
+              ],
+              correct: [0],
+              rationale: "The glomerulus filters blood by letting water and small solutes pass while keeping cells and proteins inside the bloodstream. This is the first step in urine formation."
+            },
+            {
+              chamber: 0,
+              type: 'mcq',
+              question: "Which portion of the nephron creates the concentration gradient that allows the kidney to produce either concentrated or dilute urine?",
+              options: [
+                "Loop of Henle",
+                "Glomerulus",
+                "Proximal convoluted tubule",
+                "Bowman's capsule"
+              ],
+              correct: [0],
+              rationale: "The Loop of Henle concentrates the gradient by pulling water out of the descending limb and pulling electrolytes out of the ascending limb, allowing the kidney to produce concentrated or dilute urine as needed."
+            },
+            {
+              chamber: 0,
+              type: 'sata',
+              question: "The nurse is reviewing the three basic functions of the kidneys. Which functions should be included? (Select all that apply)",
+              options: [
+                "Cleansing of extracellular fluid and maintenance of ECF volume and composition",
+                "Maintenance of acid-base balance",
+                "Excretion of metabolic wastes and foreign substances",
+                "Production of red blood cells",
+                "Regulation of body temperature"
+              ],
+              correct: [0, 1, 2],
+              rationale: "The three basic functions of diuretics/kidneys are: 1) Cleansing of ECF and maintenance of ECF volume and composition, 2) Maintenance of acid-base balance, and 3) Excretion of metabolic wastes and foreign substances. RBC production and temperature regulation are not primary diuretic functions."
+            },
+            {
+              chamber: 0,
+              type: 'mcq',
+              question: "Where in the nephron does sodium-potassium exchange primarily occur?",
+              options: [
+                "Late distal convoluted tubule and collecting duct",
+                "Proximal convoluted tubule",
+                "Ascending loop of Henle",
+                "Descending loop of Henle"
+              ],
+              correct: [0],
+              rationale: "According to the slides, the late distal convoluted tubule and collecting duct (distal nephron) are responsible for sodium-potassium exchange and regulation of urine concentration."
+            },
+
+            // Chamber 2: Loop Diuretics Basics (5 questions)
+            {
+              chamber: 1,
+              type: 'mcq',
+              question: "A patient is prescribed furosemide for pulmonary edema. The nurse understands this medication works by which mechanism?",
+              options: [
+                "Blocking sodium and chloride reabsorption in the ascending loop of Henle",
+                "Blocking aldosterone in the distal nephron",
+                "Creating osmotic force in the nephron lumen",
+                "Inhibiting carbonic anhydrase in the proximal tubule"
+              ],
+              correct: [0],
+              rationale: "Loop diuretics work by blockade of sodium and chloride reabsorption. Furosemide specifically acts on the ascending loop of Henle to block reabsorption, producing powerful diuresis."
+            },
+            {
+              chamber: 1,
+              type: 'mcq',
+              question: "The nurse is preparing to administer IV furosemide to a patient with acute heart failure. How quickly should the nurse expect the onset of action?",
+              options: [
+                "5 minutes",
+                "15 minutes",
+                "30 minutes",
+                "60 minutes"
+              ],
+              correct: [0],
+              rationale: "IV furosemide has a rapid onset of 5 minutes. Oral administration has an onset of 60 minutes. This rapid IV onset makes it ideal for acute situations like pulmonary edema."
+            },
+            {
+              chamber: 1,
+              type: 'sata',
+              question: "For which conditions is furosemide (Lasix) indicated? (Select all that apply)",
+              options: [
+                "Pulmonary edema",
+                "Edematous states",
+                "Hypertension",
+                "Diabetes insipidus",
+                "Hyperkalemia"
+              ],
+              correct: [0, 1, 2],
+              rationale: "According to the slides, therapeutic uses of furosemide include pulmonary edema, edematous states (swelling states), and hypertension. Diabetes insipidus is treated with thiazides, not loop diuretics."
+            },
+            {
+              chamber: 1,
+              type: 'mcq',
+              question: "Which characteristic differentiates loop diuretics from thiazide diuretics?",
+              options: [
+                "Loop diuretics still work when urine flow is scant",
+                "Loop diuretics cause less potassium wasting",
+                "Loop diuretics have a slower onset of action",
+                "Loop diuretics produce less diuresis overall"
+              ],
+              correct: [0],
+              rationale: "A key advantage of loop diuretics is that they still work when urine flow is scant, unlike thiazides which are not effective when urine flow is scant. This makes loop diuretics more useful in renal impairment."
+            },
+            {
+              chamber: 1,
+              type: 'mcq',
+              question: "Which loop diuretic is most frequently prescribed?",
+              options: [
+                "Furosemide (Lasix)",
+                "Bumetanide (Bumex)",
+                "Torsemide (Demadex)",
+                "Ethacrynic acid (Edecrin)"
+              ],
+              correct: [0],
+              rationale: "The slides explicitly state that furosemide (Lasix) is the most frequently prescribed loop diuretic."
+            },
+
+            // Chamber 3: Loop Diuretics Advanced (5 questions)
+            {
+              chamber: 2,
+              type: 'sata',
+              question: "A patient taking furosemide develops muscle weakness and cardiac dysrhythmias. Which electrolyte imbalances should the nurse suspect? (Select all that apply)",
+              options: [
+                "Hypokalemia",
+                "Hyponatremia",
+                "Hypochloremia",
+                "Hypercalcemia",
+                "Hypermagnesemia"
+              ],
+              correct: [0, 1, 2],
+              rationale: "Furosemide causes hyponatremia, hypochloremia, and dehydration. Hypokalemia is a major adverse effect that wastes a lot of K+, leading to muscle weakness and dysrhythmias. Furosemide also impacts calcium and magnesium (causing losses, not increases)."
+            },
+            {
+              chamber: 2,
+              type: 'mcq',
+              question: "The nurse is monitoring a patient receiving furosemide. Which adverse effect is unique to loop diuretics compared to thiazides?",
+              options: [
+                "Ototoxicity",
+                "Hyperglycemia",
+                "Hyperuricemia",
+                "Hypokalemia"
+              ],
+              correct: [0],
+              rationale: "Ototoxicity is an adverse effect specifically associated with loop diuretics like furosemide. While both loop and thiazide diuretics can cause hyperglycemia, hyperuricemia, and hypokalemia, only loop diuretics cause hearing loss."
+            },
+            {
+              chamber: 2,
+              type: 'mcq',
+              question: "A patient taking furosemide develops hyperuricemia. The nurse understands this occurs because:",
+              options: [
+                "The drug increases uric acid reabsorption in the proximal tubule when the kidneys compete to reabsorb sodium and water",
+                "The drug blocks uric acid excretion in the collecting duct",
+                "The drug stimulates uric acid production in the liver",
+                "The drug prevents uric acid filtration at the glomerulus"
+              ],
+              correct: [0],
+              rationale: "According to the slides, hyperuricemia occurs because the drug increases uric acid reabsorption in the proximal tubule when the kidneys compete to reabsorb sodium and water, causing uric acid to build up in the blood."
+            },
+            {
+              chamber: 2,
+              type: 'mcq',
+              question: "Which mechanism explains the hypotension that can occur with furosemide administration?",
+              options: [
+                "Relaxation of venous smooth muscle",
+                "Decreased cardiac contractility",
+                "Increased peripheral resistance",
+                "Stimulation of renin release"
+              ],
+              correct: [0],
+              rationale: "Furosemide causes hypotension through two mechanisms: loss of volume and relaxation of venous smooth muscle, as stated in the slides."
+            },
+            {
+              chamber: 2,
+              type: 'sata',
+              question: "Which other high-ceiling loop diuretics share similar adverse effects to furosemide? (Select all that apply)",
+              options: [
+                "Ethacrynic acid (Edecrin)",
+                "Bumetanide (Bumex)",
+                "Torsemide (Demadex)",
+                "Hydrochlorothiazide (HydroDIURIL)",
+                "Spironolactone (Aldactone)"
+              ],
+              correct: [0, 1, 2],
+              rationale: "According to the slides, ethacrynic acid, bumetanide, and torsemide all can cause ototoxicity, hypovolemia, hypotension, hypokalemia, hyperuricemia, hyperglycemia, and disruption of lipid metabolism—the same adverse effects as furosemide."
+            },
+
+            // Chamber 4: Thiazide Diuretics (5 questions)
+            {
+              chamber: 3,
+              type: 'mcq',
+              question: "Where in the nephron do thiazide diuretics exert their primary action?",
+              options: [
+                "Early segment of the distal convoluted tubule",
+                "Ascending loop of Henle",
+                "Proximal convoluted tubule",
+                "Collecting duct"
+              ],
+              correct: [0],
+              rationale: "Hydrochlorothiazide acts on the early segment of the distal convoluted tubule, as clearly stated in the slides. This is different from loop diuretics which act on the loop of Henle."
+            },
+            {
+              chamber: 3,
+              type: 'mcq',
+              question: "A patient asks why hydrochlorothiazide was prescribed instead of furosemide for hypertension. Which response by the nurse is most accurate?",
+              options: [
+                "Thiazides are preferred for routine hypertension management because they have a moderate, sustained effect",
+                "Thiazides work faster than loop diuretics",
+                "Thiazides cause less potassium loss than loop diuretics",
+                "Thiazides work better when kidney function is poor"
+              ],
+              correct: [0],
+              rationale: "While thiazides have maximum diuresis considerably lower than loop diuretics and don't work as effectively when urine flow is scant, they are the preferred first-line agents for essential hypertension due to their moderate, sustained effects."
+            },
+            {
+              chamber: 3,
+              type: 'mcq',
+              question: "When should the nurse expect peak effects after administering oral hydrochlorothiazide?",
+              options: [
+                "4 to 6 hours",
+                "30 to 60 minutes",
+                "8 to 12 hours",
+                "12 to 24 hours"
+              ],
+              correct: [0],
+              rationale: "According to the slides, hydrochlorothiazide peaks in 4 to 6 hours after oral administration."
+            },
+            {
+              chamber: 3,
+              type: 'sata',
+              question: "For which conditions is hydrochlorothiazide indicated? (Select all that apply)",
+              options: [
+                "Essential hypertension",
+                "Edema",
+                "Diabetes insipidus",
+                "Increased intracranial pressure",
+                "Primary hyperaldosteronism"
+              ],
+              correct: [0, 1, 2],
+              rationale: "The slides list therapeutic uses of HCTZ as essential hypertension, edema, and diabetes insipidus (DI). Increased intracranial pressure is treated with mannitol, and primary hyperaldosteronism is treated with spironolactone."
+            },
+            {
+              chamber: 3,
+              type: 'mcq',
+              question: "A patient on hydrochlorothiazide is concerned about pregnancy. What should the nurse explain about diuretic use during pregnancy?",
+              options: [
+                "Diuretics reduce blood volume and can decrease placental perfusion, potentially impairing fetal growth and oxygen delivery",
+                "Diuretics are completely safe during all trimesters of pregnancy",
+                "Diuretics improve placental blood flow and are recommended",
+                "Diuretics only pose risks in the third trimester"
+              ],
+              correct: [0],
+              rationale: "According to the slides, use in pregnancy and lactation is concerning because diuretics reduce blood volume, which can decrease placental perfusion and impair fetal growth and oxygen delivery."
+            },
+
+            // Chamber 5: Potassium-Sparing Diuretics (5 questions)
+            {
+              chamber: 4,
+              type: 'mcq',
+              question: "Spironolactone works by which mechanism of action?",
+              options: [
+                "Blocking aldosterone in the distal nephron, causing retention of potassium and increased excretion of sodium",
+                "Blocking sodium reabsorption in the loop of Henle",
+                "Creating osmotic force in the nephron lumen",
+                "Inhibiting carbonic anhydrase activity"
+              ],
+              correct: [0],
+              rationale: "Spironolactone is an aldosterone antagonist that blocks aldosterone in the distal nephron, which spares K+ and loses Na+ and Cl-, causing retention of potassium and increased excretion of sodium."
+            },
+            {
+              chamber: 4,
+              type: 'sata',
+              question: "Which conditions are appropriate indications for spironolactone therapy? (Select all that apply)",
+              options: [
+                "Heart failure (decreases mortality in severe failure)",
+                "Hypertension",
+                "Edematous states",
+                "Primary hyperaldosteronism",
+                "Acute renal failure"
+              ],
+              correct: [0, 1, 2, 3],
+              rationale: "The slides list therapeutic uses of spironolactone as: hypertension, edematous states, heart failure (decreases mortality in severe failure), and primary hyperaldosteronism. It also mentions PMS, PCOS, acne, and gynecomastia as uses."
+            },
+            {
+              chamber: 4,
+              type: 'mcq',
+              question: "What is the most serious adverse effect of spironolactone?",
+              options: [
+                "Hyperkalemia",
+                "Hypokalemia",
+                "Hyponatremia",
+                "Ototoxicity"
+              ],
+              correct: [0],
+              rationale: "The slides emphasize hyperkalemia as the primary adverse effect of spironolactone, highlighted in yellow. This is the opposite of loop and thiazide diuretics which cause hypokalemia."
+            },
+            {
+              chamber: 4,
+              type: 'mcq',
+              question: "A patient taking spironolactone for hypertension asks about foods to avoid. Which food should the nurse recommend limiting?",
+              options: [
+                "Salt substitutes",
+                "Dairy products",
+                "Whole grains",
+                "Lean meats"
+              ],
+              correct: [0],
+              rationale: "Salt substitutes contain potassium and should be avoided with spironolactone to prevent dangerous hyperkalemia. The drug interactions section notes to avoid agents that raise potassium levels."
+            },
+            {
+              chamber: 4,
+              type: 'mcq',
+              question: "Why are potassium-sparing diuretics rarely used alone for therapy?",
+              options: [
+                "They produce only modest increases in urine production",
+                "They are too expensive for monotherapy",
+                "They work too slowly to be effective alone",
+                "They cause severe dehydration when used alone"
+              ],
+              correct: [0],
+              rationale: "According to the slides, potassium-sparing diuretics produce a modest increase in urine production and substantial decrease in potassium excretion, but are rarely used alone for therapy. They're typically combined with other diuretics."
+            },
+
+            // Chamber 6: Osmotic Diuretics (5 questions)
+            {
+              chamber: 5,
+              type: 'mcq',
+              question: "Mannitol promotes diuresis by which unique mechanism?",
+              options: [
+                "Creating osmotic force within the lumen of the nephron",
+                "Blocking sodium channels in the collecting duct",
+                "Inhibiting aldosterone receptors",
+                "Blocking carbonic anhydrase enzyme"
+              ],
+              correct: [0],
+              rationale: "Mannitol promotes diuresis by creating osmotic force within the lumen of the nephron, pulling water into the tubule by osmosis rather than blocking specific transporters."
+            },
+            {
+              chamber: 5,
+              type: 'mcq',
+              question: "How must mannitol be administered?",
+              options: [
+                "Parenterally (IV only)",
+                "Orally with food",
+                "Orally on empty stomach",
+                "Subcutaneously"
+              ],
+              correct: [0],
+              rationale: "The slides clearly state that mannitol must be given parenterally (IV). The pharmacokinetics section emphasizes 'drug must be given parenterally.'"
+            },
+            {
+              chamber: 5,
+              type: 'sata',
+              question: "For which conditions is mannitol indicated? (Select all that apply)",
+              options: [
+                "Reduction of intracranial pressure",
+                "Reduction of intraocular pressure",
+                "Prophylaxis of renal failure",
+                "Essential hypertension",
+                "Heart failure"
+              ],
+              correct: [0, 1, 2],
+              rationale: "Therapeutic uses of mannitol include: prophylaxis of renal failure (helps flush kidneys and prevent necrosis), reduction of intracranial pressure, and reduction of intraocular pressure. It's not used for routine hypertension or heart failure."
+            },
+            {
+              chamber: 5,
+              type: 'mcq',
+              question: "The nurse receives mannitol from the pharmacy and notes crystals in the IV solution. What is the most appropriate action?",
+              options: [
+                "Warm the solution to dissolve the crystals before administration",
+                "Return the solution to pharmacy as contaminated",
+                "Shake the bag vigorously to break up the crystals",
+                "Administer the solution as-is since crystals are normal"
+              ],
+              correct: [0],
+              rationale: "Mannitol solutions commonly form crystals and should be warmed to dissolve them before administration. This is a standard nursing consideration for mannitol IV solutions."
+            },
+            {
+              chamber: 5,
+              type: 'sata',
+              question: "Which adverse effects are associated with mannitol? (Select all that apply)",
+              options: [
+                "Edema",
+                "Headache",
+                "Nausea and vomiting",
+                "Fluid and electrolyte imbalance",
+                "Hyperkalemia"
+              ],
+              correct: [0, 1, 2, 3],
+              rationale: "The slides list adverse effects of mannitol as: edema, headache, nausea, vomiting, and fluid and electrolyte imbalance. Hyperkalemia is not listed as an adverse effect of mannitol."
+            },
+
+            // Chamber 7: Adverse Effects & Interactions (5 questions)
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "A patient taking furosemide and digoxin develops nausea, visual changes, and bradycardia. The nurse suspects digoxin toxicity. What is the most likely cause?",
+              options: [
+                "Furosemide-induced hypokalemia increases digoxin binding to cardiac tissue",
+                "Furosemide increases digoxin absorption",
+                "Furosemide prevents digoxin excretion",
+                "Digoxin and furosemide have additive cardiac effects"
+              ],
+              correct: [0],
+              rationale: "The slides note that furosemide interacts with digoxin, and low K+ makes digoxin more toxic. Hypokalemia from loop diuretics increases the risk of digoxin toxicity."
+            },
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "A patient on hydrochlorothiazide is started on lithium for bipolar disorder. What should the nurse monitor closely?",
+              options: [
+                "Lithium levels (risk of toxicity due to reduced renal excretion)",
+                "Blood glucose levels",
+                "Hearing changes",
+                "Calcium levels"
+              ],
+              correct: [0],
+              rationale: "Both furosemide and HCTZ can reduce renal excretion of lithium, leading to accumulation. The slides state that low sodium causes retention of lithium, and thiazides can reduce renal excretion of lithium."
+            },
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "A patient taking furosemide reports taking ibuprofen daily for arthritis. What should the nurse explain?",
+              options: [
+                "NSAIDs reduce renal blood flow and can blunt the diuretic effects of furosemide",
+                "NSAIDs enhance the effects of furosemide, increasing risk of dehydration",
+                "NSAIDs and furosemide have no interaction",
+                "NSAIDs increase the risk of ototoxicity with furosemide"
+              ],
+              correct: [0],
+              rationale: "The slides clearly state that NSAIDs may blunt diuretic effect by reducing renal blood flow and blunting Lasix's effects. This is true for both loop diuretics and thiazides."
+            },
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "Which medication combination increases the risk of ototoxicity when used with furosemide?",
+              options: [
+                "Gentamicin (aminoglycoside antibiotic)",
+                "Amoxicillin",
+                "Metformin",
+                "Lisinopril"
+              ],
+              correct: [0],
+              rationale: "The slides list ototoxic drugs as a drug interaction with furosemide. Gentamicin is an ototoxic aminoglycoside that, when combined with loop diuretics, increases hearing loss risk. Note that HCTZ can be combined with ototoxic agents without increased risk."
+            },
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "How does furosemide affect acid-base balance?",
+              options: [
+                "Loss of K+ (hypokalemia) leads to metabolic alkalosis as H+ shifts into cells and kidneys retain more bicarbonate",
+                "Loss of K+ leads to metabolic acidosis",
+                "Increased H+ excretion leads to respiratory alkalosis",
+                "No effect on acid-base balance"
+              ],
+              correct: [0],
+              rationale: "The slides explain that acid-base imbalance occurs from loss of K+, leading to hypokalemia which causes metabolic alkalosis (H+ shifts into cells, reducing acid in blood, and kidneys retain more bicarbonate)."
+            },
+
+            // Chamber 8: Clinical Application & Priority (5 questions)
+            {
+              chamber: 7,
+              type: 'mcq',
+              question: "A patient admitted with pulmonary edema is gasping for breath with oxygen saturation of 82%. Which diuretic should the nurse anticipate administering first?",
+              options: [
+                "Furosemide IV - provides rapid onset within 5 minutes for acute life-threatening situation",
+                "Hydrochlorothiazide PO - provides sustained diuretic effect",
+                "Spironolactone PO - preserves potassium during diuresis",
+                "Mannitol IV - reduces fluid overload"
+              ],
+              correct: [0],
+              rationale: "Pulmonary edema is a life-threatening emergency requiring rapid diuresis. IV furosemide has an onset of 5 minutes and is specifically indicated for pulmonary edema. The rapid onset makes it ideal for acute situations."
+            },
+            {
+              chamber: 7,
+              type: 'mcq',
+              question: "The nurse is caring for a patient receiving bumetanide twice daily. Which action is most important?",
+              options: [
+                "Schedule the medication to be given at 0800 and 1400 to avoid nocturia",
+                "Monitor for hyperkalemia",
+                "Assess hearing before each dose",
+                "Hold the medication if blood pressure is elevated"
+              ],
+              correct: [0],
+              rationale: "Loop diuretics should be scheduled to avoid giving the second dose too late in the day, which would cause nocturia (nighttime urination) and sleep disruption. Giving at 0800 and 1400 allows diuretic effect to occur during waking hours."
+            },
+            {
+              chamber: 7,
+              type: 'priority',
+              question: "A patient taking furosemide has the following assessment findings: K+ 2.9 mEq/L, muscle cramps, irregular pulse, fatigue. Which intervention is the priority?",
+              options: [
+                "Notify the provider immediately and prepare to administer potassium supplementation",
+                "Increase dietary potassium intake",
+                "Encourage fluid intake",
+                "Reduce the furosemide dose"
+              ],
+              correct: [0],
+              rationale: "Hypokalemia (K+ <3.5) with symptoms (muscle cramps, irregular pulse, fatigue) is a serious adverse effect of loop diuretics that requires immediate intervention. The priority is to notify the provider for orders to replace potassium, as severe hypokalemia can cause life-threatening dysrhythmias."
+            },
+            {
+              chamber: 7,
+              type: 'case',
+              question: "A patient admitted with increased intracranial pressure after head injury needs urgent ICP reduction. The provider orders a diuretic. Which medication should the nurse anticipate and why?",
+              options: [
+                "Mannitol IV - creates osmotic force to rapidly reduce intracranial pressure",
+                "Furosemide PO - reduces fluid volume systemically",
+                "Hydrochlorothiazide PO - provides sustained pressure reduction",
+                "Spironolactone PO - gentle diuresis without electrolyte shifts"
+              ],
+              correct: [0],
+              rationale: "Mannitol is specifically indicated for reduction of intracranial pressure. It must be given IV and works by creating osmotic force to draw fluid from brain tissue, reducing ICP rapidly."
+            },
+            {
+              chamber: 7,
+              type: 'sata',
+              question: "When providing discharge teaching for a patient prescribed furosemide, which dietary items should the nurse recommend to prevent adverse effects? (Select all that apply)",
+              options: [
+                "Oranges (high in potassium)",
+                "Spinach (high in potassium)",
+                "Potatoes (high in potassium)",
+                "White bread",
+                "Carbonated beverages"
+              ],
+              correct: [0, 1, 2],
+              rationale: "Furosemide causes significant potassium wasting (hypokalemia). Patients should increase dietary potassium intake with foods like oranges, spinach, and potatoes to prevent this adverse effect."
+            },
+
+            // Additional questions to reach 40 total
+            {
+              chamber: 0,
+              type: 'mcq',
+              question: "What percentage of filtered water and electrolytes undergo reabsorption in the nephron?",
+              options: [
+                "99%",
+                "75%",
+                "50%",
+                "25%"
+              ],
+              correct: [0],
+              rationale: "According to the slides, 99% of water, electrolytes, and nutrients undergo reabsorption in the nephron, with only 1% being excreted as urine."
+            },
+            {
+              chamber: 1,
+              type: 'mcq',
+              question: "Which site of action in the nephron produces the greatest diuresis?",
+              options: [
+                "Proximal tubule (99%)",
+                "Loop of Henle",
+                "Distal convoluted tubule",
+                "Collecting duct"
+              ],
+              correct: [0],
+              rationale: "The slides explicitly state that the proximal tubule produces the greatest diuresis at 99%, highlighted in yellow in the presentation."
+            },
+            {
+              chamber: 2,
+              type: 'mcq',
+              question: "A patient on furosemide complains of muscle weakness and cardiac palpitations. Lab results show K+ 2.7 mEq/L. Which food should the nurse recommend?",
+              options: [
+                "Bananas and orange juice",
+                "White rice and pasta",
+                "Chicken breast",
+                "Green beans"
+              ],
+              correct: [0],
+              rationale: "The patient has hypokalemia from furosemide. Bananas and orange juice are high in potassium and will help correct the deficiency. The discharge teaching question in the slides uses oranges, spinach, and potatoes as examples of potassium-rich foods."
+            },
+            {
+              chamber: 3,
+              type: 'mcq',
+              question: "How does the maximum diuretic effect of thiazides compare to loop diuretics?",
+              options: [
+                "Considerably lower than loop diuretics",
+                "Equal to loop diuretics",
+                "Greater than loop diuretics",
+                "Variable depending on the patient"
+              ],
+              correct: [0],
+              rationale: "The slides state that maximum diuresis with thiazides is considerably lower than with loop diuretics. They also do NOT diurese as effectively and are not effective when urine flow is scant."
+            },
+            {
+              chamber: 3,
+              type: 'mcq',
+              question: "A patient asks why hydrochlorothiazide was not effective during an episode of acute renal impairment. What should the nurse explain?",
+              options: [
+                "Thiazides are not effective when urine flow is scant, unlike loop diuretics",
+                "Thiazides require normal renal function for absorption",
+                "The dose was probably too low",
+                "Thiazides only work in the presence of aldosterone"
+              ],
+              correct: [0],
+              rationale: "The slides emphasize that thiazides are NOT effective when urine flow is scant (unlike loop diuretics which still work when urine flow is scant). This is a key differentiating factor."
+            },
+            {
+              chamber: 4,
+              type: 'sata',
+              question: "Which medications are classified as nonaldosterone antagonist potassium-sparing diuretics? (Select all that apply)",
+              options: [
+                "Triamterene",
+                "Amiloride",
+                "Spironolactone",
+                "Furosemide",
+                "Mannitol"
+              ],
+              correct: [0, 1],
+              rationale: "The slides list triamterene and amiloride as nonaldosterone antagonists under the potassium-sparing diuretic category. Spironolactone is an aldosterone antagonist."
+            },
+            {
+              chamber: 4,
+              type: 'mcq',
+              question: "In addition to hyperkalemia, which adverse effect is noted with spironolactone?",
+              options: [
+                "Endocrine effects",
+                "Ototoxicity",
+                "Hypocalcemia",
+                "Respiratory depression"
+              ],
+              correct: [0],
+              rationale: "The slides list endocrine effects as an adverse effect of spironolactone, in addition to hyperkalemia and potential for benign and malignant tumors."
+            },
+            {
+              chamber: 5,
+              type: 'mcq',
+              question: "What should the nurse use when administering mannitol IV to prevent crystals from entering the bloodstream?",
+              options: [
+                "Filter needle or in-line filter",
+                "Large-bore IV catheter",
+                "Y-site connector",
+                "Standard IV tubing"
+              ],
+              correct: [0],
+              rationale: "After warming mannitol to dissolve crystals, a filter should be used during administration to catch any remaining crystals. This is a standard safety measure for mannitol administration."
+            },
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "Which statement about combining hydrochlorothiazide with ototoxic agents is correct?",
+              options: [
+                "HCTZ can be combined with ototoxic agents without increased risk of hearing loss",
+                "HCTZ increases ototoxicity risk like loop diuretics do",
+                "HCTZ should never be given with ototoxic drugs",
+                "HCTZ causes permanent hearing loss on its own"
+              ],
+              correct: [0],
+              rationale: "The slides specifically note that HCTZ can be combined with ototoxic agents without increased risk of hearing loss, unlike loop diuretics which do increase this risk."
+            },
+            {
+              chamber: 6,
+              type: 'mcq',
+              question: "A patient on both furosemide and an antihypertensive medication develops symptomatic hypotension. What is the likely explanation?",
+              options: [
+                "Both medications lower blood pressure, creating an additive effect",
+                "Furosemide blocks the antihypertensive effect",
+                "The antihypertensive increases furosemide excretion",
+                "There is no interaction between these drugs"
+              ],
+              correct: [0],
+              rationale: "The slides list antihypertensive agents as a drug interaction with furosemide because both lower BP, causing additive hypotensive effects."
+            },
+            {
+              chamber: 7,
+              type: 'priority',
+              question: "A nurse is caring for multiple patients. Which patient should the nurse assess first?",
+              options: [
+                "Patient on IV furosemide reporting ringing in ears and muffled hearing",
+                "Patient on spironolactone with K+ 4.8 mEq/L",
+                "Patient on HCTZ with glucose 128 mg/dL",
+                "Patient on mannitol with mild headache"
+              ],
+              correct: [0],
+              rationale: "Ototoxicity (ringing in ears, hearing loss) is a serious adverse effect of loop diuretics that can become permanent. This patient requires immediate assessment and possible discontinuation of the medication. The other findings are concerning but not immediately dangerous."
+            }
+          ];
+
+          // Randomize answer options for each question
+          const randomizeOptions = (question) => {
+            if (question.type === 'mcq' || question.type === 'sata' || question.type === 'priority' || question.type === 'case') {
+              const items = question.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
+              const shuffled = [...items].sort(() => Math.random() - 0.5);
+              
+              const newCorrect = question.correct.map(originalIdx => {
+                return shuffled.findIndex(item => item.originalIndex === originalIdx);
+              });
+
+              return {
+                ...question,
+                options: shuffled.map(item => item.text),
+                correct: newCorrect,
+                originalOrder: items
+              };
+            }
+            return question;
+          };
+
+          const [randomizedQuestions] = useState(() => 
+            questions.map(q => randomizeOptions(q))
+          );
+
+          const chamberQuestions = randomizedQuestions.filter(q => q.chamber === currentChamber);
+
+          const handleAnswer = () => {
+            const question = chamberQuestions[currentQuestion];
+            
+            let correct = false;
+            if (question.type === 'mcq' || question.type === 'priority' || question.type === 'case') {
+              correct = selectedAnswers.length === 1 && selectedAnswers[0] === question.correct[0];
+            } else if (question.type === 'sata') {
+              correct = selectedAnswers.length === question.correct.length &&
+                        selectedAnswers.every(ans => question.correct.includes(ans));
+            }
+
+            setIsCorrect(correct);
+            setShowFeedback(true);
+            
+            if (correct) {
+              setScore(score + 1);
+            }
+          };
+
+          const handleNext = () => {
+            setShowFeedback(false);
+            setSelectedAnswers([]);
+            
+            if (currentQuestion < chamberQuestions.length - 1) {
+              setCurrentQuestion(currentQuestion + 1);
+            } else if (currentChamber < chambers.length - 1) {
+              setCurrentChamber(currentChamber + 1);
+              setCurrentQuestion(0);
+            } else {
+              setGameState('victory');
+            }
+          };
+
+          const toggleAnswer = (index) => {
+            const question = chamberQuestions[currentQuestion];
+            
+            if (question.type === 'sata') {
+              if (selectedAnswers.includes(index)) {
+                setSelectedAnswers(selectedAnswers.filter(a => a !== index));
+              } else {
+                setSelectedAnswers([...selectedAnswers, index]);
+              }
+            } else {
+              setSelectedAnswers([index]);
+            }
+          };
+
+          const totalQuestions = randomizedQuestions.length;
+          const questionsAnswered = currentChamber * 5 + currentQuestion + (showFeedback ? 1 : 0);
+
+          if (gameState === 'start') {
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-purple-900 via-pink-900 to-purple-800 p-8">
+                <div className="max-w-4xl mx-auto">
+                  <div className="text-center mb-12 animate-pulse">
+                    <Waves className="w-24 h-24 mx-auto mb-4 text-pink-300" />
+                    <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300 mb-4">
+                      Neptune Renal Research Facility
+                    </h1>
+                    <p className="text-xl text-pink-200 mb-2">🌊 Underwater Escape Room Adventure 🌊</p>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 mb-8 border-4 border-pink-300 shadow-2xl">
+                    <h2 className="text-3xl font-bold text-pink-300 mb-4 flex items-center gap-2">
+                      <AlertCircle className="w-8 h-8" />
+                      Mission Briefing
+                    </h2>
+                    <p className="text-pink-100 text-lg leading-relaxed mb-4">
+                      You are a deep-sea diver trapped inside the submerged Neptune Renal Research Facility! 
+                      The facility's experimental diuretic systems are malfunctioning, threatening to implode 
+                      the entire structure.
+                    </p>
+                    <p className="text-pink-100 text-lg leading-relaxed mb-4">
+                      To escape, you must navigate through <strong>8 aquatic chambers</strong>, each testing 
+                      your knowledge of renal physiology and diuretic medications. Answer <strong>40 
+                      NCLEX-style questions</strong> correctly to unlock each chamber and reach the surface!
+                    </p>
+                    <div className="bg-purple-900/50 rounded-xl p-4 mt-4">
+                      <h3 className="text-pink-300 font-bold mb-2">⚠️ Survival Tips:</h3>
+                      <ul className="text-pink-100 space-y-1">
+                        <li>✓ Correct answers create glowing pathways forward</li>
+                        <li>✓ Wrong answers cause harmless underwater setbacks</li>
+                        <li>✓ Master nephron anatomy, loop diuretics, thiazides, K-sparing drugs, and more!</li>
+                        <li>✓ Apply clinical reasoning to escape before oxygen runs out!</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border-4 border-purple-300">
+                    <h2 className="text-3xl font-bold text-purple-300 mb-6 text-center">
+                      Choose Your Diver
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {characters.map((char) => (
+                        <button
+                          key={char.name}
+                          onClick={() => {
+                            setCharacter(char);
+                            setGameState('playing');
+                          }}
+                          className="bg-white/20 hover:bg-white/30 rounded-2xl p-6 transition-all transform hover:scale-105 border-4 hover:border-pink-300"
+                          style={{ borderColor: char.color }}
+                        >
+                          <div className="text-6xl mb-2">{char.emoji}</div>
+                          <div className="text-xl font-bold text-white">{char.name}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (gameState === 'victory') {
+            const percentage = Math.round((score / totalQuestions) * 100);
+            return (
+              <div className="min-h-screen bg-gradient-to-b from-green-900 via-blue-900 to-purple-900 p-8 flex items-center justify-center">
+                <div className="max-w-2xl mx-auto text-center">
+                  <div className="animate-bounce mb-8">
+                    <CheckCircle className="w-32 h-32 mx-auto text-green-300" />
+                  </div>
+                  <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 via-blue-300 to-purple-300 mb-6">
+                    🎉 ESCAPE SUCCESSFUL! 🎉
+                  </h1>
+                  <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border-4 border-green-300">
+                    <p className="text-3xl text-green-300 mb-4">
+                      Diver {character?.name} has reached the surface!
+                    </p>
+                    <p className="text-2xl text-white mb-6">
+                      Final Score: {score} / {totalQuestions} ({percentage}%)
+                    </p>
+                    <div className="text-xl text-green-200 leading-relaxed mb-6">
+                      {percentage >= 90 ? "🏆 MASTER NEPHROLOGIST! You've mastered diuretic pharmacology!" :
+                       percentage >= 80 ? "⭐ EXPERT DIVER! Excellent knowledge of renal medications!" :
+                       percentage >= 70 ? "✓ SKILLED SURVIVOR! Good grasp of diuretic concepts!" :
+                       "💪 BRAVE EXPLORER! Review the material and dive again!"}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setGameState('start');
+                        setCurrentChamber(0);
+                        setCurrentQuestion(0);
+                        setScore(0);
+                        setCharacter(null);
+                      }}
+                      className="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold py-4 px-8 rounded-full text-xl hover:scale-105 transition-transform"
+                    >
+                      Dive Again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          const question = chamberQuestions[currentQuestion];
+          const chamber = chambers[currentChamber];
+
+          return (
+            <div className="min-h-screen bg-gradient-to-b from-blue-900 via-purple-900 to-pink-900 p-4 md:p-8">
+              <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border-2 border-pink-300">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="text-3xl">{character?.emoji}</div>
+                      <span className="text-white font-bold">{character?.name}</span>
+                    </div>
+                    <div className="text-pink-300 font-bold">
+                      Score: {score}/{totalQuestions}
+                    </div>
+                  </div>
+                  <div className="w-full bg-purple-900/50 rounded-full h-4 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-pink-400 to-purple-400 h-full transition-all duration-500"
+                      style={{ width: `${(questionsAnswered / totalQuestions) * 100}%` }}
+                    />
+                  </div>
+                  <div className="text-pink-200 text-sm mt-2 text-center">
+                    Question {questionsAnswered} of {totalQuestions}
+                  </div>
+                </div>
+
+                {/* Chamber Info */}
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6 border-4" style={{ borderColor: chamber.color }}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Droplets className="w-8 h-8" style={{ color: chamber.color }} />
+                    <h2 className="text-3xl font-bold text-white">
+                      Chamber {currentChamber + 1}: {chamber.name}
+                    </h2>
+                  </div>
+                  <p className="text-pink-200 text-lg italic">{chamber.description}</p>
+                  <div className="mt-2 text-purple-300 text-sm">
+                    Question {currentQuestion + 1} of {chamberQuestions.length} in this chamber
+                  </div>
+                </div>
+
+                {/* Question Card */}
+                <div className="bg-white/95 rounded-3xl p-8 shadow-2xl border-4 border-purple-300">
+                  <div className="mb-6">
+                    <div className="inline-block bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold mb-4">
+                      {question.type === 'mcq' ? '📝 Multiple Choice' :
+                       question.type === 'sata' ? '☑️ Select All That Apply' :
+                       question.type === 'priority' ? '⚡ Priority Question' :
+                       '📋 Case Study'}
+                    </div>
+                    <h3 className="text-2xl font-bold text-purple-900 leading-relaxed">
+                      {question.question}
+                    </h3>
+                  </div>
+
+                  {/* Answer Options */}
+                  <div className="space-y-3 mb-6">
+                    {question.options.map((option, index) => {
+                      const isSelected = selectedAnswers.includes(index);
+                      const isCorrectAnswer = question.correct.includes(index);
+                      const showAsCorrect = showFeedback && isCorrectAnswer;
+                      const showAsWrong = showFeedback && isSelected && !isCorrectAnswer;
+
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => !showFeedback && toggleAnswer(index)}
+                          disabled={showFeedback}
+                          className={`w-full p-4 rounded-xl text-left transition-all transform hover:scale-102 border-3 font-medium text-lg
+                            ${showAsCorrect ? 'bg-green-100 border-green-500 text-green-900' :
+                              showAsWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                              isSelected ? 'bg-purple-100 border-purple-500 text-purple-900' :
+                              'bg-gray-50 border-gray-300 text-gray-800 hover:bg-purple-50 hover:border-purple-300'}
+                          `}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                              ${showAsCorrect ? 'border-green-500 bg-green-500' :
+                                showAsWrong ? 'border-red-500 bg-red-500' :
+                                isSelected ? 'border-purple-500 bg-purple-500' :
+                                'border-gray-400'}
+                            `}>
+                              {(isSelected || showAsCorrect) && (
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              )}
+                            </div>
+                            <span>{option}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Feedback */}
+                  {showFeedback && (
+                    <div className={`p-6 rounded-2xl mb-6 border-4 ${isCorrect ? 'bg-green-50 border-green-400' : 'bg-yellow-50 border-yellow-400'}`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        {isCorrect ? (
+                          <CheckCircle className="w-8 h-8 text-green-600 flex-shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-8 h-8 text-yellow-600 flex-shrink-0" />
+                        )}
+                        <div>
+                          <h4 className={`text-2xl font-bold mb-2 ${isCorrect ? 'text-green-800' : 'text-yellow-800'}`}>
+                            {isCorrect ? '🌟 Correct! Pathway Unlocked!' : '⚠️ Not Quite Right'}
+                          </h4>
+                          <p className={`text-lg italic mb-3 ${isCorrect ? 'text-green-700' : 'text-yellow-700'}`}>
+                            {isCorrect 
+                              ? '✨ Bioluminescent jellyfish illuminate the pathway ahead. The chamber hums with approval as ancient mechanisms unlock...'
+                              : '⚡ The facility lights flicker ominously. A metal bulkhead groans under pressure. Time to regroup and try again...'}
+                          </p>
+                          <div className={`${isCorrect ? 'text-green-900' : 'text-yellow-900'}`}>
+                            <strong className="block mb-1">📚 Rationale:</strong>
+                            <p className="leading-relaxed">{question.rationale}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4">
+                    {!showFeedback ? (
+                      <button
+                        onClick={handleAnswer}
+                        disabled={selectedAnswers.length === 0}
+                        className={`flex-1 py-4 px-6 rounded-xl font-bold text-xl transition-all transform
+                          ${selectedAnswers.length === 0 
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:scale-105 shadow-lg'}`}
+                      >
+                        Submit Answer
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleNext}
+                        className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-4 px-6 rounded-xl text-xl hover:scale-105 transition-transform shadow-lg"
+                      >
+                        {currentQuestion < chamberQuestions.length - 1 
+                          ? 'Next Question →'
+                          : currentChamber < chambers.length - 1
+                          ? 'Enter Next Chamber 🌊'
+                          : 'Reach the Surface! 🎉'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fun underwater elements */}
+                <div className="mt-8 text-center">
+                  <div className="inline-flex gap-4 text-4xl animate-pulse">
+                    <Fish className="text-pink-300" />
+                    <Anchor className="text-purple-300" />
+                    <Fish className="text-blue-300 transform scale-x-[-1]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<NeptuneRenalEscape />);
+    </script>
+</body>
+</html>

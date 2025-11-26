@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acid-Base Balance Game! 🎮</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .score-item {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .score-item .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .score-item .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .menu-screen, .game-screen, .results-screen {
+            padding: 40px;
+            display: none;
+        }
+
+        .menu-screen.active, .game-screen.active, .results-screen.active {
+            display: block;
+        }
+
+        .game-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .game-mode-card {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            padding: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .game-mode-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .game-mode-card .icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .game-mode-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .game-mode-card p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .question-container {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .question-text {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .abg-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .abg-value {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .abg-value .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .abg-value .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 3px solid #667eea;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .option-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .option-btn.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+            animation: correct-answer 0.5s ease;
+        }
+
+        .option-btn.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correct-answer {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            color: #721c24;
+        }
+
+        .next-btn, .submit-btn, .back-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .next-btn:hover, .submit-btn:hover, .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-summary {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results-summary .score-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .results-summary .message {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+
+        .stars {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        .matching-game {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .matching-column h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .matching-item {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .matching-item:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .matching-item.selected {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .matching-item.matched {
+            background: #d4edda;
+            border-color: #28a745;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .drag-drop-area {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .drop-zone {
+            background: #f5f5f5;
+            border: 3px dashed #667eea;
+            padding: 30px;
+            border-radius: 15px;
+            min-height: 200px;
+            text-align: center;
+        }
+
+        .drop-zone h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .draggable-item {
+            background: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 10px;
+            cursor: move;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .draggable-item:hover {
+            transform: scale(1.05);
+        }
+
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .timer.warning {
+            color: #dc3545;
+            animation: blink 1s ease infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .combo-meter {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .combo-meter.active {
+            animation: combo-pulse 0.5s ease;
+        }
+
+        @keyframes combo-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .hint-btn {
+            background: #ffc107;
+            color: #2c3e50;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn:hover {
+            background: #ffb300;
+            transform: scale(1.05);
+        }
+
+        .hint-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .hint-box.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        .achievement-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .achievement-popup .icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .matching-game {
+                grid-template-columns: 1fr;
+            }
+
+            .drag-drop-area {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .game-mode-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            position: absolute;
+            animation: confetti-fall 3s linear;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="achievement-popup" id="achievementPopup">
+        <div class="icon">🏆</div>
+        <h2 id="achievementTitle">Achievement Unlocked!</h2>
+        <p id="achievementText"></p>
+    </div>
+
+    <div class="game-container">
+        <div class="header">
+            <h1>🎮 Acid-Base Balance Game! 🧬</h1>
+            <p>Learn while you play!</p>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="label">Score</div>
+                <div class="value" id="totalScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="label">Correct</div>
+                <div class="value" id="correctCount">0</div>
+            </div>
+            <div class="score-item">
+                <div class="label">Streak</div>
+                <div class="value" id="streakCount">0</div>
+            </div>
+            <div class="score-item">
+                <div class="label">Level</div>
+                <div class="value" id="levelDisplay">1</div>
+            </div>
+        </div>
+
+        <!-- Menu Screen -->
+        <div class="menu-screen active" id="menuScreen">
+            <h2 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">Choose Your Game Mode!</h2>
+            
+            <div class="game-mode-grid">
+                <div class="game-mode-card" onclick="startGame('abg-quiz')">
+                    <div class="icon">🔬</div>
+                    <h3>ABG Quiz Master</h3>
+                    <p>Identify acid-base imbalances from blood gas values. Perfect for mastering ABG interpretation!</p>
+                </div>
+
+                <div class="game-mode-card" onclick="startGame('matching')">
+                    <div class="icon">🎯</div>
+                    <h3>Match the Pairs</h3>
+                    <p>Match disorders with their causes and treatments. Test your knowledge connections!</p>
+                </div>
+
+                <div class="game-mode-card" onclick="startGame('speed-round')">
+                    <div class="icon">⚡</div>
+                    <h3>Speed Round</h3>
+                    <p>Race against time! Answer as many questions as possible in 60 seconds!</p>
+                </div>
+
+                <div class="game-mode-card" onclick="startGame('scenario')">
+                    <div class="icon">🏥</div>
+                    <h3>Clinical Scenarios</h3>
+                    <p>Real-world patient cases! Make the right diagnosis and treatment decisions.</p>
+                </div>
+
+                <div class="game-mode-card" onclick="startGame('pharmacology')">
+                    <div class="icon">💊</div>
+                    <h3>Pharm Challenge</h3>
+                    <p>Master sodium bicarbonate! Dosing, uses, and nursing implications.</p>
+                </div>
+
+                <div class="game-mode-card" onclick="startGame('true-false')">
+                    <div class="icon">✅</div>
+                    <h3>True or False</h3>
+                    <p>Quick fire questions to test your acid-base knowledge!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <button class="back-btn" onclick="backToMenu()">← Back to Menu</button>
+            
+            <div id="timerDisplay" class="timer" style="display: none;"></div>
+            <div id="comboMeter" class="combo-meter" style="display: none;"></div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar">Question 1 of 10</div>
+            </div>
+
+            <div id="gameContent"></div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-screen" id="resultsScreen">
+            <div class="results-summary">
+                <h2>Game Complete!</h2>
+                <div class="stars" id="starsDisplay"></div>
+                <div class="score-display" id="finalScore">0</div>
+                <div class="message" id="resultMessage"></div>
+                <p id="resultDetails"></p>
+                
+                <div style="margin-top: 30px;">
+                    <button class="next-btn" onclick="backToMenu()" style="margin: 10px;">Play Again</button>
+                    <button class="next-btn" onclick="showResults()" style="margin: 10px;">Review Answers</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            mode: '',
+            score: 0,
+            correct: 0,
+            incorrect: 0,
+            streak: 0,
+            currentQuestion: 0,
+            totalQuestions: 10,
+            questions: [],
+            answers: [],
+            timeLeft: 60,
+            timer: null,
+            hintsUsed: 0,
+            level: 1
+        };
+
+        // Question Banks
+        const abgQuestions = [
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.30, PaCO2: 50, HCO3: 24 },
+                answer: "Respiratory Acidosis (Uncompensated)",
+                options: ["Respiratory Acidosis (Uncompensated)", "Respiratory Alkalosis", "Metabolic Acidosis", "Metabolic Alkalosis"],
+                explanation: "pH is low (acidosis), PaCO₂ is high (respiratory cause), HCO₃⁻ is normal (no compensation yet)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.50, PaCO2: 30, HCO3: 24 },
+                answer: "Respiratory Alkalosis (Uncompensated)",
+                options: ["Respiratory Alkalosis (Uncompensated)", "Respiratory Acidosis", "Metabolic Alkalosis", "Metabolic Acidosis"],
+                explanation: "pH is high (alkalosis), PaCO₂ is low (respiratory cause), HCO₃⁻ is normal (no compensation)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.28, PaCO2: 40, HCO3: 18 },
+                answer: "Metabolic Acidosis (Uncompensated)",
+                options: ["Metabolic Acidosis (Uncompensated)", "Metabolic Alkalosis", "Respiratory Acidosis", "Respiratory Alkalosis"],
+                explanation: "pH is low (acidosis), HCO₃⁻ is low (metabolic cause), PaCO₂ is normal (no compensation)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.48, PaCO2: 42, HCO3: 30 },
+                answer: "Metabolic Alkalosis (Uncompensated)",
+                options: ["Metabolic Alkalosis (Uncompensated)", "Metabolic Acidosis", "Respiratory Alkalosis", "Respiratory Acidosis"],
+                explanation: "pH is high (alkalosis), HCO₃⁻ is high (metabolic cause), PaCO₂ is normal (no compensation)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.35, PaCO2: 55, HCO3: 30 },
+                answer: "Respiratory Acidosis (Compensated)",
+                options: ["Respiratory Acidosis (Compensated)", "Metabolic Alkalosis", "Normal ABG", "Mixed Disorder"],
+                explanation: "pH is at the lower limit of normal, PaCO₂ is high (respiratory acidosis), HCO₃⁻ is high (renal compensation)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.25, PaCO2: 30, HCO3: 16 },
+                answer: "Metabolic Acidosis (Partially Compensated)",
+                options: ["Metabolic Acidosis (Partially Compensated)", "Respiratory Alkalosis", "Mixed Disorder", "Normal ABG"],
+                explanation: "pH is low (acidosis), HCO₃⁻ is low (metabolic cause), PaCO₂ is low (respiratory compensation attempting)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.38, PaCO2: 42, HCO3: 24 },
+                answer: "Normal ABG",
+                options: ["Normal ABG", "Compensated Acidosis", "Compensated Alkalosis", "Mixed Disorder"],
+                explanation: "All values are within normal range: pH 7.35-7.45, PaCO₂ 35-45, HCO₃⁻ 22-26."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.52, PaCO2: 28, HCO3: 22 },
+                answer: "Respiratory Alkalosis (Uncompensated)",
+                options: ["Respiratory Alkalosis (Uncompensated)", "Metabolic Alkalosis", "Normal ABG", "Respiratory Acidosis"],
+                explanation: "pH is high (alkalosis), PaCO₂ is low (respiratory cause - hyperventilation), HCO₃⁻ is normal."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.32, PaCO2: 58, HCO3: 30 },
+                answer: "Respiratory Acidosis (Partially Compensated)",
+                options: ["Respiratory Acidosis (Partially Compensated)", "Metabolic Acidosis", "Mixed Disorder", "Normal ABG"],
+                explanation: "pH is low (acidosis), PaCO₂ is high (respiratory cause - COPD), HCO₃⁻ is high (renal compensation)."
+            },
+            {
+                question: "Interpret these ABG values:",
+                values: { pH: 7.50, PaCO2: 45, HCO3: 35 },
+                answer: "Metabolic Alkalosis (Uncompensated)",
+                options: ["Metabolic Alkalosis (Uncompensated)", "Respiratory Alkalosis", "Normal ABG", "Mixed Disorder"],
+                explanation: "pH is high (alkalosis), HCO₃⁻ is very high (metabolic cause - vomiting/NG suction), PaCO₂ is normal."
+            }
+        ];
+
+        const scenarioQuestions = [
+            {
+                question: "A 65-year-old COPD patient presents with confusion and drowsiness. ABG shows pH 7.28, PaCO₂ 68, HCO₃⁻ 28. What is the priority intervention?",
+                options: ["Improve ventilation/oxygenation", "Administer sodium bicarbonate", "Give aggressive diuretics", "Start antibiotics immediately"],
+                answer: "Improve ventilation/oxygenation",
+                explanation: "This is respiratory acidosis from CO₂ retention. The priority is to improve ventilation, not give bicarbonate (which would generate more CO₂)."
+            },
+            {
+                question: "A patient with severe vomiting for 3 days has pH 7.52, PaCO₂ 44, HCO₃⁻ 35. What electrolyte are you most concerned about?",
+                options: ["Potassium (K⁺)", "Sodium (Na⁺)", "Calcium (Ca²⁺)", "Magnesium (Mg²⁺)"],
+                answer: "Potassium (K⁺)",
+                explanation: "Metabolic alkalosis causes K⁺ to shift into cells, leading to dangerous hypokalemia and potential cardiac dysrhythmias."
+            },
+            {
+                question: "A diabetic patient in DKA has pH 7.20, PaCO₂ 28, HCO₃⁻ 12. Which respiratory pattern do you expect?",
+                options: ["Kussmaul respirations (deep, rapid)", "Cheyne-Stokes breathing", "Slow, shallow breathing", "Biot's respirations"],
+                answer: "Kussmaul respirations (deep, rapid)",
+                explanation: "The body compensates for metabolic acidosis by increasing ventilation to blow off CO₂, resulting in deep, rapid Kussmaul breathing."
+            },
+            {
+                question: "A patient on a ventilator has pH 7.52, PaCO₂ 28, HCO₃⁻ 22. What should you do?",
+                options: ["Decrease ventilator rate/tidal volume", "Increase ventilator rate", "Give sodium bicarbonate", "Administer potassium"],
+                answer: "Decrease ventilator rate/tidal volume",
+                explanation: "Respiratory alkalosis from mechanical hyperventilation. Reduce ventilation to allow CO₂ to normalize."
+            },
+            {
+                question: "A patient receiving sodium bicarbonate develops muscle twitching and positive Chvostek's sign. What happened?",
+                options: ["Metabolic alkalosis causing hypocalcemia symptoms", "Hyperkalemia from bicarbonate", "Normal response to treatment", "Sodium overload"],
+                answer: "Metabolic alkalosis causing hypocalcemia symptoms",
+                explanation: "Overcorrection caused alkalosis. High pH decreases ionized calcium, causing tetany despite normal total calcium."
+            },
+            {
+                question: "An anxious patient hyperventilating has pH 7.50, PaCO₂ 28, HCO₃⁻ 24. What's the best immediate intervention?",
+                options: ["Have patient breathe into paper bag/reduce breathing rate", "Give oxygen immediately", "Administer sedatives IV", "Start bicarbonate drip"],
+                answer: "Have patient breathe into paper bag/reduce breathing rate",
+                explanation: "Respiratory alkalosis from hyperventilation. Rebreathing CO₂ or slowing respirations will help correct the imbalance."
+            },
+            {
+                question: "A post-op patient has been vomiting and on NG suction. Labs show pH 7.48, PaCO₂ 46, HCO₃⁻ 33. What's the underlying problem?",
+                options: ["Loss of gastric acid (H⁺)", "Excessive bicarbonate intake", "Respiratory failure", "Renal failure"],
+                answer: "Loss of gastric acid (H⁺)",
+                explanation: "Vomiting and NG suction remove HCl (gastric acid), leading to metabolic alkalosis from acid loss."
+            },
+            {
+                question: "A patient in septic shock has pH 7.25, PaCO₂ 30, HCO₃⁻ 14. What type of acidosis is this?",
+                options: ["Lactic acidosis (metabolic)", "Respiratory acidosis", "Diabetic ketoacidosis", "Renal tubular acidosis"],
+                answer: "Lactic acidosis (metabolic)",
+                explanation: "Septic shock causes tissue hypoxia and anaerobic metabolism, producing lactic acid and metabolic acidosis."
+            },
+            {
+                question: "A patient takes too much aspirin. Early ABG shows pH 7.48, PaCO₂ 28, HCO₃⁻ 22. What's happening?",
+                options: ["Respiratory alkalosis (early salicylate toxicity)", "Metabolic acidosis (late stage)", "Normal response", "Mixed disorder from start"],
+                answer: "Respiratory alkalosis (early salicylate toxicity)",
+                explanation: "Aspirin initially stimulates the respiratory center causing hyperventilation and respiratory alkalosis. Later progresses to metabolic acidosis."
+            },
+            {
+                question: "A renal failure patient has pH 7.30, PaCO₂ 38, HCO₃⁻ 16. Why did this occur?",
+                options: ["Kidneys cannot excrete H⁺ or generate HCO₃⁻", "Excessive acid intake", "Respiratory failure", "Medication side effect"],
+                answer: "Kidneys cannot excrete H⁺ or generate HCO₃⁻",
+                explanation: "Chronic kidney disease causes metabolic acidosis because damaged kidneys cannot eliminate acid or produce bicarbonate."
+            }
+        ];
+
+        const pharmacologyQuestions = [
+            {
+                question: "What is the primary mechanism of action of sodium bicarbonate?",
+                options: ["Neutralizes H⁺ by providing HCO₃⁻", "Blocks acid production", "Increases renal excretion", "Stimulates buffer systems"],
+                answer: "Neutralizes H⁺ by providing HCO₃⁻",
+                explanation: "NaHCO₃ directly increases plasma bicarbonate which neutralizes excess hydrogen ions."
+            },
+            {
+                question: "Why is sodium bicarbonate contraindicated in respiratory acidosis?",
+                options: ["It generates CO₂ that cannot be exhaled", "It causes hypernatremia", "It worsens hypoxia", "It causes alkalosis"],
+                answer: "It generates CO₂ that cannot be exhaled",
+                explanation: "The reaction H⁺ + HCO₃⁻ → H₂CO₃ → CO₂ + H₂O produces CO₂. If the patient can't ventilate, acidosis worsens."
+            },
+            {
+                question: "What electrolyte must be closely monitored when giving sodium bicarbonate?",
+                options: ["Potassium (K⁺)", "Chloride (Cl⁻)", "Phosphate (PO₄³⁻)", "Magnesium (Mg²⁺)"],
+                answer: "Potassium (K⁺)",
+                explanation: "As pH rises, K⁺ shifts intracellularly causing potentially dangerous hypokalemia."
+            },
+            {
+                question: "What is the typical initial dose of sodium bicarbonate in cardiac arrest?",
+                options: ["1 mEq/kg IV push", "50 mEq IV drip", "2 mEq/kg slow infusion", "0.5 mEq/kg per hour"],
+                answer: "1 mEq/kg IV push",
+                explanation: "Standard ACLS dosing is 1 mEq/kg as initial IV bolus during cardiac arrest."
+            },
+            {
+                question: "In which overdose is sodium bicarbonate particularly useful?",
+                options: ["Tricyclic antidepressants", "Acetaminophen", "Opioids", "Benzodiazepines"],
+                answer: "Tricyclic antidepressants",
+                explanation: "Alkalinization with NaHCO₃ reverses cardiotoxicity and improves protein binding in TCA overdose."
+            },
+            {
+                question: "What assessment is critical before giving sodium bicarbonate?",
+                options: ["Adequate ventilation/respiratory status", "Blood pressure only", "Urine output", "Heart rate"],
+                answer: "Adequate ventilation/respiratory status",
+                explanation: "Patient must be able to eliminate the CO₂ generated by bicarbonate administration."
+            },
+            {
+                question: "Why should sodium bicarbonate NOT be mixed with calcium in an IV line?",
+                options: ["Forms precipitate/incompatible", "Increases toxicity", "Decreases effectiveness", "Causes hemolysis"],
+                answer: "Forms precipitate/incompatible",
+                explanation: "NaHCO₃ and calcium salts are chemically incompatible and form a precipitate that can cause harm."
+            },
+            {
+                question: "What condition can occur if sodium bicarbonate is given too rapidly?",
+                options: ["Metabolic alkalosis", "Hyperkalemia", "Respiratory acidosis", "Hypocalcemia directly"],
+                answer: "Metabolic alkalosis",
+                explanation: "Overcorrection causes metabolic alkalosis with symptoms like tetany, confusion, and dysrhythmias."
+            },
+            {
+                question: "In which patient population should sodium bicarbonate be used cautiously?",
+                options: ["Heart failure patients", "Diabetic patients", "Pregnant patients", "Pediatric patients"],
+                answer: "Heart failure patients",
+                explanation: "High sodium content can cause fluid overload and worsen heart failure."
+            },
+            {
+                question: "How long after sodium bicarbonate administration should ABGs be rechecked?",
+                options: ["15-30 minutes", "1-2 hours", "4-6 hours", "Immediately"],
+                answer: "15-30 minutes",
+                explanation: "ABGs should be rechecked 15-30 minutes after administration to assess response and avoid overcorrection."
+            }
+        ];
+
+        const trueFalseQuestions = [
+            {
+                question: "The normal blood pH range is 7.35-7.45.",
+                answer: true,
+                explanation: "Correct! This narrow range is essential for proper enzyme function and cellular metabolism."
+            },
+            {
+                question: "In metabolic acidosis, the respiratory system compensates by decreasing ventilation.",
+                answer: false,
+                explanation: "False! The respiratory system compensates by INCREASING ventilation to blow off CO₂ and raise pH."
+            },
+            {
+                question: "Kussmaul respirations are deep, rapid breaths seen in metabolic acidosis.",
+                answer: true,
+                explanation: "Correct! This is the body's compensatory mechanism to eliminate CO₂ in metabolic acidosis."
+            },
+            {
+                question: "Respiratory compensation for metabolic disorders occurs within seconds.",
+                answer: false,
+                explanation: "False! Respiratory compensation takes minutes to hours. Buffer systems respond in seconds."
+            },
+            {
+                question: "The bicarbonate buffer system is the most important extracellular buffer.",
+                answer: true,
+                explanation: "Correct! The HCO₃⁻/H₂CO₃ system is the primary buffer in extracellular fluid."
+            },
+            {
+                question: "In respiratory alkalosis, PaCO₂ is elevated above 45 mmHg.",
+                answer: false,
+                explanation: "False! In respiratory alkalosis, PaCO₂ is LOW (<35 mmHg) due to hyperventilation."
+            },
+            {
+                question: "Vomiting typically causes metabolic acidosis.",
+                answer: false,
+                explanation: "False! Vomiting causes metabolic ALKALOSIS due to loss of gastric acid (HCl)."
+            },
+            {
+                question: "MUDPILES is a mnemonic for causes of metabolic acidosis.",
+                answer: true,
+                explanation: "Correct! MUDPILES helps remember: Methanol, Uremia, DKA, Paraldehyde, Iron/INH, Lactic acidosis, Ethylene glycol, Salicylates."
+            },
+            {
+                question: "The kidneys can compensate for acid-base imbalances within minutes.",
+                answer: false,
+                explanation: "False! Renal compensation takes hours to days, but provides the most powerful long-term control."
+            },
+            {
+                question: "Hyperventilation causes respiratory alkalosis.",
+                answer: true,
+                explanation: "Correct! Excessive breathing eliminates too much CO₂, raising pH above 7.45."
+            },
+            {
+                question: "Sodium bicarbonate should be the first-line treatment for respiratory acidosis.",
+                answer: false,
+                explanation: "False! Respiratory acidosis requires improved VENTILATION, not bicarbonate (which generates more CO₂)."
+            },
+            {
+                question: "Metabolic alkalosis can cause tetany symptoms despite normal calcium levels.",
+                answer: true,
+                explanation: "Correct! Alkalosis decreases ionized calcium, causing symptoms even when total calcium is normal."
+            }
+        ];
+
+        const matchingPairs = [
+            { left: "Respiratory Acidosis", right: "COPD, Opioid overdose" },
+            { left: "Respiratory Alkalosis", right: "Anxiety, Hyperventilation" },
+            { left: "Metabolic Acidosis", right: "DKA, Renal failure" },
+            { left: "Metabolic Alkalosis", right: "Vomiting, NG suction" },
+            { left: "Kussmaul Respirations", right: "Deep, rapid breathing in metabolic acidosis" },
+            { left: "Sodium Bicarbonate", right: "Alkalinizing agent for metabolic acidosis" },
+            { left: "pH < 7.35", right: "Acidosis" },
+            { left: "pH > 7.45", right: "Alkalosis" },
+            { left: "HCO₃⁻ < 22", right: "Metabolic Acidosis" },
+            { left: "PaCO₂ > 45", right: "Respiratory Acidosis" }
+        ];
+
+        function startGame(mode) {
+            gameState.mode = mode;
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.incorrect = 0;
+            gameState.streak = 0;
+            gameState.currentQuestion = 0;
+            gameState.hintsUsed = 0;
+            gameState.answers = [];
+
+            document.getElementById('menuScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            
+            updateScoreboard();
+
+            switch(mode) {
+                case 'abg-quiz':
+                    gameState.questions = shuffleArray([...abgQuestions]).slice(0, 10);
+                    showABGQuestion();
+                    break;
+                case 'matching':
+                    startMatchingGame();
+                    break;
+                case 'speed-round':
+                    startSpeedRound();
+                    break;
+                case 'scenario':
+                    gameState.questions = shuffleArray([...scenarioQuestions]).slice(0, 10);
+                    showScenarioQuestion();
+                    break;
+                case 'pharmacology':
+                    gameState.questions = shuffleArray([...pharmacologyQuestions]).slice(0, 10);
+                    showPharmQuestion();
+                    break;
+                case 'true-false':
+                    gameState.questions = shuffleArray([...trueFalseQuestions]).slice(0, 10);
+                    showTrueFalseQuestion();
+                    break;
+            }
+        }
+
+        function showABGQuestion() {
+            const q = gameState.questions[gameState.currentQuestion];
+            const content = document.getElementById('gameContent');
+            
+            content.innerHTML = `
+                <div class="question-container">
+                    <div class="question-text">${q.question}</div>
+                    <div class="abg-values">
+                        <div class="abg-value">
+                            <div class="label">pH</div>
+                            <div class="value">${q.values.pH}</div>
+                        </div>
+                        <div class="abg-value">
+                            <div class="label">PaCO₂</div>
+                            <div class="value">${q.values.PaCO2}</div>
+                        </div>
+                        <div class="abg-value">
+                            <div class="label">HCO₃⁻</div>
+                            <div class="value">${q.values.HCO3}</div>
+                        </div>
+                    </div>
+                    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <div class="hint-box" id="hintBox">
+                        <strong>Hint:</strong> First check pH (acidosis or alkalosis), then see which value matches - CO₂ for respiratory, HCO₃⁻ for metabolic.
+                    </div>
+                </div>
+                <div class="options-grid" id="optionsGrid">
+                    ${q.options.map(opt => `
+                        <button class="option-btn" onclick="checkAnswer('${opt}', '${q.answer}', '${q.explanation}')">${opt}</button>
+                    `).join('')}
+                </div>
+                <div class="feedback" id="feedback"></div>
+            `;
+            
+            updateProgressBar();
+        }
+
+        function showScenarioQuestion() {
+            const q = gameState.questions[gameState.currentQuestion];
+            const content = document.getElementById('gameContent');
+            
+            content.innerHTML = `
+                <div class="question-container">
+                    <div class="question-text">🏥 ${q.question}</div>
+                    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <div class="hint-box" id="hintBox">
+                        <strong>Hint:</strong> Think about the primary problem and what intervention addresses the ROOT cause.
+                    </div>
+                </div>
+                <div class="options-grid" id="optionsGrid">
+                    ${q.options.map(opt => `
+                        <button class="option-btn" onclick="checkAnswer('${opt}', '${q.answer}', '${q.explanation}')">${opt}</button>
+                    `).join('')}
+                </div>
+                <div class="feedback" id="feedback"></div>
+            `;
+            
+            updateProgressBar();
+        }
+
+        function showPharmQuestion() {
+            const q = gameState.questions[gameState.currentQuestion];
+            const content = document.getElementById('gameContent');
+            
+            content.innerHTML = `
+                <div class="question-container">
+                    <div class="question-text">💊 ${q.question}</div>
+                    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <div class="hint-box" id="hintBox">
+                        <strong>Hint:</strong> Remember: NaHCO₃ neutralizes acid by providing bicarbonate, but generates CO₂ that must be exhaled.
+                    </div>
+                </div>
+                <div class="options-grid" id="optionsGrid">
+                    ${q.options.map(opt => `
+                        <button class="option-btn" onclick="checkAnswer('${opt}', '${q.answer}', '${q.explanation}')">${opt}</button>
+                    `).join('')}
+                </div>
+                <div class="feedback" id="feedback"></div>
+            `;
+            
+            updateProgressBar();
+        }
+
+        function showTrueFalseQuestion() {
+            const q = gameState.questions[gameState.currentQuestion];
+            const content = document.getElementById('gameContent');
+            
+            content.innerHTML = `
+                <div class="question-container">
+                    <div class="question-text">✅ ${q.question}</div>
+                    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <div class="hint-box" id="hintBox">
+                        <strong>Hint:</strong> Think about the key concepts: compensation mechanisms, normal values, and common causes.
+                    </div>
+                </div>
+                <div class="options-grid">
+                    <button class="option-btn" onclick="checkAnswer('True', ${q.answer}, '${q.explanation}')">✓ TRUE</button>
+                    <button class="option-btn" onclick="checkAnswer('False', ${q.answer}, '${q.explanation}')">✗ FALSE</button>
+                </div>
+                <div class="feedback" id="feedback"></div>
+            `;
+            
+            updateProgressBar();
+        }
+
+        function startMatchingGame() {
+            gameState.totalQuestions = matchingPairs.length;
+            const shuffled = shuffleArray([...matchingPairs]);
+            const leftItems = shuffled.map(p => p.left);
+            const rightItems = shuffleArray(shuffled.map(p => p.right));
+            
+            let selectedLeft = null;
+            let selectedRight = null;
+            let matchedPairs = [];
+            
+            const content = document.getElementById('gameContent');
+            content.innerHTML = `
+                <div class="question-container">
+                    <div class="question-text">🎯 Match the Disorders with Their Causes/Descriptions!</div>
+                    <p style="text-align: center; color: #666;">Click one item from each column to match them</p>
+                </div>
+                <div class="matching-game">
+                    <div class="matching-column">
+                        <h3>Disorders/Concepts</h3>
+                        <div id="leftColumn">
+                            ${leftItems.map((item, i) => `
+                                <div class="matching-item" data-left="${item}" onclick="selectLeft('${item}')">${item}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="matching-column">
+                        <h3>Causes/Descriptions</h3>
+                        <div id="rightColumn">
+                            ${rightItems.map((item, i) => `
+                                <div class="matching-item" data-right="${item}" onclick="selectRight('${item}')">${item}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="feedback" id="feedback"></div>
+            `;
+            
+            updateProgressBar();
+            
+            window.selectLeft = function(item) {
+                document.querySelectorAll('[data-left]').forEach(el => el.classList.remove('selected'));
+                event.target.classList.add('selected');
+                selectedLeft = item;
+                checkMatch();
+            };
+            
+            window.selectRight = function(item) {
+                document.querySelectorAll('[data-right]').forEach(el => el.classList.remove('selected'));
+                event.target.classList.add('selected');
+                selectedRight = item;
+                checkMatch();
+            };
+            
+            function checkMatch() {
+                if (selectedLeft && selectedRight) {
+                    const pair = matchingPairs.find(p => p.left === selectedLeft && p.right === selectedRight);
+                    
+                    if (pair) {
+                        // Correct match!
+                        gameState.correct++;
+                        gameState.streak++;
+                        gameState.score += 100 + (gameState.streak * 10);
+                        
+                        document.querySelector(`[data-left="${selectedLeft}"]`).classList.add('matched');
+                        document.querySelector(`[data-right="${selectedRight}"]`).classList.add('matched');
+                        
+                        showFeedback(true, `Perfect match! 🎉`);
+                        createConfetti();
+                        
+                        matchedPairs.push(pair);
+                        gameState.currentQuestion++;
+                        
+                        if (matchedPairs.length === matchingPairs.length) {
+                            setTimeout(() => endGame(), 2000);
+                        }
+                    } else {
+                        // Wrong match
+                        gameState.incorrect++;
+                        gameState.streak = 0;
+                        showFeedback(false, `Not quite! Try again.`);
+                    }
+                    
+                    selectedLeft = null;
+                    selectedRight = null;
+                    document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+                    updateScoreboard();
+                    updateProgressBar();
+                }
+            }
+        }
+
+        function startSpeedRound() {
+            gameState.timeLeft = 60;
+            gameState.questions = shuffleArray([
+                ...abgQuestions.slice(0, 3),
+                ...scenarioQuestions.slice(0, 3),
+                ...pharmacologyQuestions.slice(0, 2),
+                ...trueFalseQuestions.slice(0, 2)
+            ]);
+            gameState.totalQuestions = gameState.questions.length;
+            
+            document.getElementById('timerDisplay').style.display = 'block';
+            document.getElementById('comboMeter').style.display = 'block';
+            
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimer();
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    endGame();
+                }
+            }, 1000);
+            
+            showSpeedQuestion();
+        }
+
+        function showSpeedQuestion() {
+            if (gameState.currentQuestion >= gameState.questions.length) {
+                gameState.questions = shuffleArray([
+                    ...abgQuestions.slice(0, 3),
+                    ...scenarioQuestions.slice(0, 3),
+                    ...pharmacologyQuestions.slice(0, 2),
+                    ...trueFalseQuestions.slice(0, 2)
+                ]);
+                gameState.currentQuestion = 0;
+                gameState.totalQuestions += gameState.questions.length;
+            }
+            
+            const q = gameState.questions[gameState.currentQuestion];
+            const content = document.getElementById('gameContent');
+            
+            if (q.values) {
+                // ABG question
+                content.innerHTML = `
+                    <div class="question-container">
+                        <div class="question-text">⚡ ${q.question}</div>
+                        <div class="abg-values">
+                            <div class="abg-value">
+                                <div class="label">pH</div>
+                                <div class="value">${q.values.pH}</div>
+                            </div>
+                            <div class="abg-value">
+                                <div class="label">PaCO₂</div>
+                                <div class="value">${q.values.PaCO2}</div>
+                            </div>
+                            <div class="abg-value">
+                                <div class="label">HCO₃⁻</div>
+                                <div class="value">${q.values.HCO3}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="options-grid" id="optionsGrid">
+                        ${q.options.map(opt => `
+                            <button class="option-btn" onclick="checkSpeedAnswer('${opt}', '${q.answer}')">${opt}</button>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (typeof q.answer === 'boolean') {
+                // True/False question
+                content.innerHTML = `
+                    <div class="question-container">
+                        <div class="question-text">⚡ ${q.question}</div>
+                    </div>
+                    <div class="options-grid">
+                        <button class="option-btn" onclick="checkSpeedAnswer('True', ${q.answer})">✓ TRUE</button>
+                        <button class="option-btn" onclick="checkSpeedAnswer('False', ${q.answer})">✗ FALSE</button>
+                    </div>
+                `;
+            } else {
+                // Regular question
+                content.innerHTML = `
+                    <div class="question-container">
+                        <div class="question-text">⚡ ${q.question}</div>
+                    </div>
+                    <div class="options-grid" id="optionsGrid">
+                        ${q.options.map(opt => `
+                            <button class="option-btn" onclick="checkSpeedAnswer('${opt}', '${q.answer}')">${opt}</button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            updateProgressBar();
+        }
+
+        function checkSpeedAnswer(selected, correct) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            let isCorrect = false;
+            if (typeof correct === 'boolean') {
+                isCorrect = (selected === 'True') === correct;
+            } else {
+                isCorrect = selected === correct;
+            }
+            
+            if (isCorrect) {
+                event.target.classList.add('correct');
+                gameState.correct++;
+                gameState.streak++;
+                const bonus = gameState.streak * 25;
+                gameState.score += 150 + bonus;
+                
+                updateComboMeter();
+                createConfetti();
+            } else {
+                event.target.classList.add('incorrect');
+                gameState.incorrect++;
+                gameState.streak = 0;
+                updateComboMeter();
+            }
+            
+            gameState.currentQuestion++;
+            updateScoreboard();
+            
+            setTimeout(() => {
+                if (gameState.timeLeft > 0) {
+                    showSpeedQuestion();
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(selected, correct, explanation) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            let isCorrect = false;
+            if (typeof correct === 'boolean') {
+                isCorrect = (selected === 'True') === correct;
+            } else {
+                isCorrect = selected === correct;
+            }
+            
+            if (isCorrect) {
+                event.target.classList.add('correct');
+                gameState.correct++;
+                gameState.streak++;
+                gameState.score += 100 + (gameState.streak * 10);
+                showFeedback(true, explanation);
+                createConfetti();
+                
+                if (gameState.streak === 3) {
+                    showAchievement("🔥 On Fire!", "3 correct in a row!");
+                }
+                if (gameState.streak === 5) {
+                    showAchievement("⭐ Superstar!", "5 correct streak!");
+                }
+            } else {
+                event.target.classList.add('incorrect');
+                gameState.incorrect++;
+                gameState.streak = 0;
+                showFeedback(false, explanation);
+            }
+            
+            gameState.answers.push({
+                question: gameState.questions[gameState.currentQuestion].question,
+                selected: selected,
+                correct: correct,
+                isCorrect: isCorrect
+            });
+            
+            updateScoreboard();
+            
+            setTimeout(() => {
+                gameState.currentQuestion++;
+                
+                if (gameState.currentQuestion < gameState.totalQuestions) {
+                    switch(gameState.mode) {
+                        case 'abg-quiz':
+                            showABGQuestion();
+                            break;
+                        case 'scenario':
+                            showScenarioQuestion();
+                            break;
+                        case 'pharmacology':
+                            showPharmQuestion();
+                            break;
+                        case 'true-false':
+                            showTrueFalseQuestion();
+                            break;
+                    }
+                } else {
+                    endGame();
+                }
+            }, 3000);
+        }
+
+        function showHint() {
+            const hintBox = document.getElementById('hintBox');
+            hintBox.classList.toggle('show');
+            gameState.hintsUsed++;
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+            feedback.innerHTML = `
+                <strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect'}</strong><br>
+                ${explanation}
+            `;
+        }
+
+        function updateScoreboard() {
+            document.getElementById('totalScore').textContent = gameState.score;
+            document.getElementById('correctCount').textContent = gameState.correct;
+            document.getElementById('streakCount').textContent = gameState.streak;
+            document.getElementById('levelDisplay').textContent = Math.floor(gameState.score / 500) + 1;
+        }
+
+        function updateProgressBar() {
+            const progress = (gameState.currentQuestion / gameState.totalQuestions) * 100;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = `Question ${gameState.currentQuestion + 1} of ${gameState.totalQuestions}`;
+        }
+
+        function updateTimer() {
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.textContent = `⏱️ ${gameState.timeLeft}s`;
+            
+            if (gameState.timeLeft <= 10) {
+                timerDisplay.classList.add('warning');
+            }
+        }
+
+        function updateComboMeter() {
+            const comboMeter = document.getElementById('comboMeter');
+            if (gameState.streak > 0) {
+                comboMeter.textContent = `🔥 ${gameState.streak}x COMBO! +${gameState.streak * 25} Bonus`;
+                comboMeter.classList.add('active');
+                setTimeout(() => comboMeter.classList.remove('active'), 500);
+            } else {
+                comboMeter.textContent = 'Build your combo!';
+            }
+        }
+
+        function endGame() {
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultsScreen').classList.add('active');
+            
+            const percentage = (gameState.correct / gameState.totalQuestions) * 100;
+            let stars = '';
+            let message = '';
+            
+            if (percentage >= 90) {
+                stars = '⭐⭐⭐⭐⭐';
+                message = '🏆 OUTSTANDING! You\'re a master!';
+            } else if (percentage >= 80) {
+                stars = '⭐⭐⭐⭐';
+                message = '🎉 Excellent work!';
+            } else if (percentage >= 70) {
+                stars = '⭐⭐⭐';
+                message = '👍 Good job!';
+            } else if (percentage >= 60) {
+                stars = '⭐⭐';
+                message = '📚 Keep studying!';
+            } else {
+                stars = '⭐';
+                message = '💪 Practice makes perfect!';
+            }
+            
+            document.getElementById('starsDisplay').textContent = stars;
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('resultDetails').innerHTML = `
+                You got <strong>${gameState.correct}</strong> out of <strong>${gameState.totalQuestions}</strong> correct! (${percentage.toFixed(0)}%)<br>
+                Best streak: ${Math.max(...gameState.answers.reduce((acc, a, i) => {
+                    if (a.isCorrect) {
+                        acc[acc.length - 1]++;
+                    } else {
+                        acc.push(0);
+                    }
+                    return acc;
+                }, [0]))}<br>
+                ${gameState.hintsUsed > 0 ? `Hints used: ${gameState.hintsUsed}` : 'No hints used - impressive!'}
+            `;
+            
+            createMassiveConfetti();
+        }
+
+        function backToMenu() {
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultsScreen').classList.remove('active');
+            document.getElementById('menuScreen').classList.add('active');
+            document.getElementById('timerDisplay').style.display = 'none';
+            document.getElementById('comboMeter').style.display = 'none';
+            
+            gameState = {
+                mode: '',
+                score: 0,
+                correct: 0,
+                incorrect: 0,
+                streak: 0,
+                currentQuestion: 0,
+                totalQuestions: 10,
+                questions: [],
+                answers: [],
+                timeLeft: 60,
+                timer: null,
+                hintsUsed: 0,
+                level: 1
+            };
+            
+            updateScoreboard();
+        }
+
+        function showAchievement(title, text) {
+            const popup = document.getElementById('achievementPopup');
+            const overlay = document.getElementById('overlay');
+            
+            document.getElementById('achievementTitle').textContent = title;
+            document.getElementById('achievementText').textContent = text;
+            
+            overlay.classList.add('show');
+            popup.classList.add('show');
+            
+            setTimeout(() => {
+                popup.classList.remove('show');
+                overlay.classList.remove('show');
+            }, 3000);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.background = ['#667eea', '#764ba2', '#ffd89b', '#19547b', '#ff6b6b', '#4ecdc4'][Math.floor(Math.random() * 6)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function createMassiveConfetti() {
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.background = ['#667eea', '#764ba2', '#ffd89b', '#19547b', '#ff6b6b', '#4ecdc4'][Math.floor(Math.random() * 6)];
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Initialize
+        updateScoreboard();
+    </script>
+</body>
+</html>

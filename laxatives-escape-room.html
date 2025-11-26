@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Laxative Asylum - Horror Escape Room NCLEX Game</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(-25%);
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+            }
+            50% {
+                transform: translateY(0);
+                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+            }
+        }
+        
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+        
+        .hover\:scale-105:hover {
+            transform: scale(1.05);
+        }
+        
+        .hover\:scale-102:hover {
+            transform: scale(1.02);
+        }
+        
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 300ms;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const LaxativesEscapeRoom = () => {
+            const [gameState, setGameState] = useState('character-select');
+            const [selectedCharacter, setSelectedCharacter] = useState(null);
+            const [currentRoom, setCurrentRoom] = useState(0);
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [keysCollected, setKeysCollected] = useState(0);
+            const [score, setScore] = useState(0);
+            const [showRationale, setShowRationale] = useState(false);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [isCorrect, setIsCorrect] = useState(false);
+            const [showAnimation, setShowAnimation] = useState(false);
+            const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
+
+            const characters = [
+                { id: 1, name: 'Nurse Nina', sprite: '👩‍⚕️', description: 'Expert in GI nursing', color: '#ff69b4' },
+                { id: 2, name: 'Dr. Bowel', sprite: '🧑‍⚕️', description: 'Gastroenterology specialist', color: '#4169e1' },
+                { id: 3, name: 'Pharmacist Phil', sprite: '💊', description: 'Master of laxative mechanisms', color: '#32cd32' }
+            ];
+
+            const rooms = [
+                {
+                    id: 0,
+                    name: "The Constipation Chamber",
+                    description: "A dark room filled with ancient medical texts. The walls pulse ominously...",
+                    theme: "🏚️",
+                    color: "#8b4513"
+                },
+                {
+                    id: 1,
+                    name: "The Fiber Forest",
+                    description: "Twisted vines of dietary fiber block your path. Strange sounds echo...",
+                    theme: "🌲",
+                    color: "#228b22"
+                },
+                {
+                    id: 2,
+                    name: "The Bulk-Forming Basement",
+                    description: "Water drips from swollen masses. The air feels thick and gelatinous...",
+                    theme: "💧",
+                    color: "#4682b4"
+                },
+                {
+                    id: 3,
+                    name: "The Surfactant Sanctum",
+                    description: "Oil slicks shimmer on every surface. Something slides in the shadows...",
+                    theme: "🛢️",
+                    color: "#2f4f4f"
+                },
+                {
+                    id: 4,
+                    name: "The Stimulant Dungeon",
+                    description: "Electric pulses crackle through the walls. Your intestines feel the urgency...",
+                    theme: "⚡",
+                    color: "#ff4500"
+                },
+                {
+                    id: 5,
+                    name: "The Osmotic Observatory",
+                    description: "Fluid shifts unnaturally. Pressure builds in the haunted laboratory...",
+                    theme: "🔬",
+                    color: "#9370db"
+                },
+                {
+                    id: 6,
+                    name: "The Colonoscopy Catacombs",
+                    description: "Preparation solutions bubble in ancient cauldrons. The smell is terrible...",
+                    theme: "🏺",
+                    color: "#a0522d"
+                },
+                {
+                    id: 7,
+                    name: "The Laxative Abuse Asylum",
+                    description: "Reflections of overuse haunt the mirrors. Electrolytes scatter everywhere...",
+                    theme: "🪞",
+                    color: "#800080"
+                }
+            ];
+
+            const questions = [
+                // Room 0: Constipation Chamber - Basic Concepts
+                {
+                    room: 0,
+                    type: 'multiple-choice',
+                    question: 'A patient asks the nurse, "How often should I have a bowel movement to be considered normal?" What is the nurse\'s best response?',
+                    options: [
+                        'You must have a bowel movement every single day',
+                        'Normal frequency varies from 2-3 times daily to 2 times weekly',
+                        'At least 3 times per day is optimal',
+                        'Once weekly is acceptable'
+                    ],
+                    correct: 1,
+                    rationale: 'Normal bowel elimination frequency varies widely, ranging from 2-3 times per day to 2 times per week. Daily bowel movements are not required for normal function, and laxative misuse often stems from misconceptions about what constitutes normal bowel function.'
+                },
+                {
+                    room: 0,
+                    type: 'multiple-choice',
+                    question: 'The colon absorbs approximately how much of the fluid that enters it each day?',
+                    options: [
+                        '50% of fluid',
+                        '70% of fluid',
+                        '90% of fluid',
+                        '100% of fluid'
+                    ],
+                    correct: 2,
+                    rationale: 'The colon receives approximately 1500 mL of fluid daily and absorbs 90% of it. This absorption of water and electrolytes is the primary function of the colon, while nutrient absorption is minimal.'
+                },
+                {
+                    room: 0,
+                    type: 'sata',
+                    question: 'Which characteristics may define constipation? Select all that apply.',
+                    options: [
+                        'Hard stools',
+                        'Infrequent stools',
+                        'Excessive straining',
+                        'Sense of incomplete evacuation',
+                        'Daily bowel movements'
+                    ],
+                    correct: [0, 1, 2, 3],
+                    rationale: 'Constipation may be defined as hard stools, infrequent stools, excessive straining, prolonged effort, sense of incomplete evacuation, or unsuccessful defecation. Daily bowel movements are not required for normal function.'
+                },
+                {
+                    room: 0,
+                    type: 'priority',
+                    question: 'What is the PRIORITY teaching point for preventing constipation in a bedridden patient?',
+                    options: [
+                        'Increase dietary fiber intake',
+                        'Take laxatives daily',
+                        'Drink less water to reduce urination',
+                        'Avoid all physical movement'
+                    ],
+                    correct: 0,
+                    rationale: 'Proper bowel function is highly dependent on dietary fiber, with bran being the best source. Fiber absorbs water, softens feces, increases stool size, and can be digested by colonic bacteria to increase fecal mass. Low-fiber diet is a frequent cause of constipation.'
+                },
+                {
+                    room: 0,
+                    type: 'case-study',
+                    question: 'A patient states, "I haven\'t had a bowel movement in 2 days, so I must be constipated." What is the nurse\'s best response?',
+                    options: [
+                        'You are correct; take a laxative immediately',
+                        'Bowel replenishment after evacuation can take 2-5 days; this is normal',
+                        'You need emergency treatment for fecal impaction',
+                        'Start taking daily stimulant laxatives'
+                    ],
+                    correct: 1,
+                    rationale: 'After a complete bowel evacuation (such as from laxative use), bowel replenishment can take 2 to 5 days. This normal delay is often mistaken for constipation, leading to laxative abuse. Constipation in the United States results in at least 2.5 million medical visits annually.'
+                },
+
+                // Room 1: Fiber Forest - Dietary Fiber & Function
+                {
+                    room: 1,
+                    type: 'multiple-choice',
+                    question: 'What happens when intestinal transit is delayed in the colon?',
+                    options: [
+                        'Stool becomes softer due to increased water',
+                        'Excessive fluid absorption occurs, causing hard stool',
+                        'Nutrients are better absorbed',
+                        'Electrolyte balance improves'
+                    ],
+                    correct: 1,
+                    rationale: 'Delayed transport through the colon causes excessive fluid absorption and results in hard stool. The colon absorbs 90% of the 1500 mL of fluid entering it daily, so prolonged transit time leads to over-absorption.'
+                },
+                {
+                    room: 1,
+                    type: 'teaching',
+                    question: 'A patient asks why the provider recommended eating more bran. What is the nurse\'s best explanation?',
+                    options: [
+                        'Bran stimulates intestinal contractions directly',
+                        'Bran is the best source of dietary fiber, which absorbs water and softens stool',
+                        'Bran prevents all gastrointestinal diseases',
+                        'Bran replaces the need for laxatives completely'
+                    ],
+                    correct: 1,
+                    rationale: 'Bran is the best source of dietary fiber. Fiber absorbs water to soften feces and increase size, and can be digested by colonic bacteria, whose growth increases fecal mass. Proper bowel function is highly dependent on dietary fiber.'
+                },
+                {
+                    room: 1,
+                    type: 'sata',
+                    question: 'What are the benefits of dietary fiber? Select all that apply.',
+                    options: [
+                        'Absorbs water to soften feces',
+                        'Increases stool size',
+                        'Can be digested by colonic bacteria',
+                        'Decreases fecal mass',
+                        'Increases bacterial growth in colon'
+                    ],
+                    correct: [0, 1, 2, 4],
+                    rationale: 'Dietary fiber absorbs water to soften feces and increase size. Fiber can be digested by colonic bacteria, and this bacterial growth increases fecal mass (not decreases it). These mechanisms improve bowel function naturally.'
+                },
+                {
+                    room: 1,
+                    type: 'multiple-choice',
+                    question: 'How much fluid enters the colon each day?',
+                    options: [
+                        '500 mL',
+                        '1000 mL',
+                        '1500 mL',
+                        '2000 mL'
+                    ],
+                    correct: 2,
+                    rationale: '1500 mL of fluid enters the colon each day, and 90% of this fluid is absorbed. Absorption of nutrients is minimal in the colon; its primary function is absorbing water and electrolytes.'
+                },
+                {
+                    room: 1,
+                    type: 'priority',
+                    question: 'A patient with chronic constipation asks about prevention strategies. What is the PRIORITY recommendation?',
+                    options: [
+                        'Take daily stimulant laxatives',
+                        'Increase dietary fiber intake',
+                        'Decrease fluid intake',
+                        'Use enemas twice weekly'
+                    ],
+                    correct: 1,
+                    rationale: 'A low-fiber diet is a frequent cause of constipation. Increasing dietary fiber is the priority prevention strategy because proper bowel function is highly dependent on dietary fiber, with bran being the best source.'
+                },
+
+                // Room 2: Bulk-Forming Basement
+                {
+                    room: 2,
+                    type: 'multiple-choice',
+                    question: 'How do bulk-forming laxatives work?',
+                    options: [
+                        'They stimulate intestinal motility directly',
+                        'They draw water into the intestinal lumen osmotically',
+                        'They swell with water to form a gel that softens and increases fecal mass',
+                        'They lubricate the stool'
+                    ],
+                    correct: 2,
+                    rationale: 'Bulk-forming laxatives function similarly to dietary fiber. They swell with water to form a gel that softens and increases fecal mass, mimicking the natural action of fiber.'
+                },
+                {
+                    room: 2,
+                    type: 'teaching',
+                    question: 'A patient is prescribed psyllium (Metamucil). What is the most important teaching point?',
+                    options: [
+                        'Take with minimal water to prevent diarrhea',
+                        'Results occur within 30 minutes',
+                        'Adverse effects are minimal, but esophageal obstruction can occur',
+                        'This medication works by stimulating the bowel'
+                    ],
+                    correct: 2,
+                    rationale: 'Bulk-forming laxatives have minimal adverse effects, but esophageal obstruction can occur if not taken with adequate water. Psyllium is a bulk-forming laxative that requires sufficient fluid to swell properly.'
+                },
+                {
+                    room: 2,
+                    type: 'sata',
+                    question: 'Bulk-forming laxatives are used for which conditions? Select all that apply.',
+                    options: [
+                        'Temporary treatment of constipation',
+                        'Diverticulosis',
+                        'Irritable bowel syndrome',
+                        'Acute diarrhea',
+                        'Fecal impaction'
+                    ],
+                    correct: [0, 1, 2],
+                    rationale: 'Bulk-forming laxatives are the preferred temporary treatment of constipation and are also used for diverticulosis and irritable bowel syndrome. They are not used for acute diarrhea or fecal impaction.'
+                },
+                {
+                    room: 2,
+                    type: 'multiple-choice',
+                    question: 'Which laxative is classified as bulk-forming?',
+                    options: [
+                        'Bisacodyl (Dulcolax)',
+                        'Psyllium (Metamucil)',
+                        'Docusate sodium (Colace)',
+                        'Milk of Magnesia (MOM)'
+                    ],
+                    correct: 1,
+                    rationale: 'Psyllium (Metamucil) is a bulk-forming laxative. Bisacodyl is a stimulant laxative, docusate sodium is a surfactant laxative, and Milk of Magnesia is an osmotic laxative.'
+                },
+                {
+                    room: 2,
+                    type: 'case-study',
+                    question: 'A patient with irritable bowel syndrome asks why bulk-forming laxatives were prescribed instead of stimulant laxatives. What is the nurse\'s best response?',
+                    options: [
+                        'Stimulant laxatives are too expensive',
+                        'Bulk-forming laxatives work faster than stimulants',
+                        'Bulk-forming laxatives have minimal adverse effects and work similarly to dietary fiber',
+                        'Stimulant laxatives cannot be used for IBS'
+                    ],
+                    correct: 2,
+                    rationale: 'Bulk-forming laxatives are preferred for conditions like IBS because they have minimal adverse effects and function similarly to dietary fiber by forming a gel that softens and increases fecal mass. They are used for diverticulosis and irritable bowel syndrome.'
+                },
+
+                // Room 3: Surfactant Sanctum
+                {
+                    room: 3,
+                    type: 'multiple-choice',
+                    question: 'How long does it typically take for surfactant laxatives to produce a soft stool?',
+                    options: [
+                        '30 minutes',
+                        '2-6 hours',
+                        'Several days',
+                        'Immediately'
+                    ],
+                    correct: 2,
+                    rationale: 'Surfactant laxatives produce a soft stool several days after onset of treatment. They work by lowering surface tension to facilitate water penetration into feces and may also affect the intestinal wall.'
+                },
+                {
+                    room: 3,
+                    type: 'multiple-choice',
+                    question: 'What is the mechanism of action of docusate sodium (Colace)?',
+                    options: [
+                        'Stimulates peristalsis directly',
+                        'Draws water into intestinal lumen',
+                        'Lowers surface tension to facilitate water penetration into feces',
+                        'Forms a gel that increases stool bulk'
+                    ],
+                    correct: 2,
+                    rationale: 'Surfactant laxatives like docusate sodium alter stool consistency by lowering surface tension, which facilitates penetration of water into feces. They may also inhibit fluid absorption and stimulate secretion of water and electrolytes.'
+                },
+                {
+                    room: 3,
+                    type: 'sata',
+                    question: 'Surfactant laxatives may act on the intestinal wall to: Select all that apply.',
+                    options: [
+                        'Inhibit fluid absorption',
+                        'Stimulate secretion of water',
+                        'Stimulate secretion of electrolytes',
+                        'Increase peristalsis dramatically',
+                        'Cause immediate evacuation'
+                    ],
+                    correct: [0, 1, 2],
+                    rationale: 'Surfactant laxatives may act on the intestinal wall to inhibit fluid absorption and stimulate secretion of water and electrolytes into the intestinal lumen. In this respect, surfactants resemble stimulant laxatives, though they work more slowly.'
+                },
+                {
+                    room: 3,
+                    type: 'teaching',
+                    question: 'A patient taking docusate sodium (Colace) asks when to expect results. What is the nurse\'s response?',
+                    options: [
+                        'Within 30 minutes to 1 hour',
+                        'Within 2 to 6 hours',
+                        'Within 6 to 12 hours',
+                        'After several days of treatment'
+                    ],
+                    correct: 3,
+                    rationale: 'Surfactant laxatives produce a soft stool several days after onset of treatment. They work gradually by lowering surface tension and facilitating water penetration into feces.'
+                },
+                {
+                    room: 3,
+                    type: 'multiple-choice',
+                    question: 'Which statement about surfactant laxatives is accurate?',
+                    options: [
+                        'They work faster than bulk-forming laxatives',
+                        'They resemble stimulant laxatives in their effect on the intestinal wall',
+                        'They cause immediate catharsis',
+                        'They are contraindicated in pregnancy'
+                    ],
+                    correct: 1,
+                    rationale: 'Surfactant laxatives may act on the intestinal wall to inhibit fluid absorption and stimulate secretion of water and electrolytes into the intestinal lumen. In this respect, surfactants resemble stimulant laxatives.'
+                },
+
+                // Room 4: Stimulant Dungeon
+                {
+                    room: 4,
+                    type: 'sata',
+                    question: 'What are the two main effects of stimulant laxatives on the bowel? Select all that apply.',
+                    options: [
+                        'Stimulate intestinal motility',
+                        'Increase water and electrolytes in intestinal lumen',
+                        'Form gel to increase bulk',
+                        'Lower surface tension',
+                        'Lubricate the stool'
+                    ],
+                    correct: [0, 1],
+                    rationale: 'Stimulant laxatives have two effects on the bowel: they stimulate intestinal motility and increase the amounts of water and electrolytes in the intestinal lumen.'
+                },
+                {
+                    room: 4,
+                    type: 'multiple-choice',
+                    question: 'Stimulant laxatives are legitimately used for which condition?',
+                    options: [
+                        'Daily bowel regulation',
+                        'Opioid-induced constipation',
+                        'Mild dietary constipation',
+                        'Routine use in healthy adults'
+                    ],
+                    correct: 1,
+                    rationale: 'Stimulant laxatives are legitimately used for opioid-induced constipation and for constipation from slow intestinal transit. However, they are widely used and abused, being the most frequently abused laxatives by the general public.'
+                },
+                {
+                    room: 4,
+                    type: 'case-study',
+                    question: 'A patient on long-term morphine therapy complains of severe constipation. Which laxative class is most appropriate?',
+                    options: [
+                        'Bulk-forming laxatives',
+                        'Surfactant laxatives',
+                        'Stimulant laxatives',
+                        'No laxatives needed'
+                    ],
+                    correct: 2,
+                    rationale: 'Stimulant laxatives are legitimately used for opioid-induced constipation. They stimulate intestinal motility and increase water and electrolytes in the intestinal lumen, making them effective for this indication.'
+                },
+                {
+                    room: 4,
+                    type: 'priority',
+                    question: 'A patient is prescribed bisacodyl (Dulcolax). What is the PRIORITY teaching point?',
+                    options: [
+                        'Take with antacids for better absorption',
+                        'Crush the tablet for faster results',
+                        'Do not take with antacids as this can cause premature dissolution',
+                        'Expect results in 2-3 days'
+                    ],
+                    correct: 2,
+                    rationale: 'Bisacodyl tablets are enteric-coated and should not be taken with antacids or crushed/chewed, as this causes premature dissolution in the stomach rather than the intestine. This is critical patient teaching for bisacodyl.'
+                },
+                {
+                    room: 4,
+                    type: 'multiple-choice',
+                    question: 'Which laxative is classified as a stimulant?',
+                    options: [
+                        'Psyllium (Metamucil)',
+                        'Docusate sodium (Colace)',
+                        'Bisacodyl (Dulcolax)',
+                        'Lubiprostone'
+                    ],
+                    correct: 2,
+                    rationale: 'Bisacodyl (Dulcolax) is a stimulant laxative. It stimulates intestinal motility and increases amounts of water and electrolytes in the intestinal lumen. Stimulant laxatives are widely used and abused.'
+                },
+
+                // Room 5: Osmotic Observatory
+                {
+                    room: 5,
+                    type: 'multiple-choice',
+                    question: 'How do osmotic laxative salts (like magnesium hydroxide) work?',
+                    options: [
+                        'They stimulate peristalsis directly',
+                        'They are poorly absorbed and draw water into intestinal lumen',
+                        'They lower surface tension of stool',
+                        'They form bulk in the intestine'
+                    ],
+                    correct: 1,
+                    rationale: 'Osmotic laxatives like sodium phosphate and magnesium hydroxide (Milk of Magnesia) are poorly absorbed salts that draw water into the intestinal lumen. The fecal mass softens and swells, the wall stretches, and peristalsis is stimulated.'
+                },
+                {
+                    room: 5,
+                    type: 'teaching',
+                    question: 'A patient asks about the onset of action for Milk of Magnesia at a low dose. What should the nurse teach?',
+                    options: [
+                        'Results in 30 minutes',
+                        'Results in 2-6 hours',
+                        'Results in 6-12 hours',
+                        'Results in 1-3 days'
+                    ],
+                    correct: 2,
+                    rationale: 'Low doses of osmotic laxatives produce results in 6 to 12 hours. High doses produce results in 2 to 6 hours. The onset depends on the dose and the osmotic effect.'
+                },
+                {
+                    room: 5,
+                    type: 'sata',
+                    question: 'What are potential adverse effects of osmotic laxatives? Select all that apply.',
+                    options: [
+                        'Dehydration from substantial water loss',
+                        'Acute renal failure',
+                        'Sodium retention',
+                        'Increased appetite',
+                        'Hypotension from fluid shifts'
+                    ],
+                    correct: [0, 1, 2],
+                    rationale: 'Adverse effects of osmotic laxatives include dehydration from substantial water loss, acute renal failure, and sodium retention which can exacerbate heart failure, hypertension, and edema.'
+                },
+                {
+                    room: 5,
+                    type: 'case-study',
+                    question: 'A patient with heart failure needs a laxative for constipation. Why should osmotic laxatives containing sodium be avoided?',
+                    options: [
+                        'They work too slowly',
+                        'They are too expensive',
+                        'Sodium retention can exacerbate heart failure, hypertension, and edema',
+                        'They cause severe diarrhea'
+                    ],
+                    correct: 2,
+                    rationale: 'Osmotic laxatives can cause sodium retention, which can exacerbate heart failure, hypertension, and edema. Patients with cardiovascular conditions should avoid sodium-containing osmotic laxatives.'
+                },
+                {
+                    room: 5,
+                    type: 'multiple-choice',
+                    question: 'Magnesium hydroxide (Milk of Magnesia) belongs to which laxative classification?',
+                    options: [
+                        'Bulk-forming',
+                        'Surfactant',
+                        'Stimulant',
+                        'Osmotic'
+                    ],
+                    correct: 3,
+                    rationale: 'Magnesium hydroxide (Milk of Magnesia) is an osmotic laxative. It is a poorly absorbed salt that draws water into the intestinal lumen, causing the fecal mass to soften and swell.'
+                },
+
+                // Room 6: Colonoscopy Catacombs
+                {
+                    room: 6,
+                    type: 'multiple-choice',
+                    question: 'What is the typical volume of polyethylene glycol-electrolyte solution (GoLytely) that must be ingested for colonoscopy preparation?',
+                    options: [
+                        '500 mL',
+                        '1 liter',
+                        '2 liters',
+                        '4 liters'
+                    ],
+                    correct: 3,
+                    rationale: 'The volume administered is huge, typically 4 L. Patients must ingest 250 to 300 mL every 10 minutes for 2 to 3 hours. With HalfLytely and MoviPrep, the volume is cut in half. Most common adverse effects are nausea, bloating, and abdominal discomfort.'
+                },
+                {
+                    room: 6,
+                    type: 'sata',
+                    question: 'Which adverse effects are associated with sodium phosphate products for colonoscopy prep? Select all that apply.',
+                    options: [
+                        'Hyperphosphatemia',
+                        'Acute reversible renal damage',
+                        'Chronic irreversible renal damage',
+                        'Dehydration',
+                        'Electrolyte disturbances'
+                    ],
+                    correct: [0, 1, 2, 3, 4],
+                    rationale: 'Sodium phosphate products can cause nausea, bloating, abdominal discomfort, dehydration, electrolyte disturbances, and kidney damage. Hyperphosphatemia can cause acute, reversible renal damage and possibly chronic, irreversible renal damage.'
+                },
+                {
+                    room: 6,
+                    type: 'priority',
+                    question: 'A patient with reduced renal function needs colonoscopy preparation. What is the PRIORITY concern with magnesium oxide/citric acid/sodium picosulfate (Prepopik)?',
+                    options: [
+                        'The medication is too expensive',
+                        'It works too slowly',
+                        'Magnesium can accumulate in patients with reduced renal function',
+                        'It causes severe nausea'
+                    ],
+                    correct: 2,
+                    rationale: 'Caution must be used in patients with reduced renal function as magnesium builds up. This combination product can cause electrolyte imbalances, renal problems, seizures, and arrhythmias. The most common adverse reactions are nausea, headache, and vomiting.'
+                },
+                {
+                    room: 6,
+                    type: 'teaching',
+                    question: 'A patient is prescribed polyethylene glycol-electrolyte solution (PEG-ELS). What is the advantage of this preparation over sodium phosphate?',
+                    options: [
+                        'It tastes better',
+                        'It is isotonic with body fluids and safer for electrolytes',
+                        'It requires less volume',
+                        'It works faster'
+                    ],
+                    correct: 1,
+                    rationale: 'Polyethylene glycol plus electrolytes (PEG-ELS) is isotonic with body fluids, making it safer than sodium phosphate, which is hypertonic and can cause dehydration and electrolyte disturbance. However, PEG-ELS requires ingestion of large volume of bad-tasting liquid.'
+                },
+                {
+                    room: 6,
+                    type: 'case-study',
+                    question: 'A patient preparing for colonoscopy develops severe electrolyte imbalances and renal impairment. Which bowel prep was most likely used?',
+                    options: [
+                        'Polyethylene glycol (isotonic)',
+                        'Bulk-forming laxatives',
+                        'Sodium phosphate products (hypertonic)',
+                        'Surfactant laxatives'
+                    ],
+                    correct: 2,
+                    rationale: 'Sodium phosphate products are hypertonic with body fluids and can cause dehydration, electrolyte disturbances, kidney damage, and hyperphosphatemia, which can cause acute reversible and possibly chronic irreversible renal damage.'
+                },
+
+                // Room 7: Laxative Abuse Asylum
+                {
+                    room: 7,
+                    type: 'sata',
+                    question: 'What are causes of laxative abuse? Select all that apply.',
+                    options: [
+                        'Misconception that bowel movements must occur daily',
+                        'Laxatives empty the bowel completely, creating a cycle',
+                        'Medical necessity in all cases',
+                        'Bowel replenishment taking 2-5 days mistaken for constipation',
+                        'Provider recommendation for daily use'
+                    ],
+                    correct: [0, 1, 3],
+                    rationale: 'Laxative abuse is caused by misconception that bowel movements must occur daily, and laxatives can perpetuate their own use by emptying the bowel completely. The bowel then stays empty for days, making people think they\'re constipated again. Bowel replenishment after evacuation can take 2 to 5 days and is often mistaken for constipation.'
+                },
+                {
+                    room: 7,
+                    type: 'multiple-choice',
+                    question: 'What are consequences of chronic laxative abuse?',
+                    options: [
+                        'Improved bowel function',
+                        'Diminished defecatory reflexes and further reliance on laxatives',
+                        'Enhanced electrolyte balance',
+                        'Strengthened intestinal muscles'
+                    ],
+                    correct: 1,
+                    rationale: 'Consequences of laxative abuse include diminished defecatory reflexes leading to further reliance on laxatives, electrolyte imbalance, dehydration, and colitis.'
+                },
+                {
+                    room: 7,
+                    type: 'teaching',
+                    question: 'A patient who has been using laxatives daily for years wants to stop. What should the nurse teach about the expected timeline?',
+                    options: [
+                        'Bowel function returns to normal immediately',
+                        'Bowel replenishment after stopping can take 2-5 days; this is normal',
+                        'Daily laxatives should never be stopped',
+                        'Expect permanent bowel dysfunction'
+                    ],
+                    correct: 1,
+                    rationale: 'After a complete bowel evacuation, bowel replenishment can take 2 to 5 days. This normal delay is often mistaken for constipation. Patients stopping chronic laxative use need to understand this to avoid resuming laxatives unnecessarily.'
+                },
+                {
+                    room: 7,
+                    type: 'case-study',
+                    question: 'A patient with chronic laxative abuse presents with electrolyte imbalances and colitis. Which laxative type is most frequently abused?',
+                    options: [
+                        'Bulk-forming laxatives',
+                        'Surfactant laxatives',
+                        'Stimulant laxatives (Group III)',
+                        'Osmotic laxatives'
+                    ],
+                    correct: 2,
+                    rationale: 'Group III stimulant laxatives are most frequently abused by the general public. They act slowly (1 to 3 days) to produce a soft, formed stool and are used for treating chronic constipation and preventing straining at stool.'
+                },
+                {
+                    room: 7,
+                    type: 'priority',
+                    question: 'What is the PRIORITY intervention for a patient with diminished defecatory reflexes from laxative abuse?',
+                    options: [
+                        'Increase laxative dose',
+                        'Switch to stronger laxatives',
+                        'Use glycerin suppositories to help reestablish normal bowel function',
+                        'Continue current laxative regimen'
+                    ],
+                    correct: 2,
+                    rationale: 'Glycerin suppository is useful for reestablishing normal bowel function after termination of chronic laxative use. It acts as an osmotic agent that softens and lubricates hardened, impacted feces, may stimulate rectal contraction, and evacuation occurs about 30 minutes after suppository insertion.'
+                },
+
+                // Additional questions to reach 40 total
+                {
+                    room: 0,
+                    type: 'sata',
+                    question: 'Which are legitimate indications for laxative use? Select all that apply.',
+                    options: [
+                        'Obtain fresh stool sample',
+                        'Empty bowel before procedure',
+                        'Expel dead parasites after treatment',
+                        'Daily bowel regulation',
+                        'Prevent fecal impaction in bedridden patients'
+                    ],
+                    correct: [0, 1, 2, 4],
+                    rationale: 'Legitimate indications include: obtaining fresh stool sample, emptying bowel before treatment or procedure, expelling dead parasites after treatment, modifying effluent from ostomy, treating constipation (multiple causes including pregnancy and opioid use), preventing fecal impaction in bedridden patients, and removing poisons. Daily bowel regulation is not a legitimate indication.'
+                },
+                {
+                    room: 1,
+                    type: 'sata',
+                    question: 'Which are contraindications to laxative use? Select all that apply.',
+                    options: [
+                        'Abdominal pain with nausea',
+                        'Acute surgical abdomen',
+                        'Fecal impaction',
+                        'Mild constipation',
+                        'Symptoms of appendicitis'
+                    ],
+                    correct: [0, 1, 2, 4],
+                    rationale: 'Contraindications include: abdominal pain, nausea, cramps, or symptoms of appendicitis, regional enteritis, diverticulitis, or ulcerative colitis; acute surgical abdomen; fecal impaction or bowel obstruction (do not use laxatives as this leads to perforation); and habitual use. Use with caution in pregnancy and lactation.'
+                },
+                {
+                    room: 2,
+                    type: 'multiple-choice',
+                    question: 'A patient with fecal impaction asks for a laxative. What is the nurse\'s best response?',
+                    options: [
+                        'Laxatives are the first-line treatment for impaction',
+                        'Laxatives are contraindicated in fecal impaction as they can lead to perforation',
+                        'Only stimulant laxatives should be used',
+                        'Take double the normal laxative dose'
+                    ],
+                    correct: 1,
+                    rationale: 'Fecal impaction or bowel obstruction is a contraindication to laxative use. Do not use laxatives for this condition as it leads to perforation. Manual disimpaction or other interventions may be needed.'
+                },
+                {
+                    room: 3,
+                    type: 'multiple-choice',
+                    question: 'How do laxatives produce catharsis versus a laxative effect?',
+                    options: [
+                        'Catharsis is slow; laxative effect is fast',
+                        'They are the same thing',
+                        'Catharsis produces prompt, fluid evacuation; laxative effect produces soft, formed stool over days',
+                        'Catharsis only occurs with enemas'
+                    ],
+                    correct: 2,
+                    rationale: 'Laxative effect produces soft, formed stool over 1 or more days and is relatively mild. Catharsis produces prompt, fluid evacuation of the bowel and is fast and intense, such as when doing a bowel prep.'
+                },
+                {
+                    room: 4,
+                    type: 'multiple-choice',
+                    question: 'Which classification system groups laxatives by therapeutic effect based on onset time?',
+                    options: [
+                        'Group I: rapid (2-6 hours), watery; Group II: intermediate (6-12 hours), semifluid; Group III: slow (1-3 days), soft formed',
+                        'Group I: bulk; Group II: stimulant; Group III: osmotic',
+                        'All laxatives work the same speed',
+                        'Classification is based on cost only'
+                    ],
+                    correct: 0,
+                    rationale: 'Group I acts rapidly (within 2 to 6 hours) and gives stool a watery consistency, useful for bowel prep. Group II has intermediate latency (6 to 12 hours) and produces a semifluid stool. Group III is most frequently abused, acts slowly (1 to 3 days) to produce a soft, formed stool, and is used for treating chronic constipation.'
+                },
+                {
+                    room: 5,
+                    type: 'case-study',
+                    question: 'A patient needs rapid bowel evacuation for a diagnostic procedure tomorrow. Which therapeutic group is most appropriate?',
+                    options: [
+                        'Group III (slow, 1-3 days)',
+                        'Group II (intermediate, 6-12 hours)',
+                        'Group I (rapid, 2-6 hours, watery consistency)',
+                        'No laxatives needed'
+                    ],
+                    correct: 2,
+                    rationale: 'Group I laxatives act rapidly (within 2 to 6 hours) and give stool a watery consistency. They are useful for preparing bowel for diagnostic procedures or surgery.'
+                },
+                {
+                    room: 6,
+                    type: 'teaching',
+                    question: 'A patient is prescribed lubiprostone. What should the nurse teach about expected results?',
+                    options: [
+                        'Expect immediate evacuation',
+                        'Expect spontaneous evacuation of a semisoft stool, usually within 24 hours',
+                        'Results take 3-5 days',
+                        'Only works for bowel prep'
+                    ],
+                    correct: 1,
+                    rationale: 'Lubiprostone is a selective chloride channel activator that increases chloride in the lumen. By activating chloride channels in epithelial cells lining the intestine, it promotes secretion of chloride-rich fluid into the intestine and enhances motility. The result is spontaneous evacuation of a semisoft stool, usually within 24 hours.'
+                },
+                {
+                    room: 7,
+                    type: 'multiple-choice',
+                    question: 'What is the mechanism of action of lubiprostone?',
+                    options: [
+                        'Stimulates peristalsis directly',
+                        'Activates chloride channels to promote fluid secretion and enhance motility',
+                        'Forms bulk in the intestine',
+                        'Draws water osmotically'
+                    ],
+                    correct: 1,
+                    rationale: 'Lubiprostone is a selective chloride channel activator. By activating (opening) chloride channels in epithelial cells lining the intestine, it promotes secretion of chloride-rich fluid into the intestine and enhances motility in the small intestine and colon.'
+                },
+                {
+                    room: 0,
+                    type: 'sata',
+                    question: 'What are adverse effects of mineral oil? Select all that apply.',
+                    options: [
+                        'Lipid pneumonia if aspirated',
+                        'Anal leakage if not absorbed',
+                        'Deposition in liver tissue',
+                        'Electrolyte enhancement',
+                        'Improved vitamin absorption'
+                    ],
+                    correct: [0, 1, 2],
+                    rationale: 'Mineral oil is a mixture of indigestible and poorly absorbed hydrocarbons. Adverse effects include lipid pneumonia (if aspirated into lungs, oil droplets can\'t be cleared and collect in alveoli causing inflammation), anal leakage (if not absorbed), and deposition of mineral oil in the liver (small amounts absorbed through lymphatics accumulate in liver tissue over time).'
+                },
+                {
+                    room: 1,
+                    type: 'teaching',
+                    question: 'For what purpose is mineral oil especially useful when administered by enema?',
+                    options: [
+                        'Daily bowel maintenance',
+                        'Treating fecal impaction',
+                        'Routine constipation',
+                        'Bowel preparation'
+                    ],
+                    correct: 1,
+                    rationale: 'Mineral oil\'s laxative action is produced by lubrication. Mineral oil is especially useful when administered by enema to treat fecal impaction, where its lubricating properties help soften and remove the impacted stool.'
+                }
+            ];
+
+            const shuffleArray = (array) => {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            };
+
+            const getShuffledOptions = (question) => {
+                if (question.type === 'sata') {
+                    return question.options;
+                }
+                return shuffleArray(question.options);
+            };
+
+            const [shuffledQuestions, setShuffledQuestions] = useState([]);
+
+            useEffect(() => {
+                const questionsForRoom = questions.filter(q => q.room === currentRoom);
+                setShuffledQuestions(questionsForRoom.map(q => ({
+                    ...q,
+                    shuffledOptions: getShuffledOptions(q)
+                })));
+                setCurrentQuestion(0);
+            }, [currentRoom]);
+
+            const currentQ = shuffledQuestions[currentQuestion];
+
+            const handleCharacterSelect = (character) => {
+                setSelectedCharacter(character);
+                setGameState('playing');
+            };
+
+            const handleAnswerSelect = (index) => {
+                if (showRationale) return;
+                
+                if (currentQ.type === 'sata') {
+                    const newSelected = selectedAnswer ? [...selectedAnswer] : [];
+                    if (newSelected.includes(index)) {
+                        setSelectedAnswer(newSelected.filter(i => i !== index));
+                    } else {
+                        setSelectedAnswer([...newSelected, index]);
+                    }
+                } else {
+                    setSelectedAnswer(index);
+                }
+            };
+
+            const handleSubmitAnswer = () => {
+                if (selectedAnswer === null || (Array.isArray(selectedAnswer) && selectedAnswer.length === 0)) return;
+
+                let correct = false;
+                if (currentQ.type === 'sata') {
+                    const sortedSelected = [...selectedAnswer].sort();
+                    const sortedCorrect = [...currentQ.correct].sort();
+                    correct = JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
+                } else {
+                    const actualCorrectIndex = currentQ.shuffledOptions.indexOf(currentQ.options[currentQ.correct]);
+                    correct = selectedAnswer === actualCorrectIndex;
+                }
+
+                setIsCorrect(correct);
+                setShowRationale(true);
+                
+                if (correct) {
+                    setScore(score + 1);
+                    setShowAnimation(true);
+                    setTimeout(() => setShowAnimation(false), 2000);
+                }
+                
+                setAnsweredQuestions(new Set([...answeredQuestions, currentRoom * 5 + currentQuestion]));
+            };
+
+            const handleNextQuestion = () => {
+                setShowRationale(false);
+                setSelectedAnswer(null);
+                setIsCorrect(false);
+
+                if (currentQuestion < shuffledQuestions.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else {
+                    if (currentRoom < rooms.length - 1) {
+                        setKeysCollected(keysCollected + 1);
+                        setCurrentRoom(currentRoom + 1);
+                        setGameState('room-transition');
+                    } else {
+                        setGameState('victory');
+                    }
+                }
+            };
+
+            const handleContinueToRoom = () => {
+                setGameState('playing');
+            };
+
+            if (gameState === 'character-select') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-red-900 p-8">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="text-center mb-12">
+                                <h1 className="text-6xl font-bold mb-4 animate-pulse" style={{
+                                    textShadow: '0 0 20px #ff0000, 0 0 40px #ff0000',
+                                    color: '#ff6b6b'
+                                }}>
+                                    🏚️ THE LAXATIVE ASYLUM 🏚️
+                                </h1>
+                                <p className="text-2xl text-purple-300 mb-2">Horror Escape Room Challenge</p>
+                                <p className="text-xl text-gray-400">40 NCLEX Questions • 8 Haunted Rooms • 1 Way Out</p>
+                            </div>
+
+                            <div className="bg-black border-4 border-red-600 shadow-2xl rounded-lg p-8">
+                                <h2 className="text-3xl font-bold text-center mb-8 text-red-500">SELECT YOUR CHARACTER</h2>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {characters.map(char => (
+                                        <div
+                                            key={char.id}
+                                            onClick={() => handleCharacterSelect(char)}
+                                            className="cursor-pointer transform hover:scale-105 transition-all duration-300 bg-gradient-to-br from-gray-900 to-gray-800 border-4 border-purple-600 rounded-lg p-6 hover:border-red-500 hover:shadow-xl"
+                                            style={{ boxShadow: `0 0 30px ${char.color}` }}
+                                        >
+                                            <div className="text-8xl text-center mb-4">{char.sprite}</div>
+                                            <h3 className="text-2xl font-bold text-center mb-2" style={{ color: char.color }}>
+                                                {char.name}
+                                            </h3>
+                                            <p className="text-center text-gray-400 text-sm">{char.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-8 p-6 bg-red-900 bg-opacity-30 border-2 border-red-500 rounded-lg">
+                                    <h3 className="text-xl font-bold text-red-400 mb-3">⚠️ WARNING ⚠️</h3>
+                                    <p className="text-gray-300">
+                                        You are trapped in the abandoned Laxative Asylum. The only way to escape is to correctly answer 
+                                        40 NCLEX-style questions across 8 terrifying rooms. Each room contains 5 questions. 
+                                        Answer correctly to collect keys and progress. The bowels of this asylum hold dark secrets...
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'room-transition') {
+                const room = rooms[currentRoom];
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 flex items-center justify-center">
+                        <div className="bg-black border-4 border-yellow-500 shadow-2xl max-w-2xl rounded-lg animate-pulse p-12 text-center">
+                            <div className="text-9xl mb-6">{room.theme}</div>
+                            <h2 className="text-4xl font-bold mb-4 text-yellow-400">{room.name}</h2>
+                            <p className="text-xl text-gray-300 mb-8">{room.description}</p>
+                            <div className="text-6xl mb-6">🔑</div>
+                            <p className="text-2xl text-green-400 mb-8">KEY COLLECTED! {keysCollected}/8</p>
+                            <button
+                                onClick={handleContinueToRoom}
+                                className="bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all"
+                                style={{ boxShadow: '0 0 20px #ff0000' }}
+                            >
+                                ENTER THE {room.name.toUpperCase()}
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'victory') {
+                const percentage = Math.round((score / 40) * 100);
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-green-900 via-black to-blue-900 p-8 flex items-center justify-center">
+                        <div className="bg-black border-4 border-green-500 shadow-2xl max-w-3xl rounded-lg p-12 text-center">
+                            <h1 className="text-6xl font-bold mb-6 text-green-400 animate-pulse">
+                                🎉 ESCAPED! 🎉
+                            </h1>
+                            <div className="text-8xl mb-8">{selectedCharacter.sprite}</div>
+                            <h2 className="text-3xl font-bold mb-4 text-white">
+                                Congratulations, {selectedCharacter.name}!
+                            </h2>
+                            <p className="text-2xl text-gray-300 mb-8">
+                                You've survived the Laxative Asylum and mastered the art of bowel management!
+                            </p>
+                            
+                            <div className="bg-gradient-to-r from-purple-900 to-blue-900 p-8 rounded-lg mb-8">
+                                <h3 className="text-3xl font-bold text-yellow-400 mb-4">FINAL SCORE</h3>
+                                <p className="text-6xl font-bold text-white mb-2">{score}/40</p>
+                                <p className="text-3xl text-green-400">{percentage}% Mastery</p>
+                                <p className="text-xl text-gray-400 mt-4">Keys Collected: 8/8 🔑</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="bg-red-900 bg-opacity-40 p-4 rounded-lg border-2 border-red-500">
+                                    <p className="text-sm text-gray-400">Questions Answered</p>
+                                    <p className="text-3xl font-bold text-white">40</p>
+                                </div>
+                                <div className="bg-blue-900 bg-opacity-40 p-4 rounded-lg border-2 border-blue-500">
+                                    <p className="text-sm text-gray-400">Rooms Conquered</p>
+                                    <p className="text-3xl font-bold text-white">8</p>
+                                </div>
+                            </div>
+
+                            <div className="text-left bg-gray-900 p-6 rounded-lg border-2 border-purple-500">
+                                <h4 className="text-xl font-bold text-purple-400 mb-3">🎓 Knowledge Mastered:</h4>
+                                <ul className="text-gray-300 space-y-1 text-sm">
+                                    <li>✓ Laxative classifications and mechanisms</li>
+                                    <li>✓ Bulk-forming, surfactant, stimulant, and osmotic agents</li>
+                                    <li>✓ Indications and contraindications</li>
+                                    <li>✓ Adverse effects and safety considerations</li>
+                                    <li>✓ Patient teaching and nursing interventions</li>
+                                    <li>✓ Bowel preparation protocols</li>
+                                    <li>✓ Laxative abuse recognition and prevention</li>
+                                    <li>✓ Special populations and precautions</li>
+                                </ul>
+                            </div>
+
+                            <p className="text-xl text-gray-400 mt-8">
+                                You are now ready to manage constipation like a true nursing professional! 💪
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!currentQ) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
+
+            const room = rooms[currentRoom];
+            const questionNumber = currentRoom * 5 + currentQuestion + 1;
+
+            return (
+                <div className="min-h-screen p-6" style={{
+                    background: `linear-gradient(135deg, ${room.color}20, #000000, ${room.color}40)`
+                }}>
+                    <div className="max-w-5xl mx-auto">
+                        {/* Header */}
+                        <div className="bg-black border-4 border-red-600 rounded-lg p-4 mb-6 shadow-2xl">
+                            <div className="flex justify-between items-center mb-3">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-4xl">{selectedCharacter.sprite}</span>
+                                    <div>
+                                        <p className="text-xl font-bold" style={{ color: selectedCharacter.color }}>
+                                            {selectedCharacter.name}
+                                        </p>
+                                        <p className="text-sm text-gray-400">Score: {score}/40</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold text-yellow-400">
+                                        🔑 {keysCollected}/8 Keys
+                                    </p>
+                                    <p className="text-sm text-gray-400">
+                                        Question {questionNumber}/40
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl">{room.theme}</span>
+                                <div className="flex-1">
+                                    <p className="text-lg font-bold text-red-400">{room.name}</p>
+                                    <div className="w-full bg-gray-800 rounded-full h-3 mt-1">
+                                        <div 
+                                            className="h-3 rounded-full transition-all duration-500"
+                                            style={{ 
+                                                width: `${((currentQuestion + 1) / 5) * 100}%`,
+                                                background: `linear-gradient(90deg, ${room.color}, #ff0000)`
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Room Description */}
+                        <div className="bg-gradient-to-r from-gray-900 to-black border-2 border-purple-600 rounded-lg p-4 mb-6 shadow-xl">
+                            <p className="text-gray-300 text-center italic">{room.description}</p>
+                        </div>
+
+                        {/* Animation */}
+                        {showAnimation && (
+                            <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, pointerEvents: 'none'}}>
+                                <div className="text-9xl animate-bounce">
+                                    ✅
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Question Card */}
+                        <div className="bg-black border-4 border-yellow-500 shadow-2xl rounded-lg p-8">
+                            <div className="mb-6">
+                                <div className="flex justify-between items-start mb-4">
+                                    <span className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold">
+                                        {currentQ.type.toUpperCase().replace('-', ' ')}
+                                    </span>
+                                    <span className="text-gray-400 text-sm">
+                                        Room {currentRoom + 1} • Question {currentQuestion + 1}/5
+                                    </span>
+                                </div>
+                                
+                                <h3 className="text-2xl font-bold text-yellow-400 mb-4">
+                                    {currentQ.question}
+                                </h3>
+
+                                {currentQ.type === 'sata' && (
+                                    <p className="text-green-400 text-sm mb-4">
+                                        ⚠️ Select ALL that apply
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                                {currentQ.shuffledOptions.map((option, index) => {
+                                    const isSelected = currentQ.type === 'sata' 
+                                        ? selectedAnswer?.includes(index)
+                                        : selectedAnswer === index;
+                                    
+                                    const showCorrectness = showRationale;
+                                    let borderColor = 'border-gray-600';
+                                    let bgColor = 'bg-gray-900';
+                                    
+                                    if (isSelected && !showRationale) {
+                                        borderColor = 'border-blue-500';
+                                        bgColor = 'bg-blue-900 bg-opacity-30';
+                                    }
+                                    
+                                    if (showCorrectness) {
+                                        if (currentQ.type === 'sata') {
+                                            const originalIndex = currentQ.options.indexOf(option);
+                                            if (currentQ.correct.includes(originalIndex)) {
+                                                borderColor = 'border-green-500';
+                                                bgColor = 'bg-green-900 bg-opacity-30';
+                                            } else if (isSelected) {
+                                                borderColor = 'border-red-500';
+                                                bgColor = 'bg-red-900 bg-opacity-30';
+                                            }
+                                        } else {
+                                            const actualCorrectIndex = currentQ.shuffledOptions.indexOf(currentQ.options[currentQ.correct]);
+                                            if (index === actualCorrectIndex) {
+                                                borderColor = 'border-green-500';
+                                                bgColor = 'bg-green-900 bg-opacity-30';
+                                            } else if (isSelected) {
+                                                borderColor = 'border-red-500';
+                                                bgColor = 'bg-red-900 bg-opacity-30';
+                                            }
+                                        }
+                                    }
+
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleAnswerSelect(index)}
+                                            disabled={showRationale}
+                                            className={`w-full text-left p-4 rounded-lg border-2 ${borderColor} ${bgColor} hover:bg-opacity-50 transition-all transform hover:scale-102 disabled:cursor-not-allowed`}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <span className="text-xl font-bold text-yellow-400 min-w-[30px]">
+                                                    {String.fromCharCode(65 + index)}.
+                                                </span>
+                                                <span className="text-gray-200">{option}</span>
+                                                {showCorrectness && currentQ.type === 'sata' && currentQ.correct.includes(currentQ.options.indexOf(option)) && (
+                                                    <span className="ml-auto text-green-400">✓</span>
+                                                )}
+                                                {showCorrectness && currentQ.type !== 'sata' && index === currentQ.shuffledOptions.indexOf(currentQ.options[currentQ.correct]) && (
+                                                    <span className="ml-auto text-green-400">✓</span>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {!showRationale && (
+                                <button
+                                    onClick={handleSubmitAnswer}
+                                    disabled={selectedAnswer === null || (Array.isArray(selectedAnswer) && selectedAnswer.length === 0)}
+                                    className="w-full bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 text-white text-xl font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all disabled:cursor-not-allowed disabled:transform-none"
+                                    style={{ boxShadow: '0 0 20px rgba(255,0,0,0.5)' }}
+                                >
+                                    SUBMIT ANSWER
+                                </button>
+                            )}
+
+                            {showRationale && (
+                                <div className="space-y-4">
+                                    <div className={`p-6 rounded-lg border-2 ${isCorrect ? 'bg-green-900 bg-opacity-30 border-green-500' : 'bg-red-900 bg-opacity-30 border-red-500'}`}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <span className="text-4xl">{isCorrect ? '✅' : '❌'}</span>
+                                            <h4 className="text-2xl font-bold text-white">
+                                                {isCorrect ? 'CORRECT!' : 'INCORRECT'}
+                                            </h4>
+                                        </div>
+                                        <p className="text-gray-200 leading-relaxed">
+                                            <span className="font-bold text-yellow-400">Rationale:</span> {currentQ.rationale}
+                                        </p>
+                                    </div>
+
+                                    {isCorrect && (
+                                        <div className="bg-gradient-to-r from-purple-900 to-blue-900 p-4 rounded-lg border-2 border-purple-500">
+                                            <p className="text-center text-green-400 font-bold">
+                                                🎯 The door creaks open slightly... {currentQuestion < 4 ? 'Continue deeper into the room...' : 'You found the key! Proceed to the next chamber...'}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleNextQuestion}
+                                        className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white text-xl font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all"
+                                        style={{ boxShadow: '0 0 20px rgba(255,165,0,0.5)' }}
+                                    >
+                                        {currentQuestion < 4 ? 'NEXT QUESTION →' : 'PROCEED TO NEXT ROOM →'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Progress Footer */}
+                        <div className="mt-6 text-center text-gray-500 text-sm">
+                            <p>Pixel Horror Escape Room • Based on Laxatives PowerPoint • NCLEX Review Game</p>
+                            <p className="mt-2">Questions Answered: {answeredQuestions.size}/40</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<LaxativesEscapeRoom />, document.getElementById('root'));
+    </script>
+</body>
+</html>
