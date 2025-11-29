@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 Christmas NCLEX Escape Room 🎄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a7b 50%, #1e3a5f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 1.5em;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #c41e3a;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #2d5a7b;
+            font-size: 1.1em;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #c41e3a, #165b33);
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            gap: 15px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: linear-gradient(135deg, #165b33, #0f4123);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-box h3 {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .stat-box p {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .room-card {
+            background: linear-gradient(135deg, #fff5f5, #ffe5e5);
+            border: 3px solid #c41e3a;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(196, 30, 58, 0.2);
+        }
+
+        .room-title {
+            color: #c41e3a;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .room-subtitle {
+            color: #2d5a7b;
+            text-align: center;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .question {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #165b33;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            border-color: #2d5a7b;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #2d5a7b;
+            background: #e3f2fd;
+        }
+
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #c41e3a, #a01729);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+            display: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #a01729, #c41e3a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+        }
+
+        .btn.show {
+            display: inline-block;
+        }
+
+        .btn-container {
+            text-align: center;
+        }
+
+        .final-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .final-screen.show {
+            display: block;
+        }
+
+        .score-display {
+            font-size: 4em;
+            color: #c41e3a;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .breakdown {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .celebration {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        .story-narrative {
+            background: linear-gradient(135deg, #fff9e6, #ffe8cc);
+            border: 2px solid #d4a574;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0 25px 0;
+            font-style: italic;
+            color: #5a4a3a;
+            line-height: 1.6;
+            box-shadow: 0 4px 15px rgba(212, 165, 116, 0.2);
+        }
+
+        .story-narrative::before {
+            content: "📖 ";
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+
+            .score-display {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎄 Christmas NCLEX Escape Room 🎄</h1>
+            <p>Escape each festive room by answering NCLEX questions correctly!</p>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0/60</div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <h3>Current Room</h3>
+                <p id="roomNumber">1</p>
+            </div>
+            <div class="stat-box">
+                <h3>Score</h3>
+                <p id="score">0/0</p>
+            </div>
+            <div class="stat-box">
+                <h3>Percentage</h3>
+                <p id="percentage">0%</p>
+            </div>
+        </div>
+
+        <div id="gameArea"></div>
+        <div id="finalScreen" class="final-screen"></div>
+    </div>
+
+    <script>
+        const questions = [
+            // HEALTH PROMOTION (5 questions)
+            {
+                category: "Health Promotion",
+                room: "🎅 Santa's Health Workshop",
+                question: "A nurse is educating a community group about Healthy People 2030. Which statement best describes the primary goal of this initiative?",
+                options: [
+                    "To provide free healthcare to all citizens",
+                    "To create evidence-based objectives for promoting health and preventing disease",
+                    "To eliminate all chronic diseases by the year 2030",
+                    "To mandate health insurance for every American"
+                ],
+                correct: 1,
+                rationale: "Healthy People 2030 is a national initiative that provides evidence-based, 10-year objectives for promoting health and preventing disease in the United States."
+            },
+            {
+                category: "Health Promotion",
+                room: "🎅 Santa's Health Workshop",
+                question: "A school nurse is implementing primary prevention strategies for students. Which action represents primary prevention?",
+                options: [
+                    "Screening students for scoliosis",
+                    "Administering influenza vaccinations",
+                    "Providing physical therapy for a student with a sports injury",
+                    "Conducting vision screenings for all kindergarteners"
+                ],
+                correct: 1,
+                rationale: "Primary prevention focuses on preventing disease before it occurs. Immunizations are a key example of primary prevention, while screenings represent secondary prevention."
+            },
+            {
+                category: "Health Promotion",
+                room: "🎅 Santa's Health Workshop",
+                question: "A nurse is conducting a health screening clinic for older adults. Which screening is most appropriate for fall prevention?",
+                options: [
+                    "Lipid panel",
+                    "Functional impairment assessment",
+                    "Prostate-specific antigen (PSA)",
+                    "Hemoglobin A1c"
+                ],
+                correct: 1,
+                rationale: "For older adults, assessing functional impairment and fall risk is a priority safety screening. This is part of secondary prevention to detect problems early."
+            },
+            {
+                category: "Health Promotion",
+                room: "🎅 Santa's Health Workshop",
+                question: "Which scenario best exemplifies tertiary prevention?",
+                options: [
+                    "Teaching proper hand hygiene to prevent infection",
+                    "Administering a pneumonia vaccine to a high-risk patient",
+                    "Providing cardiac rehabilitation after a myocardial infarction",
+                    "Performing a mammogram for breast cancer screening"
+                ],
+                correct: 2,
+                rationale: "Tertiary prevention focuses on minimizing the effects of long-term illness and preventing complications. Cardiac rehabilitation helps patients achieve the highest level of functioning after a cardiac event."
+            },
+            {
+                category: "Health Promotion",
+                room: "🎅 Santa's Health Workshop",
+                question: "A nurse is assessing factors that influence a patient's health practices. Which factor is considered an external variable?",
+                options: [
+                    "Developmental stage",
+                    "Emotional factors such as stress",
+                    "Social determinants of health",
+                    "Perception of physical functioning"
+                ],
+                correct: 2,
+                rationale: "External variables include social determinants of health (conditions in environments where people live, work, and age), family practices, and cultural background. The other options are internal variables."
+            },
+
+            // SLEEP (5 questions)
+            {
+                category: "Sleep",
+                room: "😴 Dreamy Snowman's Bedroom",
+                question: "A nurse is educating the parents of a toddler about normal sleep patterns. How many hours of sleep should the nurse recommend?",
+                options: [
+                    "14 to 17 hours",
+                    "12 to 15 hours",
+                    "11 to 14 hours",
+                    "9 to 11 hours"
+                ],
+                correct: 2,
+                rationale: "Toddlers require 11 to 14 hours of sleep. Newborns need 14-17 hours, infants 12-15 hours, and school-age children 9-11 hours."
+            },
+            {
+                category: "Sleep",
+                room: "😴 Dreamy Snowman's Bedroom",
+                question: "A patient reports chronic difficulty falling asleep and frequent awakenings during the night. The nurse recognizes these as symptoms of which sleep disorder?",
+                options: [
+                    "Sleep apnea",
+                    "Narcolepsy",
+                    "Insomnia",
+                    "Sleep deprivation"
+                ],
+                correct: 2,
+                rationale: "Insomnia is characterized by chronic difficulty falling asleep, frequent awakenings, and/or nonrestorative sleep."
+            },
+            {
+                category: "Sleep",
+                room: "😴 Dreamy Snowman's Bedroom",
+                question: "A nurse is caring for a patient with suspected sleep deprivation. Which assessment finding would support this diagnosis?",
+                options: [
+                    "Hyperreflexia and increased energy",
+                    "Ptosis and slowed response time",
+                    "Increased reasoning ability",
+                    "Enhanced fine motor coordination"
+                ],
+                correct: 1,
+                rationale: "Physiological symptoms of sleep deprivation include ptosis (drooping eyelids), blurred vision, decreased reflexes, slowed response time, and decreased reasoning and judgment."
+            },
+            {
+                category: "Sleep",
+                room: "😴 Dreamy Snowman's Bedroom",
+                question: "Which intervention should the nurse teach a patient to promote good sleep hygiene?",
+                options: [
+                    "Drink coffee 4 hours before bedtime",
+                    "Exercise vigorously immediately before bed",
+                    "Arise at the same time each morning",
+                    "Use the bedroom for work and sleep"
+                ],
+                correct: 2,
+                rationale: "Good sleep hygiene includes arising at a specific time each morning, avoiding caffeine within 6 hours of bedtime, avoiding heavy meals or exercise before bed, and using the bedroom only for sleep or sex."
+            },
+            {
+                category: "Sleep",
+                room: "😴 Dreamy Snowman's Bedroom",
+                question: "A patient with sleep apnea is being discharged. Which statement by the patient indicates understanding of the condition?",
+                options: [
+                    "I should expect to feel well-rested when I wake up",
+                    "My loud snoring and breathing pauses during sleep are normal",
+                    "This condition can cause fragmented sleep and daytime sleepiness",
+                    "I only need treatment if I stop breathing for more than 5 minutes"
+                ],
+                correct: 2,
+                rationale: "Sleep apnea is characterized by loud snoring and periods where breathing stops during sleep, leading to fragmented sleep and daytime sleepiness. It requires treatment and is not normal."
+            },
+
+            // SAFETY (5 questions)
+            {
+                category: "Safety",
+                room: "🔥 Fireplace Safety Station",
+                question: "A nurse discovers a fire in a patient's room. Using the RACE protocol, what is the nurse's first action?",
+                options: [
+                    "Activate the fire alarm",
+                    "Confine the fire by closing doors",
+                    "Rescue and remove the patient from immediate danger",
+                    "Extinguish the fire with an appropriate extinguisher"
+                ],
+                correct: 2,
+                rationale: "RACE stands for: Rescue (remove patients in immediate danger), Activate alarm, Confine (close doors/windows), Extinguish. Rescue is always the first priority."
+            },
+            {
+                category: "Safety",
+                room: "🔥 Fireplace Safety Station",
+                question: "A nurse is conducting a fall risk assessment. Which factor represents an intrinsic (patient-specific) risk?",
+                options: [
+                    "Wet floor in the bathroom",
+                    "Poor lighting in the hallway",
+                    "History of previous falls",
+                    "Cluttered environment"
+                ],
+                correct: 2,
+                rationale: "Intrinsic factors are patient-specific and include history of falls, altered cognition, and certain medications. Extrinsic factors are environmental hazards like wet floors and poor lighting."
+            },
+            {
+                category: "Safety",
+                room: "🔥 Fireplace Safety Station",
+                question: "Before applying physical restraints to an agitated patient, which alternative intervention should the nurse try first?",
+                options: [
+                    "Administer sedating medication",
+                    "Place the patient in a locked room",
+                    "Provide companionship and diversionary activities",
+                    "Call security to monitor the patient"
+                ],
+                correct: 2,
+                rationale: "Less restrictive alternatives should always be tried first, including companionship, supervision, diversionary activities, camouflaging IV lines, and evaluating medications."
+            },
+            {
+                category: "Safety",
+                room: "🔥 Fireplace Safety Station",
+                question: "A nurse is using a fire extinguisher. Following the PASS acronym, what does the 'A' stand for?",
+                options: [
+                    "Activate the alarm",
+                    "Aim at the base of the fire",
+                    "Alert others in the area",
+                    "Assess the size of the fire"
+                ],
+                correct: 1,
+                rationale: "PASS stands for: Pull the pin, Aim at the base of the fire, Squeeze the handle, Sweep from side to side."
+            },
+            {
+                category: "Safety",
+                room: "🔥 Fireplace Safety Station",
+                question: "Which patient is at highest risk for falls in the hospital setting?",
+                options: [
+                    "A 45-year-old with a fractured arm",
+                    "An 82-year-old with dementia taking multiple medications",
+                    "A 30-year-old post-appendectomy on day 2",
+                    "A 60-year-old with well-controlled diabetes"
+                ],
+                correct: 1,
+                rationale: "Fall risk increases with age, cognitive impairment, polypharmacy, history of falls, and impaired mobility. The 82-year-old with dementia and multiple medications has multiple risk factors."
+            },
+
+            // NUTRITION (5 questions)
+            {
+                category: "Nutrition",
+                room: "🍪 Gingerbread Nutrition Kitchen",
+                question: "A patient with dysphagia is at highest risk for which complication?",
+                options: [
+                    "Malabsorption",
+                    "Aspiration",
+                    "Dehydration",
+                    "Constipation"
+                ],
+                correct: 1,
+                rationale: "Aspiration (entry of food or liquid into the airway) is the most severe complication of dysphagia. Signs include coughing during eating, drooling, and pocketing food."
+            },
+            {
+                category: "Nutrition",
+                room: "🍪 Gingerbread Nutrition Kitchen",
+                question: "A nurse is caring for a patient receiving enteral nutrition via a nasogastric tube. What is the priority nursing intervention before each feeding?",
+                options: [
+                    "Check the patient's bowel sounds",
+                    "Verify tube placement",
+                    "Warm the feeding to body temperature",
+                    "Measure the patient's abdominal girth"
+                ],
+                correct: 1,
+                rationale: "Verifying tube placement before each use is critical to prevent aspiration. X-ray is the gold standard for initial confirmation. The HOB should be elevated 30-45 degrees."
+            },
+            {
+                category: "Nutrition",
+                room: "🍪 Gingerbread Nutrition Kitchen",
+                question: "Which type of fiber helps improve blood glucose control and reduce cholesterol?",
+                options: [
+                    "Insoluble fiber",
+                    "Soluble fiber",
+                    "Simple carbohydrates",
+                    "Complex proteins"
+                ],
+                correct: 1,
+                rationale: "Soluble fiber dissolves in water and helps improve blood glucose control and reduce cholesterol. Insoluble fiber does not dissolve and contributes to bowel elimination."
+            },
+            {
+                category: "Nutrition",
+                room: "🍪 Gingerbread Nutrition Kitchen",
+                question: "A patient on a low-sodium diet asks what the restriction will help manage. What is the nurse's best response?",
+                options: [
+                    "Blood glucose levels",
+                    "Cholesterol levels",
+                    "Hypertension and heart failure",
+                    "Bone density"
+                ],
+                correct: 2,
+                rationale: "Low-sodium diets are used to manage hypertension, heart failure, and kidney disease by reducing fluid retention and decreasing blood pressure."
+            },
+            {
+                category: "Nutrition",
+                room: "🍪 Gingerbread Nutrition Kitchen",
+                question: "A nurse is teaching a patient receiving Total Parenteral Nutrition (TPN). Which statement is most important to include?",
+                options: [
+                    "TPN can be stopped abruptly when you're ready to eat",
+                    "TPN must be administered through a central line",
+                    "TPN should be administered as a bolus dose",
+                    "TPN does not require monitoring of blood glucose"
+                ],
+                correct: 1,
+                rationale: "TPN must be administered via a central line for extended use. It should never be abruptly discontinued (risk of severe hypoglycemia) and requires monitoring for infection and hyperglycemia."
+            },
+
+            // PAIN (6 questions)
+            {
+                category: "Pain",
+                room: "💊 Pain Relief Pharmacy",
+                question: "A patient describes pain as burning, shooting, and feeling like 'pins and needles.' The nurse recognizes this as which type of pain?",
+                options: [
+                    "Nociceptive pain",
+                    "Acute pain",
+                    "Neuropathic pain",
+                    "Cancer pain"
+                ],
+                correct: 2,
+                rationale: "Neuropathic pain is caused by damage to the nervous system and is described as burning, shooting, tingling, or 'pins and needles.' Nociceptive pain is typically aching or throbbing."
+            },
+            {
+                category: "Pain",
+                room: "💊 Pain Relief Pharmacy",
+                question: "What is the 'gold standard' for pain assessment?",
+                options: [
+                    "Vital sign changes",
+                    "Observable behaviors like grimacing",
+                    "Patient's self-report",
+                    "Nurse's clinical judgment"
+                ],
+                correct: 2,
+                rationale: "The patient's self-report is the gold standard for pain assessment. Pain is 'whatever the experiencing person says it is.'"
+            },
+            {
+                category: "Pain",
+                room: "💊 Pain Relief Pharmacy",
+                question: "A nurse is monitoring a patient receiving morphine for post-operative pain. What is the most serious adverse effect to monitor?",
+                options: [
+                    "Constipation",
+                    "Nausea and vomiting",
+                    "Respiratory depression",
+                    "Sedation"
+                ],
+                correct: 2,
+                rationale: "Respiratory depression is the most serious adverse effect of opioid analgesics. Other side effects include constipation, nausea/vomiting, and sedation."
+            },
+            {
+                category: "Pain",
+                room: "💊 Pain Relief Pharmacy",
+                question: "A patient taking acetaminophen for chronic pain should be monitored for which serious adverse effect?",
+                options: [
+                    "Hepatotoxicity",
+                    "Respiratory depression",
+                    "Gastric ulceration",
+                    "Renal failure"
+                ],
+                correct: 0,
+                rationale: "Acetaminophen can cause hepatotoxicity (liver damage), especially with prolonged use or overdose. NSAIDs are associated with gastric effects and potential renal/cardiovascular issues."
+            },
+            {
+                category: "Pain",
+                room: "💊 Pain Relief Pharmacy",
+                question: "A nurse is educating a patient about the difference between physical dependence and addiction. Which statement is accurate?",
+                options: [
+                    "Physical dependence is the same as addiction",
+                    "Tolerance means the patient is addicted to the medication",
+                    "Physical dependence is an expected physiological response where withdrawal occurs if the drug is stopped",
+                    "Addiction occurs in all patients who take opioids for more than one week"
+                ],
+                correct: 2,
+                rationale: "Physical dependence is an expected physiological adaptation where withdrawal occurs if the drug is stopped abruptly. Addiction is a neurobiological disease with compulsive use despite harm."
+            },
+            {
+                category: "Pain",
+                room: "💊 Pain Relief Pharmacy",
+                question: "Which nonpharmacologic intervention is classified as a cognitive-behavioral modality for pain management?",
+                options: [
+                    "Aquatherapy",
+                    "Massage",
+                    "Guided imagery",
+                    "Acupuncture"
+                ],
+                correct: 2,
+                rationale: "Cognitive-behavioral modalities include guided imagery, relaxation breathing, meditation, prayer, and art therapy. Physical modalities include aquatherapy, massage, and acupuncture."
+            },
+
+            // GLUCOSE REGULATION (8 questions)
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "A patient presents with polyuria, polydipsia, polyphagia, and fruity breath odor. The nurse recognizes these as signs of:",
+                options: [
+                    "Hypoglycemia",
+                    "Hyperglycemia",
+                    "Diabetic neuropathy",
+                    "Insulin resistance"
+                ],
+                correct: 1,
+                rationale: "The '3 Ps' (polyuria, polydipsia, polyphagia) plus fruity breath odor from ketones are classic signs of hyperglycemia."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "A conscious patient has a blood glucose of 55 mg/dL. What is the priority intervention?",
+                options: [
+                    "Administer glucagon IM",
+                    "Give 15-20g of fast-acting glucose and recheck in 15 minutes",
+                    "Administer IV 50% dextrose",
+                    "Encourage the patient to eat a large meal"
+                ],
+                correct: 1,
+                rationale: "For a conscious patient with hypoglycemia, use the '15:15 rule': give 15-20g of fast-acting glucose (juice) and recheck in 15 minutes. Glucagon or IV dextrose is for unconscious patients."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "What is the goal Hemoglobin A1c level for a patient with diabetes?",
+                options: [
+                    "Less than 5%",
+                    "Less than 7%",
+                    "Less than 9%",
+                    "Less than 12%"
+                ],
+                correct: 1,
+                rationale: "The diabetic goal for Hemoglobin A1c is less than 7%. This reflects average blood glucose control over 2-3 months."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "A nurse is teaching a patient with Type 2 diabetes about modifiable risk factors. Which factor should be emphasized?",
+                options: [
+                    "Family history",
+                    "Ethnicity",
+                    "Maintaining ideal body weight and regular physical activity",
+                    "Age"
+                ],
+                correct: 2,
+                rationale: "Type 2 diabetes is characterized by insulin resistance and impaired secretion. Modifiable risk factors include maintaining ideal body weight and regular physical activity."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "A patient with diabetes should avoid exercise under which condition?",
+                options: [
+                    "Blood glucose is 120 mg/dL",
+                    "Blood glucose is 180 mg/dL",
+                    "Blood glucose is >250 mg/dL with ketones present",
+                    "One hour after eating a meal"
+                ],
+                correct: 2,
+                rationale: "Exercise should be avoided if blood glucose is >250 mg/dL and ketones are present, as this indicates inadequate insulin and exercise could worsen the condition."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "Which statement about foot care is most important for a patient with diabetes?",
+                options: [
+                    "Soak feet daily for 30 minutes to keep them soft",
+                    "It's safe to go barefoot inside the house",
+                    "Inspect feet daily for cuts, sores, or blisters",
+                    "Trim toenails at home using sharp scissors"
+                ],
+                correct: 2,
+                rationale: "Patients should inspect feet daily, wear properly fitting shoes at all times, NEVER go barefoot (even indoors), NEVER soak feet, and consult a podiatrist for nail trimming if needed."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "A patient with diabetes is experiencing neuropathy. This is an example of which type of complication?",
+                options: [
+                    "Macrovascular disease",
+                    "Microvascular disease",
+                    "Acute complication",
+                    "Metabolic syndrome"
+                ],
+                correct: 1,
+                rationale: "Neuropathy (nerve damage) is a microvascular (small vessel) complication, along with retinopathy and nephropathy. Macrovascular complications include cardiovascular and cerebrovascular disease."
+            },
+            {
+                category: "Glucose Regulation",
+                room: "🍬 Candy Cane Clinic",
+                question: "A patient with Type 1 diabetes asks why they must take insulin. What is the nurse's best response?",
+                options: [
+                    "Your body is resistant to the insulin it produces",
+                    "Your immune system has destroyed the cells that make insulin",
+                    "You need insulin to help you lose weight",
+                    "Insulin will cure your diabetes"
+                ],
+                correct: 1,
+                rationale: "Type 1 diabetes is an autoimmune condition where the immune system destroys pancreatic beta cells, resulting in absolute insulin deficiency. Type 2 involves insulin resistance."
+            },
+
+            // TISSUE INTEGRITY (5 questions)
+            {
+                category: "Tissue Integrity",
+                room: "🩹 Wound Care Workshop",
+                question: "A nurse is using the Braden Scale to assess a patient's risk for pressure injuries. Which subscale is NOT part of this assessment?",
+                options: [
+                    "Sensory perception",
+                    "Mobility",
+                    "Age",
+                    "Friction and shear"
+                ],
+                correct: 2,
+                rationale: "The Braden Scale assesses six subscales: sensory perception, moisture, activity, mobility, nutrition, and friction & shear. Age is not a subscale."
+            },
+            {
+                category: "Tissue Integrity",
+                room: "🩹 Wound Care Workshop",
+                question: "A pressure injury has partial-thickness skin loss with exposed dermis. The wound bed is pink and moist. How should the nurse stage this injury?",
+                options: [
+                    "Stage 1",
+                    "Stage 2",
+                    "Stage 3",
+                    "Unstageable"
+                ],
+                correct: 1,
+                rationale: "Stage 2 pressure injuries have partial-thickness loss of skin with exposed dermis. The wound bed is viable, pink or red, and moist."
+            },
+            {
+                category: "Tissue Integrity",
+                room: "🩹 Wound Care Workshop",
+                question: "A nurse assesses a pressure injury with full-thickness skin loss and visible adipose tissue. Granulation tissue is present. How should this be staged?",
+                options: [
+                    "Stage 2",
+                    "Stage 3",
+                    "Stage 4",
+                    "Deep tissue pressure injury"
+                ],
+                correct: 1,
+                rationale: "Stage 3 pressure injuries have full-thickness skin loss with visible adipose (fat) and granulation tissue. Stage 4 involves exposed fascia, muscle, tendon, bone, or cartilage."
+            },
+            {
+                category: "Tissue Integrity",
+                room: "🩹 Wound Care Workshop",
+                question: "Which type of wound healing occurs when a surgical incision is closed with sutures?",
+                options: [
+                    "Primary intention",
+                    "Secondary intention",
+                    "Tertiary intention",
+                    "Granulation"
+                ],
+                correct: 0,
+                rationale: "Primary intention occurs when wound edges are approximated (closed), such as with sutures or staples. Healing is quick with minimal scarring. Secondary intention occurs when edges are not closed."
+            },
+            {
+                category: "Tissue Integrity",
+                room: "🩹 Wound Care Workshop",
+                question: "A patient post-surgery has saturated dressings and shows decreased BP, increased HR, and increased RR. The nurse suspects:",
+                options: [
+                    "Infection",
+                    "Hemorrhage",
+                    "Normal wound healing",
+                    "Dehiscence"
+                ],
+                correct: 1,
+                rationale: "Hemorrhage is indicated by saturated dressings (external) or distension/swelling (internal), along with signs of hypovolemic shock: decreased BP, increased HR, and increased RR."
+            },
+
+            // INFECTION (6 questions)
+            {
+                category: "Infection",
+                room: "🦠 Infection Control Lab",
+                question: "What is the most common healthcare-associated infection (HAI)?",
+                options: [
+                    "Surgical wound infection",
+                    "Respiratory tract infection",
+                    "Urinary tract infection",
+                    "Bloodstream infection"
+                ],
+                correct: 2,
+                rationale: "Urinary tract infections are the most frequent HAI, often resulting from unsterile catheter insertion or improper catheter care."
+            },
+            {
+                category: "Infection",
+                room: "🦠 Infection Control Lab",
+                question: "A patient with tuberculosis requires which type of isolation precautions?",
+                options: [
+                    "Contact precautions",
+                    "Droplet precautions",
+                    "Airborne precautions",
+                    "Standard precautions only"
+                ],
+                correct: 2,
+                rationale: "Tuberculosis is transmitted by airborne particles that remain suspended in air and are inhaled. It requires airborne precautions with a negative pressure room and N95 respirator."
+            },
+            {
+                category: "Infection",
+                room: "🦠 Infection Control Lab",
+                question: "A patient with pneumonia has a productive cough with sputum. The nurse should use:",
+                options: [
+                    "Contact precautions",
+                    "Droplet precautions",
+                    "Airborne precautions",
+                    "No additional precautions needed"
+                ],
+                correct: 1,
+                rationale: "Pneumonia and influenza are transmitted by droplets (large particles from coughing/sneezing that travel up to 3 feet). Droplet precautions with a surgical mask are required."
+            },
+            {
+                category: "Infection",
+                room: "🦠 Infection Control Lab",
+                question: "An older adult with a UTI presents with confusion and recent falls. What should the nurse recognize?",
+                options: [
+                    "These are typical UTI symptoms in older adults",
+                    "The patient likely has sepsis",
+                    "This indicates the infection has resolved",
+                    "The patient needs a psychiatric evaluation"
+                ],
+                correct: 0,
+                rationale: "Older adults with UTIs often present with nonspecific symptoms like confusion, falls, or general decline rather than classic symptoms like dysuria."
+            },
+            {
+                category: "Infection",
+                room: "🦠 Infection Control Lab",
+                question: "A patient has an elevated WBC count with high neutrophils. The nurse interprets this as:",
+                options: [
+                    "Acute viral infection",
+                    "Chronic viral infection",
+                    "Acute bacterial infection",
+                    "No infection present"
+                ],
+                correct: 2,
+                rationale: "An elevated WBC with high neutrophils suggests acute bacterial infection. Elevated WBC with high lymphocytes suggests acute viral infection."
+            },
+            {
+                category: "Infection",
+                room: "🦠 Infection Control Lab",
+                question: "What is the priority intervention to prevent healthcare-associated infections?",
+                options: [
+                    "Administering prophylactic antibiotics",
+                    "Meticulous hand hygiene",
+                    "Limiting visitor access",
+                    "Keeping patients in isolation"
+                ],
+                correct: 1,
+                rationale: "Hand hygiene is the single most important intervention to prevent the transmission of pathogens and HAIs. It should be performed before and after every patient contact."
+            },
+
+            // MOBILITY (6 questions)
+            {
+                category: "Mobility",
+                room: "🦴 Orthopedic Recovery Room",
+                question: "A patient with a leg fracture reports severe pain with passive motion and pain out of proportion to the injury. The nurse suspects:",
+                options: [
+                    "Normal post-fracture pain",
+                    "Deep vein thrombosis",
+                    "Compartment syndrome",
+                    "Fat embolism"
+                ],
+                correct: 2,
+                rationale: "Compartment syndrome is a surgical emergency with pain on passive motion, extreme pain out of proportion, and paresthesia as early signs. Pallor, pulselessness, and paresis are late signs."
+            },
+            {
+                category: "Mobility",
+                room: "🦴 Orthopedic Recovery Room",
+                question: "What is the priority assessment for a patient with a fracture?",
+                options: [
+                    "Pain level",
+                    "Neurovascular assessment distal to the injury",
+                    "Bowel sounds",
+                    "Respiratory rate"
+                ],
+                correct: 1,
+                rationale: "A comprehensive neurovascular assessment distal to the injury is the priority. Components include pain, sensation, movement, pulses, capillary refill, skin color, and temperature."
+            },
+            {
+                category: "Mobility",
+                room: "🦴 Orthopedic Recovery Room",
+                question: "A patient with a pelvic fracture develops altered mental status, hypoxia, and a petechial rash on the neck and chest. The nurse suspects:",
+                options: [
+                    "Hemorrhage",
+                    "Compartment syndrome",
+                    "Fat embolism",
+                    "Pulmonary embolism"
+                ],
+                correct: 2,
+                rationale: "Fat embolism occurs when fat globules are released from fractures (commonly pelvis or femur). Key signs are altered mental status, hypoxia, and petechial rash on neck and chest."
+            },
+            {
+                category: "Mobility",
+                room: "🦴 Orthopedic Recovery Room",
+                question: "Immobility places a patient at risk for which urinary complication?",
+                options: [
+                    "Urinary incontinence",
+                    "Renal calculi (kidney stones)",
+                    "Bladder spasms",
+                    "Urinary frequency"
+                ],
+                correct: 1,
+                rationale: "Immobility causes urinary stasis, increasing the risk for renal calculi (kidney stones) and UTIs."
+            },
+            {
+                category: "Mobility",
+                room: "🦴 Orthopedic Recovery Room",
+                question: "Which cardiovascular complication is most common following lower extremity surgery?",
+                options: [
+                    "Myocardial infarction",
+                    "Atrial fibrillation",
+                    "Deep vein thrombosis (DVT)",
+                    "Hypertensive crisis"
+                ],
+                correct: 2,
+                rationale: "DVT is the most common complication following lower extremity surgery or trauma due to venous stasis from immobility."
+            },
+            {
+                category: "Mobility",
+                room: "🦴 Orthopedic Recovery Room",
+                question: "Prolonged immobility affects the musculoskeletal system by causing:",
+                options: [
+                    "Increased bone density",
+                    "Enhanced muscle strength",
+                    "Muscle atrophy and joint contractures",
+                    "Improved joint flexibility"
+                ],
+                correct: 2,
+                rationale: "Immobility causes muscle atrophy, joint contractures, and bone demineralization (osteoporosis). It has systemic effects on nearly every body system."
+            },
+
+            // ELIMINATION (7 questions)
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "A patient reports involuntary loss of urine when coughing or sneezing. The nurse identifies this as:",
+                options: [
+                    "Urge incontinence",
+                    "Stress incontinence",
+                    "Overflow incontinence",
+                    "Functional incontinence"
+                ],
+                correct: 1,
+                rationale: "Stress incontinence is the loss of urine with increased abdominal pressure from activities like coughing, sneezing, or laughing."
+            },
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "A patient has not voided 9 hours after surgery. What is the priority nursing intervention?",
+                options: [
+                    "Insert a Foley catheter immediately",
+                    "Encourage ambulation and running water to stimulate urination",
+                    "Restrict fluids to decrease bladder pressure",
+                    "Document and continue monitoring"
+                ],
+                correct: 1,
+                rationale: "If a patient hasn't voided 8-10 hours post-procedure, interventions include encouraging ambulation, running water, or pouring warm water over the perineum before resorting to catheterization."
+            },
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "A patient receiving narcotic pain medication is at highest risk for which bowel complication?",
+                options: [
+                    "Diarrhea",
+                    "Constipation",
+                    "Bowel incontinence",
+                    "Inflammatory bowel disease"
+                ],
+                correct: 1,
+                rationale: "Constipation is a common side effect of narcotic medications due to decreased intestinal peristalsis. Other causes include physical inactivity and low fiber intake."
+            },
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "What is the primary concern when a patient has diarrhea?",
+                options: [
+                    "Pain management",
+                    "Dehydration and electrolyte imbalances",
+                    "Skin breakdown only",
+                    "Nutritional deficiency"
+                ],
+                correct: 1,
+                rationale: "The main risks with diarrhea are dehydration and electrolyte imbalances from fluid loss. Skin integrity is also a concern but secondary."
+            },
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "A patient has hardened stool in the rectum that cannot be passed, with liquid stool oozing around it. The nurse recognizes this as:",
+                options: [
+                    "Diarrhea",
+                    "Constipation",
+                    "Fecal impaction",
+                    "Irritable bowel syndrome"
+                ],
+                correct: 2,
+                rationale: "Fecal impaction is a collection of hardened stool in the rectum that cannot be passed. Liquid stool may ooze around the impaction. If unresolved, it can progress to obstruction."
+            },
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "Which intervention is most effective for preventing constipation?",
+                options: [
+                    "Limiting fluid intake",
+                    "Bed rest",
+                    "Increasing fiber and fluid intake with regular exercise",
+                    "Frequent use of laxatives"
+                ],
+                correct: 2,
+                rationale: "Preventing constipation involves increasing fiber and fluid intake, promoting exercise, and avoiding overuse of laxatives. Physical activity increases peristalsis."
+            },
+            {
+                category: "Elimination",
+                room: "🚽 Bathroom Breakthrough",
+                question: "A nurse is teaching a patient with stress incontinence. Which intervention should be recommended?",
+                options: [
+                    "Limit fluid intake to 500 mL daily",
+                    "Perform pelvic floor muscle exercises (Kegels)",
+                    "Avoid all physical activity",
+                    "Take diuretics in the morning"
+                ],
+                correct: 1,
+                rationale: "Behavioral interventions for stress incontinence include pelvic floor muscle exercises (Kegels) and bladder retraining. Limiting fluids excessively can lead to other problems."
+            },
+
+            // FLUID & ELECTROLYTE (8 questions)
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "A patient with vomiting and diarrhea has dry mucous membranes, orthostatic hypotension, and increased heart rate. The nurse recognizes these as signs of:",
+                options: [
+                    "Fluid volume excess",
+                    "Fluid volume deficit",
+                    "Hypernatremia",
+                    "Hypokalemia"
+                ],
+                correct: 1,
+                rationale: "Fluid volume deficit (dehydration) presents with thirst, dry mucous membranes, orthostatic hypotension, increased HR, and weight loss. FVE presents with edema and bounding pulses."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "Which IV fluid is hypotonic and will shift fluid from blood vessels into cells?",
+                options: [
+                    "Normal Saline (0.9% NaCl)",
+                    "Lactated Ringer's",
+                    "0.45% NaCl",
+                    "D5NS"
+                ],
+                correct: 2,
+                rationale: "0.45% NaCl is hypotonic and shifts fluid into cells to treat cellular dehydration. Normal Saline and LR are isotonic. D5NS is hypertonic."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "A patient has a serum potassium of 5.8 mEq/L and reports palpitations and muscle weakness. What is the priority intervention?",
+                options: [
+                    "Administer potassium supplements",
+                    "Monitor heart rate and administer medications to reduce potassium",
+                    "Encourage foods high in potassium",
+                    "No intervention needed"
+                ],
+                correct: 1,
+                rationale: "Hyperkalemia (>5.0 mEq/L) can cause fatal arrhythmias. Priority is cardiac monitoring and medications to reduce potassium (e.g., Kayexalate). IV potassium must NEVER be given as IV push."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "A patient with hypocalcemia would most likely exhibit which sign?",
+                options: [
+                    "Decreased deep tendon reflexes",
+                    "Muscle weakness and constipation",
+                    "Positive Trousseau's sign",
+                    "Bone pain"
+                ],
+                correct: 2,
+                rationale: "Hypocalcemia causes Trousseau's sign (carpal spasm) and Chvostek's sign (facial twitching), plus frequent painful muscle spasms and paresthesia."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "A patient's ABG shows: pH 7.30, PaCO2 50, HCO3 24. The nurse interprets this as:",
+                options: [
+                    "Respiratory acidosis, uncompensated",
+                    "Respiratory alkalosis, uncompensated",
+                    "Metabolic acidosis, uncompensated",
+                    "Metabolic alkalosis, uncompensated"
+                ],
+                correct: 0,
+                rationale: "pH 7.30 (acidotic), PaCO2 50 (elevated = acidotic), HCO3 24 (normal). Using ROME: Respiratory = Opposite. pH and PaCO2 move opposite directions = respiratory acidosis. HCO3 is normal = uncompensated."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "Which population is most at risk for fluid volume deficit?",
+                options: [
+                    "Middle-aged adults",
+                    "Pregnant women",
+                    "Infants and older adults",
+                    "Adolescents"
+                ],
+                correct: 2,
+                rationale: "Infants, children, and older adults are particularly vulnerable to dehydration due to their physiology and decreased ability to regulate fluid balance."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "A patient receiving IV potassium asks why it must be diluted. What is the nurse's best response?",
+                options: [
+                    "It prevents pain at the IV site",
+                    "Concentrated potassium given rapidly can cause fatal cardiac arrest",
+                    "It helps the medication work faster",
+                    "Dilution is only for patient comfort"
+                ],
+                correct: 1,
+                rationale: "IV potassium must ALWAYS be diluted and infused on a pump. It is NEVER given as IV push because rapid bolus can cause fatal cardiac arrest."
+            },
+            {
+                category: "Fluid & Electrolyte",
+                room: "💧 Hydration Station",
+                question: "A patient's ABG shows: pH 7.50, PaCO2 30, HCO3 24. The nurse interprets this as:",
+                options: [
+                    "Respiratory acidosis",
+                    "Respiratory alkalosis, uncompensated",
+                    "Metabolic acidosis",
+                    "Metabolic alkalosis"
+                ],
+                correct: 1,
+                rationale: "pH 7.50 (alkalotic), PaCO2 30 (low = alkalotic), HCO3 24 (normal). Using ROME: Respiratory = Opposite. pH up, CO2 down = respiratory alkalosis. HCO3 normal = uncompensated."
+            }
+        ];
+
+        const roomThemes = [
+            "🎅 Santa's Health Workshop",
+            "😴 Dreamy Snowman's Bedroom",
+            "🔥 Fireplace Safety Station",
+            "🍪 Gingerbread Nutrition Kitchen",
+            "💊 Pain Relief Pharmacy",
+            "🍬 Candy Cane Clinic",
+            "🩹 Wound Care Workshop",
+            "🦠 Infection Control Lab",
+            "🦴 Orthopedic Recovery Room",
+            "🚽 Bathroom Breakthrough",
+            "💧 Hydration Station"
+        ];
+
+        const roomNarratives = {
+            "🎅 Santa's Health Workshop": "You've arrived at Santa's bustling workshop, but something's wrong! The elves are falling ill left and right, and Santa needs YOUR nursing expertise to implement health promotion strategies. Show them how to prevent illness, conduct proper screenings, and promote wellness throughout the North Pole. Only by mastering these concepts can you unlock the door to the next room!",
+            
+            "😴 Dreamy Snowman's Bedroom": "You stumble into a cozy bedroom where a sleepy snowman is struggling to get proper rest. The room is filled with twinkling fairy lights and soft pillows, but the snowman keeps waking up throughout the night. He desperately needs your knowledge of sleep hygiene and sleep disorders to finally get the restorative sleep he deserves. Help him rest peacefully to escape this dreamy chamber!",
+            
+            "🔥 Fireplace Safety Station": "Flames flicker dangerously in this warm room, and the fire alarm is beeping urgently! You must demonstrate your knowledge of patient safety protocols - from fall prevention to fire safety procedures. The elves are counting on you to remember RACE and PASS. Can you keep everyone safe and prevent disaster? Show your safety expertise to unlock the exit!",
+            
+            "🍪 Gingerbread Nutrition Kitchen": "Welcome to the most delicious room yet - a kitchen overflowing with gingerbread cookies, candy canes, and holiday treats! But Mrs. Claus is worried about proper nutrition for all the North Pole residents. Some have dysphagia, others need therapeutic diets, and several require enteral nutrition. Use your nutritional knowledge to create the perfect meal plans and escape this sweet-smelling kitchen!",
+            
+            "💊 Pain Relief Pharmacy": "The pharmacy is filled with bottles of medications, and a reindeer is in visible discomfort after pulling Santa's sleigh. You need to assess pain properly using PQRSTU, understand the difference between acute and chronic pain, and know your analgesics inside and out. Demonstrate your pain management expertise to help the reindeer feel better and unlock the pharmacy door!",
+            
+            "🍬 Candy Cane Clinic": "Sugar and sweetness surround you, but not everyone here has balanced glucose levels! Elves with diabetes need your help managing their blood sugar, understanding the signs of hypo and hyperglycemia, and learning proper foot care. Can you teach them about the '15:15 rule' and help them avoid complications? Master glucose regulation to move forward!",
+            
+            "🩹 Wound Care Workshop": "You've entered a medical room where several elves have pressure injuries from sitting too long making toys. The Braden Scale is on the wall, and wound care supplies are everywhere. You must accurately stage wounds, understand healing processes, and identify complications like compartment syndrome. Your tissue integrity knowledge is the key to escaping this clinical space!",
+            
+            "🦠 Infection Control Lab": "ACHOO! This lab is full of sniffling, coughing characters who need your infection prevention expertise. You'll need to know your transmission routes (contact, droplet, airborne), understand the difference between pneumonia and TB, and master the art of hand hygiene. Put on your PPE and show that you can break the chain of infection to escape!",
+            
+            "🦴 Orthopedic Recovery Room": "You hear a reindeer groaning in pain - poor Dancer has fractured her leg! This recovery room is filled with casts, crutches, and concerned faces. You need to perform neurovascular assessments, recognize compartment syndrome, understand the consequences of immobility, and know proper fracture management. Help Dancer recover to unlock your path forward!",
+            
+            "🚽 Bathroom Breakthrough": "Things are getting personal in this festive bathroom! The elves are experiencing various elimination problems - some have incontinence, others have constipation, and one hasn't voided since surgery. Your knowledge of urinary and bowel elimination is crucial. Can you recommend pelvic floor exercises, recognize fecal impaction, and help everyone achieve healthy elimination patterns? Solve these issues to flush your way out!",
+            
+            "💧 Hydration Station": "The final room! It's shimmering with IV bags and electrolyte solutions. Several characters are dehydrated from their Christmas preparations, while others are in fluid overload. You must interpret ABGs, understand fluid volume imbalances, know your electrolytes (especially potassium safety!), and demonstrate mastery of acid-base balance. This is your ultimate challenge - pass it and you'll escape to freedom and NCLEX success!"
+        };
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = 0;
+        let shuffledQuestions = [];
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function createSnowflakes() {
+            for (let i = 0; i < 20; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = '❄';
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                snowflake.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(snowflake);
+            }
+        }
+
+        function updateProgress() {
+            const percentage = (currentQuestion / questions.length) * 100;
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressFill').textContent = `${currentQuestion}/${questions.length}`;
+            document.getElementById('roomNumber').textContent = currentQuestion + 1;
+            document.getElementById('score').textContent = `${score}/${answered}`;
+            document.getElementById('percentage').textContent = answered > 0 ? 
+                Math.round((score / answered) * 100) + '%' : '0%';
+        }
+
+        function displayQuestion() {
+            const q = shuffledQuestions[currentQuestion];
+            const gameArea = document.getElementById('gameArea');
+            
+            let html = `
+                <div class="room-card">
+                    <div class="room-title">${q.room}</div>
+                    <div class="room-subtitle">Room ${currentQuestion + 1} of ${questions.length}</div>
+                    
+                    <div class="story-narrative">
+                        ${roomNarratives[q.room]}
+                    </div>
+                    
+                    <div class="question">
+                        <div class="question-text"><strong>Question ${currentQuestion + 1}:</strong> ${q.question}</div>
+                        <div class="options">
+            `;
+
+            q.options.forEach((option, index) => {
+                html += `
+                    <div class="option" onclick="selectAnswer(${index})">
+                        ${String.fromCharCode(65 + index)}. ${option}
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                        <div class="feedback" id="feedback"></div>
+                    </div>
+                    
+                    <div class="btn-container">
+                        <button class="btn" id="nextBtn" onclick="nextQuestion()">
+                            ${currentQuestion < questions.length - 1 ? 'Next Room 🎄' : 'See Results 🎁'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            gameArea.innerHTML = html;
+        }
+
+        function selectAnswer(selectedIndex) {
+            const q = shuffledQuestions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Prevent multiple selections
+            if (answered > currentQuestion) return;
+
+            answered++;
+            
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === q.correct) {
+                    option.classList.add('correct');
+                }
+                if (index === selectedIndex && index !== q.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            if (selectedIndex === q.correct) {
+                score++;
+                feedback.className = 'feedback correct show';
+                feedback.innerHTML = `<strong>✅ Correct!</strong><br>${q.rationale}`;
+            } else {
+                feedback.className = 'feedback incorrect show';
+                feedback.innerHTML = `<strong>❌ Incorrect.</strong><br><strong>Correct Answer: ${String.fromCharCode(65 + q.correct)}</strong><br>${q.rationale}`;
+            }
+
+            nextBtn.classList.add('show');
+            updateProgress();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < questions.length) {
+                displayQuestion();
+                updateProgress();
+            } else {
+                showFinalScreen();
+            }
+        }
+
+        function showFinalScreen() {
+            const gameArea = document.getElementById('gameArea');
+            const finalScreen = document.getElementById('finalScreen');
+            const percentage = Math.round((score / questions.length) * 100);
+
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 90) {
+                message = 'Outstanding! You\'re NCLEX ready! 🌟';
+                emoji = '🎉🎊🏆';
+            } else if (percentage >= 80) {
+                message = 'Excellent work! Keep it up! 💪';
+                emoji = '🎄✨';
+            } else if (percentage >= 70) {
+                message = 'Good job! Review and you\'ll ace it! 📚';
+                emoji = '⭐🎁';
+            } else {
+                message = 'Keep studying! You\'ve got this! 💙';
+                emoji = '📖💪';
+            }
+
+            // Calculate breakdown by category
+            const categoryStats = {};
+            shuffledQuestions.forEach((q, index) => {
+                if (!categoryStats[q.category]) {
+                    categoryStats[q.category] = { total: 0, correct: 0 };
+                }
+                categoryStats[q.category].total++;
+            });
+
+            let breakdownHTML = '';
+            Object.keys(categoryStats).sort().forEach(category => {
+                const stats = categoryStats[category];
+                breakdownHTML += `
+                    <div class="breakdown-item">
+                        <strong>${category}</strong>
+                        <span>${stats.total} questions</span>
+                    </div>
+                `;
+            });
+
+            gameArea.style.display = 'none';
+            finalScreen.innerHTML = `
+                <div class="celebration">${emoji}</div>
+                <h2 style="color: #c41e3a; font-size: 2em;">🎄 Escape Room Complete! 🎄</h2>
+                <div class="score-display">${score}/${questions.length}</div>
+                <h3 style="color: #165b33; font-size: 1.5em;">${percentage}%</h3>
+                <p style="font-size: 1.2em; color: #2d5a7b; margin: 20px 0;">${message}</p>
+                
+                <div class="breakdown">
+                    <h3 style="color: #c41e3a; margin-bottom: 15px;">📊 Topic Breakdown</h3>
+                    ${breakdownHTML}
+                </div>
+                
+                <button class="btn show" onclick="location.reload()">
+                    🔄 Play Again
+                </button>
+            `;
+            finalScreen.classList.add('show');
+        }
+
+        // Initialize game
+        window.onload = function() {
+            createSnowflakes();
+            shuffledQuestions = shuffleArray(questions);
+            displayQuestion();
+            updateProgress();
+        };
+    </script>
+</body>
+</html>
