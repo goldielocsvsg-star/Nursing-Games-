@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Five Nights at Mercy Hospital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blood-red: #8B0000;
+            --dark-red: #4a0000;
+            --eerie-green: #00ff00;
+            --monitor-blue: #001122;
+            --static-gray: #1a1a1a;
+            --warning-orange: #ff6600;
+            --death-purple: #2d0033;
+        }
+
+        body {
+            font-family: 'VT323', monospace;
+            background: #000;
+            min-height: 100vh;
+            overflow: hidden;
+            color: #fff;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="4" fill="%23ff0000" opacity="0.8"/><circle cx="16" cy="16" r="8" fill="none" stroke="%23ff0000" stroke-width="1" opacity="0.5"/></svg>') 16 16, crosshair;
+        }
+
+        /* STATIC OVERLAY */
+        .static-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.03;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.03) 2px,
+                rgba(0, 255, 0, 0.03) 4px
+            );
+            animation: staticFlicker 0.1s infinite;
+        }
+
+        @keyframes staticFlicker {
+            0%, 100% { opacity: 0.03; }
+            50% { opacity: 0.05; }
+        }
+
+        /* SCANLINES */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+        }
+
+        /* TITLE SCREEN */
+        #title-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a0a0a 0%, #000 70%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .title-logo {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(2.5rem, 8vw, 6rem);
+            color: var(--blood-red);
+            text-shadow: 
+                0 0 10px var(--blood-red),
+                0 0 20px var(--blood-red),
+                0 0 40px var(--dark-red),
+                4px 4px 0 #000;
+            animation: titlePulse 2s ease-in-out infinite;
+            text-align: center;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .title-subtitle {
+            font-family: 'Special Elite', cursive;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            color: #666;
+            letter-spacing: 4px;
+            margin-bottom: 40px;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.02); filter: brightness(1.2); }
+        }
+
+        .start-btn {
+            font-family: 'VT323', monospace;
+            font-size: 2rem;
+            padding: 15px 50px;
+            background: transparent;
+            border: 3px solid var(--blood-red);
+            color: var(--blood-red);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .start-btn:hover {
+            background: var(--blood-red);
+            color: #fff;
+            box-shadow: 0 0 30px var(--blood-red);
+            transform: scale(1.05);
+        }
+
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: btnShine 3s infinite;
+        }
+
+        @keyframes btnShine {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+
+        .warning-text {
+            margin-top: 30px;
+            color: #333;
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.4;
+        }
+
+        /* GAME CONTAINER */
+        #game-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: var(--monitor-blue);
+            position: relative;
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 2px solid var(--blood-red);
+            z-index: 50;
+        }
+
+        .night-indicator {
+            font-family: 'Creepster', cursive;
+            font-size: 1.8rem;
+            color: var(--blood-red);
+            text-shadow: 0 0 10px var(--blood-red);
+        }
+
+        .time-display {
+            font-size: 2rem;
+            color: var(--eerie-green);
+            text-shadow: 0 0 5px var(--eerie-green);
+        }
+
+        .power-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .power-label {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .power-bar {
+            width: 150px;
+            height: 20px;
+            background: #222;
+            border: 2px solid #444;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .power-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blood-red), var(--warning-orange));
+            transition: width 0.3s;
+        }
+
+        .power-percentage {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* MAIN GAME AREA */
+        .game-area {
+            display: flex;
+            height: calc(100vh - 60px);
+            margin-top: 60px;
+        }
+
+        /* CAMERA MONITOR */
+        .camera-monitor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            background: #0a0a0a;
+        }
+
+        .monitor-frame {
+            flex: 1;
+            border: 4px solid #333;
+            border-radius: 10px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .camera-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .camera-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: var(--eerie-green);
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px var(--eerie-green);
+        }
+
+        .rec-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ff0000;
+            font-size: 0.8rem;
+            animation: recBlink 1s infinite;
+        }
+
+        .rec-dot {
+            width: 10px;
+            height: 10px;
+            background: #ff0000;
+            border-radius: 50%;
+        }
+
+        @keyframes recBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* HALLWAY VISUALIZATION */
+        .hallway {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(180deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%);
+            border: 2px solid #222;
+            position: relative;
+            margin-bottom: 20px;
+            perspective: 500px;
+            overflow: hidden;
+        }
+
+        .hallway-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: repeating-linear-gradient(
+                90deg,
+                #1a1a1a 0px,
+                #1a1a1a 30px,
+                #222 30px,
+                #222 60px
+            );
+            transform: rotateX(60deg);
+            transform-origin: bottom;
+        }
+
+        .enemy-container {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        .enemy-icon {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 20px var(--blood-red));
+            animation: enemyFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes enemyFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .enemy-name {
+            font-family: 'Creepster', cursive;
+            color: var(--blood-red);
+            font-size: 1.2rem;
+            margin-top: 5px;
+            text-shadow: 0 0 10px var(--blood-red);
+        }
+
+        .distance-meter {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .distance-segment {
+            width: 30px;
+            height: 10px;
+            background: #333;
+            border: 1px solid #444;
+            transition: all 0.3s;
+        }
+
+        .distance-segment.active {
+            background: var(--blood-red);
+            box-shadow: 0 0 10px var(--blood-red);
+        }
+
+        .distance-segment.warning {
+            background: var(--warning-orange);
+            animation: warningPulse 0.5s infinite;
+        }
+
+        .distance-segment.danger {
+            background: #ff0000;
+            animation: dangerPulse 0.3s infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { opacity: 1; transform: scaleY(1); }
+            50% { opacity: 0.7; transform: scaleY(1.2); }
+        }
+
+        /* QUESTION PANEL */
+        .question-panel {
+            background: rgba(0, 20, 0, 0.8);
+            border: 2px solid var(--eerie-green);
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .question-header {
+            color: var(--eerie-green);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .question-text {
+            font-family: 'Special Elite', cursive;
+            font-size: 1.1rem;
+            color: #fff;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .answer-btn {
+            font-family: 'VT323', monospace;
+            font-size: 1rem;
+            padding: 12px 15px;
+            background: rgba(0, 50, 0, 0.5);
+            border: 2px solid #2a5a2a;
+            color: #8f8;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .answer-btn:hover {
+            background: rgba(0, 100, 0, 0.5);
+            border-color: var(--eerie-green);
+            transform: scale(1.02);
+        }
+
+        .answer-btn.correct {
+            background: rgba(0, 150, 0, 0.8);
+            border-color: #0f0;
+            animation: correctFlash 0.5s;
+        }
+
+        .answer-btn.incorrect {
+            background: rgba(150, 0, 0, 0.8);
+            border-color: #f00;
+            animation: incorrectShake 0.5s;
+        }
+
+        @keyframes correctFlash {
+            0%, 100% { background: rgba(0, 150, 0, 0.8); }
+            50% { background: rgba(0, 255, 0, 0.5); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* SIDEBAR STATUS */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0a0505 0%, #150808 100%);
+            border-left: 2px solid var(--blood-red);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .status-card {
+            background: rgba(50, 0, 0, 0.3);
+            border: 1px solid #400;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .status-title {
+            font-family: 'Creepster', cursive;
+            color: var(--blood-red);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px var(--blood-red);
+        }
+
+        .patient-vitals {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .vital-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vital-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .vital-value {
+            color: var(--eerie-green);
+            font-size: 1.1rem;
+        }
+
+        .vital-value.warning {
+            color: var(--warning-orange);
+        }
+
+        .vital-value.danger {
+            color: #ff0000;
+            animation: dangerPulse 0.5s infinite;
+        }
+
+        .score-display {
+            font-size: 2rem;
+            color: var(--eerie-green);
+            text-align: center;
+            text-shadow: 0 0 10px var(--eerie-green);
+        }
+
+        .streak-display {
+            text-align: center;
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .enemy-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .enemy-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+
+        .enemy-row-icon {
+            font-size: 1.5rem;
+        }
+
+        .enemy-row-info {
+            flex: 1;
+        }
+
+        .enemy-row-name {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .enemy-row-status {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .enemy-row-status.active {
+            color: var(--blood-red);
+        }
+
+        /* FEEDBACK OVERLAY */
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .feedback-text {
+            font-family: 'Creepster', cursive;
+            font-size: 4rem;
+            animation: feedbackPop 1s forwards;
+        }
+
+        .feedback-text.correct {
+            color: #00ff00;
+            text-shadow: 0 0 30px #00ff00;
+        }
+
+        .feedback-text.incorrect {
+            color: #ff0000;
+            text-shadow: 0 0 30px #ff0000;
+        }
+
+        @keyframes feedbackPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        /* JUMPSCARE */
+        .jumpscare-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+        }
+
+        .jumpscare-content {
+            text-align: center;
+            animation: jumpscareAnim 0.5s ease-out;
+        }
+
+        .jumpscare-icon {
+            font-size: 15rem;
+            animation: jumpscareShake 0.1s infinite;
+        }
+
+        .jumpscare-text {
+            font-family: 'Creepster', cursive;
+            font-size: 4rem;
+            color: var(--blood-red);
+            text-shadow: 0 0 50px var(--blood-red);
+            margin-top: 20px;
+        }
+
+        @keyframes jumpscareAnim {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes jumpscareShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        /* GAME OVER SCREEN */
+        #gameover-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a0000 0%, #000 70%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+        }
+
+        .gameover-title {
+            font-family: 'Creepster', cursive;
+            font-size: 5rem;
+            color: var(--blood-red);
+            text-shadow: 0 0 50px var(--blood-red);
+            animation: gameoverPulse 1s infinite;
+        }
+
+        @keyframes gameoverPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .gameover-stats {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .gameover-stat {
+            font-size: 1.5rem;
+            color: #888;
+            margin: 10px 0;
+        }
+
+        .gameover-stat span {
+            color: var(--eerie-green);
+        }
+
+        /* NIGHT COMPLETE SCREEN */
+        #nightcomplete-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #001a00 0%, #000 70%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+        }
+
+        .nightcomplete-title {
+            font-family: 'Creepster', cursive;
+            font-size: 4rem;
+            color: var(--eerie-green);
+            text-shadow: 0 0 30px var(--eerie-green);
+        }
+
+        .nightcomplete-subtitle {
+            font-size: 2rem;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        /* VICTORY SCREEN */
+        #victory-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #001a33 0%, #000 70%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+        }
+
+        .victory-title {
+            font-family: 'Creepster', cursive;
+            font-size: 4rem;
+            color: #ffd700;
+            text-shadow: 0 0 50px #ffd700;
+            animation: victoryGlow 1s infinite alternate;
+        }
+
+        @keyframes victoryGlow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.3); }
+        }
+
+        .certificate {
+            background: rgba(255, 215, 0, 0.1);
+            border: 3px solid #ffd700;
+            padding: 30px 50px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .certificate-text {
+            font-family: 'Special Elite', cursive;
+            font-size: 1.5rem;
+            color: #ffd700;
+        }
+
+        /* EXPLANATION BOX */
+        .explanation-box {
+            background: rgba(0, 50, 0, 0.9);
+            border: 2px solid var(--eerie-green);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .explanation-text {
+            font-family: 'Special Elite', cursive;
+            font-size: 0.95rem;
+            color: #8f8;
+            line-height: 1.4;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                border-left: none;
+                border-top: 2px solid var(--blood-red);
+            }
+            
+            .status-card {
+                flex: 1;
+                min-width: 150px;
+            }
+            
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* HEARTBEAT EFFECT */
+        .heartbeat {
+            animation: heartbeat 1s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.1); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.05); }
+            60% { transform: scale(1); }
+        }
+
+        /* GLITCH EFFECT */
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* BLOOD DRIP */
+        .blood-drip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--blood-red);
+            box-shadow: 0 0 10px var(--blood-red);
+        }
+    </style>
+</head>
+<body>
+    <div class="static-overlay"></div>
+    <div class="scanlines"></div>
+
+    <!-- TITLE SCREEN -->
+    <div id="title-screen">
+        <div class="title-logo">FIVE NIGHTS<br>AT MERCY HOSPITAL</div>
+        <div class="title-subtitle">⚕️ A Medical Survival Horror ⚕️</div>
+        <button class="start-btn" onclick="startGame()">BEGIN SHIFT</button>
+        <p class="warning-text">
+            You are the night shift nurse. Medical emergencies are approaching your patient's room. 
+            Answer correctly to push them back. Answer wrong... and they get closer. 
+            <br><br>Survive 5 nights. Save your patient. Test your knowledge.
+        </p>
+    </div>
+
+    <!-- GAME CONTAINER -->
+    <div id="game-container">
+        <div class="top-bar">
+            <div class="night-indicator">NIGHT <span id="current-night">1</span></div>
+            <div class="time-display"><span id="current-time">12:00 AM</span></div>
+            <div class="power-display">
+                <span class="power-label">PATIENT STABILITY:</span>
+                <div class="power-bar">
+                    <div class="power-fill" id="power-fill" style="width: 100%;"></div>
+                    <span class="power-percentage" id="power-percentage">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="camera-monitor">
+                <div class="monitor-frame">
+                    <div class="camera-view">
+                        <div class="camera-label">CAM-ICU-01 | HALLWAY APPROACH</div>
+                        <div class="rec-indicator">
+                            <div class="rec-dot"></div>
+                            <span>REC</span>
+                        </div>
+
+                        <div class="hallway">
+                            <div class="hallway-floor"></div>
+                            <div class="enemy-container" id="enemy-container">
+                                <div class="enemy-icon" id="enemy-icon">🦠</div>
+                                <div class="enemy-name" id="enemy-name">HYPOXIA</div>
+                            </div>
+                        </div>
+
+                        <div class="distance-meter" id="distance-meter">
+                            <div class="distance-segment" data-pos="0"></div>
+                            <div class="distance-segment" data-pos="1"></div>
+                            <div class="distance-segment" data-pos="2"></div>
+                            <div class="distance-segment" data-pos="3"></div>
+                            <div class="distance-segment" data-pos="4"></div>
+                            <div class="distance-segment" data-pos="5"></div>
+                            <div class="distance-segment" data-pos="6"></div>
+                            <div class="distance-segment" data-pos="7"></div>
+                        </div>
+
+                        <div class="question-panel">
+                            <div class="question-header">⚠️ EMERGENCY PROTOCOL REQUIRED</div>
+                            <div class="question-text" id="question-text">Loading question...</div>
+                            <div class="answer-options" id="answer-options">
+                                <!-- Options generated by JS -->
+                            </div>
+                            <div class="explanation-box" id="explanation-box">
+                                <div class="explanation-text" id="explanation-text"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="status-card">
+                    <div class="status-title">📊 Patient Status</div>
+                    <div class="patient-vitals">
+                        <div class="vital-row">
+                            <span class="vital-label">Heart Rate:</span>
+                            <span class="vital-value" id="heart-rate">72 bpm</span>
+                        </div>
+                        <div class="vital-row">
+                            <span class="vital-label">SpO₂:</span>
+                            <span class="vital-value" id="spo2">98%</span>
+                        </div>
+                        <div class="vital-row">
+                            <span class="vital-label">BP:</span>
+                            <span class="vital-value" id="bp">120/80</span>
+                        </div>
+                        <div class="vital-row">
+                            <span class="vital-label">Resp:</span>
+                            <span class="vital-value" id="resp">16</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-title">🏆 Score</div>
+                    <div class="score-display" id="score-display">0</div>
+                    <div class="streak-display">🔥 Streak: <span id="streak">0</span></div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-title">👻 Approaching Threats</div>
+                    <div class="enemy-list" id="enemy-list">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-title">📈 Progress</div>
+                    <div class="vital-row">
+                        <span class="vital-label">Questions:</span>
+                        <span class="vital-value" id="questions-answered">0/10</span>
+                    </div>
+                    <div class="vital-row">
+                        <span class="vital-label">Accuracy:</span>
+                        <span class="vital-value" id="accuracy">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div class="feedback-overlay" id="feedback-overlay">
+        <div class="feedback-text" id="feedback-text"></div>
+    </div>
+
+    <!-- JUMPSCARE OVERLAY -->
+    <div class="jumpscare-overlay" id="jumpscare-overlay">
+        <div class="jumpscare-content">
+            <div class="jumpscare-icon" id="jumpscare-icon">💀</div>
+            <div class="jumpscare-text">PATIENT CODED!</div>
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="gameover-screen">
+        <div class="gameover-title">GAME OVER</div>
+        <div class="gameover-stats">
+            <div class="gameover-stat">Night Reached: <span id="final-night">1</span></div>
+            <div class="gameover-stat">Final Score: <span id="final-score">0</span></div>
+            <div class="gameover-stat">Questions Correct: <span id="final-correct">0</span></div>
+            <div class="gameover-stat">Best Streak: <span id="final-streak">0</span></div>
+        </div>
+        <button class="start-btn" onclick="restartGame()" style="margin-top: 30px;">TRY AGAIN</button>
+    </div>
+
+    <!-- NIGHT COMPLETE SCREEN -->
+    <div id="nightcomplete-screen">
+        <div class="nightcomplete-title">NIGHT <span id="completed-night">1</span> COMPLETE</div>
+        <div class="nightcomplete-subtitle">6:00 AM - SHIFT CHANGE</div>
+        <div class="gameover-stats">
+            <div class="gameover-stat">Score: <span id="night-score">0</span></div>
+            <div class="gameover-stat">Accuracy: <span id="night-accuracy">0%</span></div>
+        </div>
+        <button class="start-btn" onclick="nextNight()" style="margin-top: 30px;">NEXT NIGHT</button>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen">
+        <div class="victory-title">🏆 YOU SURVIVED! 🏆</div>
+        <div class="certificate">
+            <div class="certificate-text">
+                CERTIFIED NIGHT SHIFT SURVIVOR<br><br>
+                You have proven your medical knowledge<br>
+                and kept your patient alive for 5 nights!
+            </div>
+        </div>
+        <div class="gameover-stats">
+            <div class="gameover-stat">Total Score: <span id="victory-score">0</span></div>
+            <div class="gameover-stat">Total Correct: <span id="victory-correct">0</span></div>
+            <div class="gameover-stat">Best Streak: <span id="victory-streak">0</span></div>
+        </div>
+        <button class="start-btn" onclick="restartGame()" style="margin-top: 30px;">PLAY AGAIN</button>
+    </div>
+
+    <script>
+        // =============================================
+        // QUESTION DATABASE - From your study guides!
+        // =============================================
+        const allQuestions = [
+            // GAS EXCHANGE QUESTIONS
+            {
+                category: "Gas Exchange",
+                question: "A patient has pH 7.30, PaCO₂ 55, HCO₃ 24. This is:",
+                options: ["Respiratory alkalosis", "Metabolic acidosis", "Respiratory acidosis", "Metabolic alkalosis"],
+                correct: 2,
+                explanation: "pH is LOW (acidosis), PaCO₂ is HIGH (respiratory cause), HCO₃ is normal. This is RESPIRATORY ACIDOSIS - CO₂ retention!",
+                enemy: "🫁",
+                enemyName: "HYPERCAPNIA"
+            },
+            {
+                category: "Gas Exchange",
+                question: "An infant in respiratory distress would show which signs?",
+                options: ["Barrel chest and clubbing", "Nasal flaring, retractions, grunting", "Pursed-lip breathing and tripod position", "Bradycardia and hypertension"],
+                correct: 1,
+                explanation: "Infant respiratory distress signs: nasal flaring, retractions (intercostal, substernal), grunting, and cyanosis around the mouth!",
+                enemy: "👶",
+                enemyName: "PEDIATRIC DISTRESS"
+            },
+            {
+                category: "Gas Exchange",
+                question: "A patient with pneumonia in the right lung should be positioned:",
+                options: ["Right side down (affected lung down)", "Left side down (good lung down)", "Supine", "Prone"],
+                correct: 1,
+                explanation: "'Good lung DOWN' improves perfusion to the healthy lung. Left lung is healthy, so position LEFT SIDE DOWN to maximize gas exchange!",
+                enemy: "🦠",
+                enemyName: "PNEUMONIA"
+            },
+            {
+                category: "Gas Exchange",
+                question: "Which oxygen delivery device provides the MOST precise FiO₂ for a COPD patient?",
+                options: ["Simple face mask", "Nasal cannula", "Non-rebreather mask", "Venturi mask"],
+                correct: 3,
+                explanation: "VENTURI MASK provides precise, controlled FiO₂! COPD patients need low-flow, precise oxygen to avoid suppressing their hypoxic drive.",
+                enemy: "💨",
+                enemyName: "HYPOXIC DRIVE FAILURE"
+            },
+            {
+                category: "Gas Exchange",
+                question: "Normal arterial blood pH range is:",
+                options: ["7.25-7.35", "7.35-7.45", "7.45-7.55", "7.30-7.40"],
+                correct: 1,
+                explanation: "Normal pH is 7.35-7.45. Below 7.35 = acidosis. Above 7.45 = alkalosis. Remember: 7.4 is the 'happy middle'!",
+                enemy: "⚗️",
+                enemyName: "ACID-BASE IMBALANCE"
+            },
+            {
+                category: "Gas Exchange",
+                question: "Wheezing breath sounds indicate:",
+                options: ["Fluid in the alveoli", "Narrowed airways", "Mucus in large airways", "Upper airway obstruction"],
+                correct: 1,
+                explanation: "Wheezes = narrowed airways (bronchospasm). Crackles = fluid. Rhonchi = mucus. Stridor = upper airway obstruction.",
+                enemy: "🌬️",
+                enemyName: "BRONCHOSPASM"
+            },
+            {
+                category: "Gas Exchange",
+                question: "A patient with respiratory acidosis would have which PaCO₂ level?",
+                options: ["Low (< 35 mmHg)", "Normal (35-45 mmHg)", "High (> 45 mmHg)", "Cannot determine"],
+                correct: 2,
+                explanation: "Respiratory ACIDOSIS = HIGH CO₂ (>45 mmHg). CO₂ is acidic, so too much = acidosis. Usually from hypoventilation.",
+                enemy: "🫁",
+                enemyName: "CO₂ RETENTION"
+            },
+            {
+                category: "Gas Exchange",
+                question: "The three systems required for adequate gas exchange are:",
+                options: ["Heart, lungs, kidneys", "Neurologic, respiratory, cardiovascular", "Brain, muscles, blood", "Lungs, liver, spleen"],
+                correct: 1,
+                explanation: "Three systems: Neurologic (controls breathing), Respiratory (oxygenates blood), Cardiovascular (perfuses tissues)!",
+                enemy: "🧠",
+                enemyName: "SYSTEM FAILURE"
+            },
+            
+            // DEFICIENCY ANEMIAS QUESTIONS
+            {
+                category: "Pharmacology",
+                question: "The drug of choice for treating iron deficiency anemia is:",
+                options: ["Iron dextran IV", "Ferrous sulfate oral", "Carbonyl iron", "Ferric carboxymaltose"],
+                correct: 1,
+                explanation: "Oral FERROUS SULFATE is the drug of choice for iron deficiency anemia. Oral is always preferred over parenteral!",
+                enemy: "💊",
+                enemyName: "IRON DEFICIENCY"
+            },
+            {
+                category: "Pharmacology",
+                question: "A nurse teaching about oral iron supplements - which patient statement shows understanding?",
+                options: ["I should take this with milk to prevent stomach upset", "Red stools mean I should stop the medication", "I should expect my stools to be dark or black", "I can take this with my antacid"],
+                correct: 2,
+                explanation: "Dark/black stools are NORMAL with iron supplements - NOT a sign of GI bleeding! Milk and antacids decrease absorption.",
+                enemy: "🩺",
+                enemyName: "MEDICATION ERROR"
+            },
+            {
+                category: "Pharmacology",
+                question: "Before giving iron dextran IV, the nurse should:",
+                options: ["Give with food to prevent nausea", "Administer a test dose and have epinephrine available", "Check blood glucose levels", "Give prophylactic antihistamines"],
+                correct: 1,
+                explanation: "Iron dextran carries risk of FATAL ANAPHYLAXIS! Always give test dose first and have epinephrine + resuscitation equipment ready!",
+                enemy: "⚠️",
+                enemyName: "ANAPHYLAXIS"
+            },
+            {
+                category: "Pharmacology",
+                question: "Which finding distinguishes B12 deficiency from folate deficiency?",
+                options: ["Macrocytic anemia", "Glossitis", "Neurologic symptoms", "Fatigue"],
+                correct: 2,
+                explanation: "NEUROLOGIC SYMPTOMS (paresthesias, ataxia, memory loss) occur ONLY in B12 deficiency, NOT folate deficiency!",
+                enemy: "🧠",
+                enemyName: "NEURO DAMAGE"
+            },
+            {
+                category: "Pharmacology",
+                question: "Why is it dangerous to treat B12 deficiency with folic acid alone?",
+                options: ["Folic acid is toxic in high doses", "Folic acid corrects anemia but NOT neurologic damage, masking B12 deficiency", "Folic acid depletes B12 stores", "Folic acid causes hypokalemia"],
+                correct: 1,
+                explanation: "Folic acid can FIX THE ANEMIA but NOT the NEURO DAMAGE of B12 deficiency. This MASKS the deficiency while neurologic damage continues!",
+                enemy: "🎭",
+                enemyName: "MASKED DEFICIENCY"
+            },
+            {
+                category: "Pharmacology",
+                question: "A 2-year-old ingested iron tablets. What is the antidote?",
+                options: ["N-acetylcysteine", "Flumazenil", "Deferoxamine", "Naloxone"],
+                correct: 2,
+                explanation: "DEFEROXAMINE is the iron chelator used for iron toxicity. Iron poisoning is the leading cause of fatal poisoning in children!",
+                enemy: "☠️",
+                enemyName: "IRON TOXICITY"
+            },
+            {
+                category: "Pharmacology",
+                question: "Which iron preparation provides the MOST elemental iron per mg?",
+                options: ["Ferrous sulfate (20%)", "Ferrous fumarate (33%)", "Ferrous gluconate (11.6%)", "Carbonyl iron (100%)"],
+                correct: 3,
+                explanation: "CARBONYL IRON is 100% elemental iron - the highest! It's also safer because it absorbs more slowly.",
+                enemy: "⚖️",
+                enemyName: "DOSING ERROR"
+            },
+            
+            // HEMATOLOGIC ALTERATIONS QUESTIONS
+            {
+                category: "Hematology",
+                question: "A patient has LOW ferritin, LOW serum iron, and HIGH TIBC. What type of anemia is this?",
+                options: ["Anemia of chronic disease", "Iron deficiency anemia", "B12 deficiency", "Aplastic anemia"],
+                correct: 1,
+                explanation: "In IDA, ferritin is LOW (depleted stores), TIBC is HIGH (body is hungry for iron)!",
+                enemy: "🩸",
+                enemyName: "IRON DEFICIENCY ANEMIA"
+            },
+            {
+                category: "Hematology",
+                question: "In hemolytic anemia, what happens to haptoglobin?",
+                options: ["Increases", "Stays the same", "Decreases", "Not affected"],
+                correct: 2,
+                explanation: "Haptoglobin DECREASES because it gets used up binding free hemoglobin from destroyed RBCs!",
+                enemy: "💔",
+                enemyName: "HEMOLYSIS"
+            },
+            {
+                category: "Hematology",
+                question: "A patient presents with fatigue, frequent infections, AND bleeding. Which anemia?",
+                options: ["Iron deficiency anemia", "Hemolytic anemia", "Aplastic anemia", "Pernicious anemia"],
+                correct: 2,
+                explanation: "Aplastic anemia = PANCYTOPENIA (all 3 cell lines low). Fatigue (low RBC) + infections (low WBC) + bleeding (low platelets)!",
+                enemy: "🦴",
+                enemyName: "BONE MARROW FAILURE"
+            },
+            {
+                category: "Hematology",
+                question: "What is the KEY lab finding that differentiates anemia of chronic disease from iron deficiency?",
+                options: ["Serum iron (both are low)", "Ferritin - HIGH in chronic disease, LOW in IDA", "MCV (both can be low)", "Hemoglobin (both are low)"],
+                correct: 1,
+                explanation: "FERRITIN is the key! In chronic disease, iron is TRAPPED in storage (high ferritin). In IDA, stores are DEPLETED (low ferritin).",
+                enemy: "🔒",
+                enemyName: "TRAPPED IRON"
+            },
+            {
+                category: "Hematology",
+                question: "Which anemia type shows an elevated MCV (macrocytic)?",
+                options: ["Iron deficiency", "Thalassemia", "B12/Folate deficiency", "Anemia of chronic disease"],
+                correct: 2,
+                explanation: "B12 and Folate deficiency cause MACROCYTIC anemia (large cells, MCV >100). Iron deficiency causes microcytic (small cells).",
+                enemy: "🔬",
+                enemyName: "MACROCYTIC CRISIS"
+            },
+            {
+                category: "Hematology",
+                question: "Pernicious anemia is caused by lack of:",
+                options: ["Iron", "Folic acid", "Intrinsic factor", "Erythropoietin"],
+                correct: 2,
+                explanation: "Pernicious anemia = lack of INTRINSIC FACTOR from parietal cells → can't absorb B12 → megaloblastic anemia + neuro symptoms!",
+                enemy: "🧬",
+                enemyName: "INTRINSIC FACTOR LOSS"
+            },
+            {
+                category: "Hematology",
+                question: "Classic signs of iron deficiency anemia include:",
+                options: ["Jaundice and dark urine", "Spoon nails, pica, and glossitis", "Neurologic symptoms and beefy red tongue", "Frequent infections and bleeding"],
+                correct: 1,
+                explanation: "IDA signs: Koilonychia (spoon nails), PICA (craving non-food items like ice/dirt), glossitis (smooth, sore tongue)!",
+                enemy: "🥄",
+                enemyName: "KOILONYCHIA"
+            },
+            {
+                category: "Hematology",
+                question: "Hemolytic anemia is characterized by:",
+                options: ["Low reticulocyte count", "High reticulocyte count, increased LDH, decreased haptoglobin", "Normal bilirubin", "Low indirect bilirubin"],
+                correct: 1,
+                explanation: "Hemolysis = RBC destruction! Body compensates with HIGH reticulocytes, HIGH LDH (cell breakdown), LOW haptoglobin (binding free Hgb).",
+                enemy: "💣",
+                enemyName: "RBC DESTRUCTION"
+            },
+            
+            // ADDITIONAL MIXED QUESTIONS
+            {
+                category: "Gas Exchange",
+                question: "Which condition causes a V/Q mismatch with normal ventilation but impaired perfusion?",
+                options: ["Pneumonia", "Pulmonary embolism", "Atelectasis", "Asthma"],
+                correct: 1,
+                explanation: "Pulmonary embolism = perfusion problem! The area is ventilated (V) but NOT perfused (Q) due to the clot blocking blood flow.",
+                enemy: "🫀",
+                enemyName: "PULMONARY EMBOLISM"
+            },
+            {
+                category: "Pharmacology",
+                question: "Vitamin C enhances the absorption of:",
+                options: ["Vitamin B12", "Folic acid", "Iron", "Calcium"],
+                correct: 2,
+                explanation: "Vitamin C (ascorbic acid) ENHANCES iron absorption by keeping iron in the ferrous (Fe²⁺) form. Take iron with OJ!",
+                enemy: "🍊",
+                enemyName: "ABSORPTION FAILURE"
+            },
+            {
+                category: "Gas Exchange",
+                question: "A patient with COPD suddenly becomes drowsy and confused. This suggests:",
+                options: ["Anxiety attack", "Hypoglycemia", "CO₂ narcosis", "Stroke"],
+                correct: 2,
+                explanation: "CO₂ narcosis! Too much oxygen suppressed the hypoxic drive, causing CO₂ retention → drowsiness, confusion, and can lead to coma.",
+                enemy: "😴",
+                enemyName: "CO₂ NARCOSIS"
+            },
+            {
+                category: "Hematology",
+                question: "Treatment for pernicious anemia is:",
+                options: ["Oral iron supplements", "Blood transfusion", "Lifelong B12 injections", "Short-term folic acid"],
+                correct: 2,
+                explanation: "Pernicious anemia requires LIFELONG B12 injections (IM or subQ) because the patient can't absorb oral B12 without intrinsic factor!",
+                enemy: "💉",
+                enemyName: "B12 CRISIS"
+            },
+            {
+                category: "Gas Exchange",
+                question: "Normal PaO₂ range is:",
+                options: ["60-70 mmHg", "80-100 mmHg", "100-120 mmHg", "35-45 mmHg"],
+                correct: 1,
+                explanation: "Normal PaO₂ is 80-100 mmHg. Below 80 = hypoxemia. Remember: O₂ is the 'high' one (80-100), CO₂ is lower (35-45).",
+                enemy: "⬇️",
+                enemyName: "HYPOXEMIA"
+            },
+            {
+                category: "Pharmacology",
+                question: "The Z-track technique is used when administering:",
+                options: ["Subcutaneous insulin", "Intramuscular iron", "Intravenous antibiotics", "Oral medications"],
+                correct: 1,
+                explanation: "Z-track technique prevents iron from staining the skin and subcutaneous tissue. Used for IM iron injections!",
+                enemy: "💉",
+                enemyName: "INJECTION ERROR"
+            },
+            {
+                category: "Hematology",
+                question: "Sickle cell crisis is triggered by:",
+                options: ["Excess oxygen", "Dehydration, hypoxia, and cold", "High iron levels", "Too much exercise only"],
+                correct: 1,
+                explanation: "Sickle cell crisis triggers: Dehydration, hypoxia, infection, cold, stress, high altitude. Keep patients HYDRATED and oxygenated!",
+                enemy: "🌡️",
+                enemyName: "SICKLE CRISIS"
+            },
+            {
+                category: "Gas Exchange",
+                question: "Clubbing of the fingers indicates:",
+                options: ["Acute respiratory infection", "Chronic hypoxia", "Anemia", "High blood pressure"],
+                correct: 1,
+                explanation: "Clubbing = CHRONIC hypoxia (long-standing oxygen deprivation). The fingertips become rounded and the nail angle flattens.",
+                enemy: "🖐️",
+                enemyName: "CHRONIC HYPOXIA"
+            }
+        ];
+
+        // =============================================
+        // GAME STATE
+        // =============================================
+        let gameState = {
+            night: 1,
+            score: 0,
+            streak: 0,
+            bestStreak: 0,
+            questionsAnswered: 0,
+            questionsCorrect: 0,
+            enemyDistance: 0, // 0-7, 7 = reached you
+            patientStability: 100,
+            currentQuestionIndex: 0,
+            usedQuestions: [],
+            questionsPerNight: 10,
+            maxNights: 5,
+            timeHour: 12,
+            isAnswering: false
+        };
+
+        // Enemy icons for variety
+        const enemyTypes = [
+            { icon: "🦠", name: "PATHOGEN" },
+            { icon: "💀", name: "MORTALITY" },
+            { icon: "🫁", name: "RESPIRATORY FAILURE" },
+            { icon: "🩸", name: "HEMORRHAGE" },
+            { icon: "⚠️", name: "CRITICAL CONDITION" },
+            { icon: "☠️", name: "TOXICITY" },
+            { icon: "🧬", name: "CELLULAR DEATH" },
+            { icon: "💔", name: "CARDIAC ARREST" }
+        ];
+
+        // =============================================
+        // AUDIO (Using Web Audio API for simple sounds)
+        // =============================================
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                switch(type) {
+                    case 'correct':
+                        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.3);
+                        break;
+                    case 'wrong':
+                        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                        oscillator.type = 'sawtooth';
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                        break;
+                    case 'jumpscare':
+                        oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+                        oscillator.type = 'sawtooth';
+                        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.8);
+                        break;
+                }
+            } catch(e) {
+                console.log('Audio not available');
+            }
+        }
+
+        // =============================================
+        // GAME FUNCTIONS
+        // =============================================
+        function startGame() {
+            document.getElementById('title-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            
+            resetGameState();
+            updateUI();
+            loadNewQuestion();
+        }
+
+        function resetGameState() {
+            gameState = {
+                night: 1,
+                score: 0,
+                streak: 0,
+                bestStreak: 0,
+                questionsAnswered: 0,
+                questionsCorrect: 0,
+                enemyDistance: 0,
+                patientStability: 100,
+                currentQuestionIndex: 0,
+                usedQuestions: [],
+                questionsPerNight: 10,
+                maxNights: 5,
+                timeHour: 12,
+                isAnswering: false
+            };
+        }
+
+        function getRandomQuestion() {
+            const available = allQuestions.filter((q, i) => !gameState.usedQuestions.includes(i));
+            if (available.length === 0) {
+                gameState.usedQuestions = [];
+                return allQuestions[Math.floor(Math.random() * allQuestions.length)];
+            }
+            const index = Math.floor(Math.random() * available.length);
+            const originalIndex = allQuestions.indexOf(available[index]);
+            gameState.usedQuestions.push(originalIndex);
+            return available[index];
+        }
+
+        function loadNewQuestion() {
+            const question = getRandomQuestion();
+            gameState.currentQuestion = question;
+            gameState.isAnswering = false;
+            
+            // Update enemy display
+            document.getElementById('enemy-icon').textContent = question.enemy;
+            document.getElementById('enemy-name').textContent = question.enemyName;
+            
+            // Update question
+            document.getElementById('question-text').textContent = question.question;
+            
+            // Generate answer buttons
+            const optionsContainer = document.getElementById('answer-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                btn.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+            
+            // Hide explanation
+            document.getElementById('explanation-box').style.display = 'none';
+            
+            // Update enemy list
+            updateEnemyList();
+        }
+
+        function selectAnswer(index) {
+            if (gameState.isAnswering) return;
+            gameState.isAnswering = true;
+            
+            const question = gameState.currentQuestion;
+            const buttons = document.querySelectorAll('.answer-btn');
+            const isCorrect = index === question.correct;
+            
+            // Mark correct/incorrect
+            buttons[index].classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect) {
+                buttons[question.correct].classList.add('correct');
+            }
+            
+            // Show explanation
+            document.getElementById('explanation-text').textContent = question.explanation;
+            document.getElementById('explanation-box').style.display = 'block';
+            
+            // Update game state
+            gameState.questionsAnswered++;
+            
+            if (isCorrect) {
+                gameState.questionsCorrect++;
+                gameState.score += 100 * (1 + gameState.streak * 0.1);
+                gameState.streak++;
+                if (gameState.streak > gameState.bestStreak) {
+                    gameState.bestStreak = gameState.streak;
+                }
+                
+                // Push enemy back
+                gameState.enemyDistance = Math.max(0, gameState.enemyDistance - 1);
+                
+                // Restore some patient stability
+                gameState.patientStability = Math.min(100, gameState.patientStability + 5);
+                
+                showFeedback('CORRECT!', true);
+                playSound('correct');
+            } else {
+                gameState.streak = 0;
+                
+                // Enemy advances
+                gameState.enemyDistance = Math.min(7, gameState.enemyDistance + 2);
+                
+                // Decrease patient stability
+                gameState.patientStability = Math.max(0, gameState.patientStability - 15);
+                
+                showFeedback('WRONG!', false);
+                playSound('wrong');
+            }
+            
+            // Update time
+            gameState.timeHour++;
+            if (gameState.timeHour > 12) gameState.timeHour = 1;
+            
+            updateUI();
+            
+            // Check for game over or night complete
+            setTimeout(() => {
+                if (gameState.enemyDistance >= 7 || gameState.patientStability <= 0) {
+                    triggerJumpscare();
+                } else if (gameState.questionsAnswered >= gameState.questionsPerNight) {
+                    completeNight();
+                } else {
+                    loadNewQuestion();
+                }
+            }, 2000);
+        }
+
+        function showFeedback(text, isCorrect) {
+            const overlay = document.getElementById('feedback-overlay');
+            const feedbackText = document.getElementById('feedback-text');
+            
+            feedbackText.textContent = text;
+            feedbackText.className = `feedback-text ${isCorrect ? 'correct' : 'incorrect'}`;
+            
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 1000);
+        }
+
+        function triggerJumpscare() {
+            const jumpscare = document.getElementById('jumpscare-overlay');
+            const icon = document.getElementById('jumpscare-icon');
+            
+            icon.textContent = gameState.currentQuestion.enemy;
+            
+            playSound('jumpscare');
+            jumpscare.style.display = 'flex';
+            
+            setTimeout(() => {
+                jumpscare.style.display = 'none';
+                showGameOver();
+            }, 2000);
+        }
+
+        function showGameOver() {
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('gameover-screen').style.display = 'flex';
+            
+            document.getElementById('final-night').textContent = gameState.night;
+            document.getElementById('final-score').textContent = Math.floor(gameState.score);
+            document.getElementById('final-correct').textContent = gameState.questionsCorrect;
+            document.getElementById('final-streak').textContent = gameState.bestStreak;
+        }
+
+        function completeNight() {
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('nightcomplete-screen').style.display = 'flex';
+            
+            document.getElementById('completed-night').textContent = gameState.night;
+            document.getElementById('night-score').textContent = Math.floor(gameState.score);
+            
+            const accuracy = gameState.questionsAnswered > 0 
+                ? Math.round((gameState.questionsCorrect / gameState.questionsAnswered) * 100) 
+                : 0;
+            document.getElementById('night-accuracy').textContent = accuracy + '%';
+        }
+
+        function nextNight() {
+            gameState.night++;
+            
+            if (gameState.night > gameState.maxNights) {
+                showVictory();
+                return;
+            }
+            
+            // Reset for new night but keep score
+            gameState.questionsAnswered = 0;
+            gameState.enemyDistance = 0;
+            gameState.patientStability = 100;
+            gameState.timeHour = 12;
+            gameState.questionsPerNight += 2; // Increase difficulty
+            
+            document.getElementById('nightcomplete-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            
+            updateUI();
+            loadNewQuestion();
+        }
+
+        function showVictory() {
+            document.getElementById('nightcomplete-screen').style.display = 'none';
+            document.getElementById('victory-screen').style.display = 'flex';
+            
+            document.getElementById('victory-score').textContent = Math.floor(gameState.score);
+            document.getElementById('victory-correct').textContent = gameState.questionsCorrect;
+            document.getElementById('victory-streak').textContent = gameState.bestStreak;
+        }
+
+        function restartGame() {
+            document.getElementById('gameover-screen').style.display = 'none';
+            document.getElementById('victory-screen').style.display = 'none';
+            document.getElementById('title-screen').style.display = 'flex';
+        }
+
+        function updateUI() {
+            // Night and time
+            document.getElementById('current-night').textContent = gameState.night;
+            
+            const ampm = gameState.timeHour < 6 ? 'AM' : 'AM';
+            const displayHour = gameState.timeHour === 0 ? 12 : gameState.timeHour;
+            document.getElementById('current-time').textContent = `${displayHour}:00 ${ampm}`;
+            
+            // Patient stability (power bar)
+            const stability = gameState.patientStability;
+            document.getElementById('power-fill').style.width = stability + '%';
+            document.getElementById('power-percentage').textContent = stability + '%';
+            
+            if (stability < 30) {
+                document.getElementById('power-fill').style.background = '#ff0000';
+            } else if (stability < 60) {
+                document.getElementById('power-fill').style.background = 'var(--warning-orange)';
+            } else {
+                document.getElementById('power-fill').style.background = 'linear-gradient(90deg, var(--blood-red), var(--warning-orange))';
+            }
+            
+            // Score and streak
+            document.getElementById('score-display').textContent = Math.floor(gameState.score);
+            document.getElementById('streak').textContent = gameState.streak;
+            
+            // Progress
+            document.getElementById('questions-answered').textContent = 
+                `${gameState.questionsAnswered}/${gameState.questionsPerNight}`;
+            
+            const accuracy = gameState.questionsAnswered > 0 
+                ? Math.round((gameState.questionsCorrect / gameState.questionsAnswered) * 100) 
+                : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            // Vitals (randomize based on stability)
+            updateVitals();
+            
+            // Distance meter
+            updateDistanceMeter();
+            
+            // Enemy position
+            updateEnemyPosition();
+        }
+
+        function updateVitals() {
+            const stability = gameState.patientStability;
+            
+            // Heart rate
+            let hr = 72;
+            if (stability < 50) hr = 90 + Math.floor(Math.random() * 30);
+            else if (stability < 80) hr = 80 + Math.floor(Math.random() * 15);
+            
+            const hrEl = document.getElementById('heart-rate');
+            hrEl.textContent = hr + ' bpm';
+            hrEl.className = 'vital-value' + (hr > 100 ? ' danger' : (hr > 90 ? ' warning' : ''));
+            
+            // SpO2
+            let spo2 = 98;
+            if (stability < 50) spo2 = 85 + Math.floor(Math.random() * 5);
+            else if (stability < 80) spo2 = 92 + Math.floor(Math.random() * 4);
+            
+            const spo2El = document.getElementById('spo2');
+            spo2El.textContent = spo2 + '%';
+            spo2El.className = 'vital-value' + (spo2 < 90 ? ' danger' : (spo2 < 95 ? ' warning' : ''));
+            
+            // BP
+            let systolic = 120, diastolic = 80;
+            if (stability < 50) {
+                systolic = 90 + Math.floor(Math.random() * 20);
+                diastolic = 50 + Math.floor(Math.random() * 15);
+            }
+            
+            const bpEl = document.getElementById('bp');
+            bpEl.textContent = `${systolic}/${diastolic}`;
+            bpEl.className = 'vital-value' + (systolic < 100 ? ' danger' : (systolic < 110 ? ' warning' : ''));
+            
+            // Resp
+            let resp = 16;
+            if (stability < 50) resp = 24 + Math.floor(Math.random() * 10);
+            else if (stability < 80) resp = 18 + Math.floor(Math.random() * 6);
+            
+            const respEl = document.getElementById('resp');
+            respEl.textContent = resp;
+            respEl.className = 'vital-value' + (resp > 28 ? ' danger' : (resp > 22 ? ' warning' : ''));
+        }
+
+        function updateDistanceMeter() {
+            const segments = document.querySelectorAll('.distance-segment');
+            const distance = gameState.enemyDistance;
+            
+            segments.forEach((seg, i) => {
+                seg.classList.remove('active', 'warning', 'danger');
+                
+                if (i < distance) {
+                    seg.classList.add('active');
+                    if (i >= 5) {
+                        seg.classList.add('danger');
+                    } else if (i >= 3) {
+                        seg.classList.add('warning');
+                    }
+                }
+            });
+        }
+
+        function updateEnemyPosition() {
+            const container = document.getElementById('enemy-container');
+            const distance = gameState.enemyDistance;
+            
+            // Scale and position based on distance
+            const scale = 0.5 + (distance * 0.15);
+            const bottom = 10 + (distance * 15);
+            
+            container.style.transform = `translateX(-50%) scale(${scale})`;
+            container.style.bottom = bottom + 'px';
+            
+            // Add shake effect when close
+            if (distance >= 5) {
+                container.classList.add('glitch');
+            } else {
+                container.classList.remove('glitch');
+            }
+        }
+
+        function updateEnemyList() {
+            const list = document.getElementById('enemy-list');
+            
+            // Show upcoming "threats" based on next questions
+            const threats = [];
+            for (let i = 0; i < 3; i++) {
+                const q = allQuestions[Math.floor(Math.random() * allQuestions.length)];
+                threats.push({
+                    icon: q.enemy,
+                    name: q.enemyName,
+                    active: i === 0
+                });
+            }
+            
+            list.innerHTML = threats.map((t, i) => `
+                <div class="enemy-row">
+                    <span class="enemy-row-icon">${t.icon}</span>
+                    <div class="enemy-row-info">
+                        <div class="enemy-row-name">${t.name}</div>
+                        <div class="enemy-row-status ${t.active ? 'active' : ''}">${t.active ? 'APPROACHING' : 'Waiting...'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize with title screen visible
+        document.getElementById('title-screen').style.display = 'flex';
+    </script>
+</body>
+</html>

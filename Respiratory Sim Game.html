@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respiratory Care Sim 🫁</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-mid: #16213e;
+            --bg-light: #0f3460;
+            --accent-teal: #00d9ff;
+            --accent-pink: #ff6b9d;
+            --accent-green: #00ff88;
+            --accent-yellow: #ffd93d;
+            --accent-orange: #ff8c42;
+            --accent-red: #ff4757;
+            --accent-purple: #a29bfe;
+            --text-light: #e8e8e8;
+            --text-dim: #8892b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            color: var(--text-light);
+            overflow-x: hidden;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .game-header {
+            background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+            border: 3px solid var(--accent-teal);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+        }
+
+        .game-title {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--accent-teal), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--accent-purple);
+            border-radius: 10px;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-value {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.8rem;
+            color: var(--accent-yellow);
+        }
+
+        /* Main Game Area */
+        .game-main {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            gap: 20px;
+        }
+
+        /* Character Panel */
+        .character-panel {
+            background: linear-gradient(180deg, var(--bg-mid), var(--bg-light));
+            border: 3px solid var(--accent-pink);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.2);
+        }
+
+        .character-avatar {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #2d5a7b, #1a3a52);
+            border-radius: 50%;
+            border: 4px solid var(--accent-teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .character-name {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.3rem;
+            text-align: center;
+            color: var(--accent-teal);
+            margin-bottom: 5px;
+        }
+
+        .character-title {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+        }
+
+        /* Need Bars */
+        .needs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .need-bar {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+
+        .need-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .need-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .need-value {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 0.9rem;
+        }
+
+        .need-track {
+            height: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .need-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .need-fill.energy { background: linear-gradient(90deg, #ff9f43, #ffc048); }
+        .need-fill.knowledge { background: linear-gradient(90deg, #00d9ff, #00ff88); }
+        .need-fill.skill { background: linear-gradient(90deg, #ff6b9d, #a29bfe); }
+        .need-fill.reputation { background: linear-gradient(90deg, #ffd93d, #ff8c42); }
+
+        /* Center Game Panel */
+        .game-center {
+            background: linear-gradient(180deg, var(--bg-mid), var(--bg-light));
+            border: 3px solid var(--accent-green);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            min-height: 600px;
+            position: relative;
+        }
+
+        .screen-title {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--accent-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Hospital Ward View */
+        .hospital-ward {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .patient-bed {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--text-dim);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .patient-bed:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-teal);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+
+        .patient-bed.empty {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .patient-bed.empty:hover {
+            transform: none;
+            border-color: var(--text-dim);
+            box-shadow: none;
+        }
+
+        .patient-bed.critical {
+            border-color: var(--accent-red);
+            animation: pulse-critical 1s infinite;
+        }
+
+        @keyframes pulse-critical {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 71, 87, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 71, 87, 0.8); }
+        }
+
+        .patient-icon {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .patient-name {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .patient-condition {
+            font-size: 0.7rem;
+            text-align: center;
+            color: var(--accent-yellow);
+            background: rgba(255, 217, 61, 0.1);
+            padding: 4px 8px;
+            border-radius: 10px;
+        }
+
+        .patient-urgency {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .urgency-low { background: var(--accent-green); }
+        .urgency-medium { background: var(--accent-yellow); }
+        .urgency-high { background: var(--accent-orange); }
+        .urgency-critical { background: var(--accent-red); animation: blink 0.5s infinite; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Patient Interaction Modal */
+        .patient-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .patient-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+            border: 3px solid var(--accent-teal);
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--accent-pink);
+            transition: transform 0.3s;
+        }
+
+        .modal-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .patient-chart {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .chart-title {
+            font-family: 'Pixelify Sans', cursive;
+            color: var(--accent-teal);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .vital-item {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .vital-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .vital-value {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.2rem;
+            color: var(--accent-green);
+        }
+
+        .vital-value.abnormal {
+            color: var(--accent-red);
+        }
+
+        /* Action Buttons */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--bg-light), var(--bg-mid));
+            border: 2px solid var(--accent-purple);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            color: var(--text-light);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-teal);
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .action-name {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .action-cost {
+            font-size: 0.7rem;
+            color: var(--accent-yellow);
+        }
+
+        /* Quiz Panel */
+        .quiz-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--accent-yellow);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .quiz-question {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--accent-yellow);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--text-dim);
+            border-radius: 10px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent-teal);
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .quiz-option.correct {
+            border-color: var(--accent-green);
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .quiz-option.incorrect {
+            border-color: var(--accent-red);
+            background: rgba(255, 71, 87, 0.2);
+        }
+
+        .quiz-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .quiz-feedback.show {
+            display: block;
+        }
+
+        .quiz-feedback.correct {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid var(--accent-green);
+        }
+
+        .quiz-feedback.incorrect {
+            background: rgba(255, 71, 87, 0.2);
+            border: 2px solid var(--accent-red);
+        }
+
+        /* Right Panel - Activity Log & Study */
+        .activity-panel {
+            background: linear-gradient(180deg, var(--bg-mid), var(--bg-light));
+            border: 3px solid var(--accent-yellow);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 217, 61, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .panel-tab {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .panel-tab.active {
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Activity Log */
+        .activity-log {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-entry {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            border-left: 3px solid var(--accent-teal);
+            font-size: 0.8rem;
+        }
+
+        .log-time {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .log-entry.success { border-left-color: var(--accent-green); }
+        .log-entry.warning { border-left-color: var(--accent-yellow); }
+        .log-entry.error { border-left-color: var(--accent-red); }
+        .log-entry.info { border-left-color: var(--accent-purple); }
+
+        /* Study Materials */
+        .study-topics {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .study-topic {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--text-dim);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .study-topic:hover {
+            border-color: var(--accent-purple);
+            transform: translateX(5px);
+        }
+
+        .study-topic-title {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 0.9rem;
+            color: var(--accent-purple);
+            margin-bottom: 4px;
+        }
+
+        .study-topic-desc {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        /* Study Modal */
+        .study-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 600;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .study-modal.active {
+            display: flex;
+        }
+
+        .study-content {
+            background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+            border: 3px solid var(--accent-purple);
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .study-header {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.5rem;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .study-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .study-card h3 {
+            color: var(--accent-teal);
+            font-family: 'Pixelify Sans', cursive;
+            margin-bottom: 10px;
+        }
+
+        .study-card p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        .memory-hook {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.2), rgba(162, 155, 254, 0.2));
+            border-left: 4px solid var(--accent-pink);
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .study-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.1rem;
+            color: white;
+            margin-top: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .study-btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .welcome-title {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--accent-teal), var(--accent-pink), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .welcome-desc {
+            color: var(--text-dim);
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-teal));
+            border: none;
+            border-radius: 15px;
+            padding: 20px 60px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.5rem;
+            color: var(--bg-dark);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, var(--bg-mid), var(--bg-light));
+            border: 2px solid var(--accent-green);
+            border-radius: 15px;
+            padding: 20px 30px;
+            z-index: 700;
+            transform: translateX(200%);
+            transition: transform 0.5s ease;
+            max-width: 350px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-title {
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 1.1rem;
+            color: var(--accent-green);
+            margin-bottom: 5px;
+        }
+
+        .toast-message {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Level Up Animation */
+        .level-up {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 4rem;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 30px rgba(255, 217, 61, 0.8);
+            z-index: 800;
+            pointer-events: none;
+        }
+
+        .level-up.show {
+            animation: levelUp 2s ease forwards;
+        }
+
+        @keyframes levelUp {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .game-main {
+                grid-template-columns: 1fr;
+            }
+            .character-panel, .activity-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .game-stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .hospital-ward {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .patient-chart {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <div class="game-header">
+            <h1 class="game-title">🫁 Respiratory Care Sim</h1>
+            <div class="game-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Shift</div>
+                    <div class="stat-value" id="currentShift">Day 1</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Patients Treated</div>
+                    <div class="stat-value" id="patientsTreated">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="totalScore">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-main">
+            <!-- Left: Character Panel -->
+            <div class="character-panel">
+                <div class="character-avatar">👩‍⚕️</div>
+                <div class="character-name" id="playerName">Nurse Riley</div>
+                <div class="character-title">Respiratory Care Specialist</div>
+                
+                <div class="needs-container">
+                    <div class="need-bar">
+                        <div class="need-header">
+                            <span class="need-label">⚡ Energy</span>
+                            <span class="need-value" id="energyValue">100</span>
+                        </div>
+                        <div class="need-track">
+                            <div class="need-fill energy" id="energyBar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="need-bar">
+                        <div class="need-header">
+                            <span class="need-label">📚 Knowledge</span>
+                            <span class="need-value" id="knowledgeValue">50</span>
+                        </div>
+                        <div class="need-track">
+                            <div class="need-fill knowledge" id="knowledgeBar" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div class="need-bar">
+                        <div class="need-header">
+                            <span class="need-label">🎯 Skill</span>
+                            <span class="need-value" id="skillValue">30</span>
+                        </div>
+                        <div class="need-track">
+                            <div class="need-fill skill" id="skillBar" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div class="need-bar">
+                        <div class="need-header">
+                            <span class="need-label">⭐ Reputation</span>
+                            <span class="need-value" id="repValue">20</span>
+                        </div>
+                        <div class="need-track">
+                            <div class="need-fill reputation" id="repBar" style="width: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Game Screen -->
+            <div class="game-center" id="gameScreen">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">🏥</div>
+                    <h2 class="welcome-title">Welcome to Respiratory Care Sim!</h2>
+                    <p class="welcome-desc">
+                        You're a respiratory care nurse working in a busy hospital. 
+                        Manage your patients, make clinical decisions, test your knowledge, 
+                        and level up your nursing skills!
+                    </p>
+                    <button class="start-btn" onclick="startGame()">Start Your Shift! 🚀</button>
+                </div>
+
+                <!-- Hospital Ward -->
+                <div id="hospitalWard" style="display: none;">
+                    <h2 class="screen-title">🏥 Respiratory Ward</h2>
+                    <div class="hospital-ward" id="patientBeds">
+                        <!-- Patient beds will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Activity Panel -->
+            <div class="activity-panel">
+                <div class="panel-tabs">
+                    <div class="panel-tab active" onclick="switchTab('log')">📋 Log</div>
+                    <div class="panel-tab" onclick="switchTab('study')">📚 Study</div>
+                </div>
+                
+                <div class="tab-content active" id="logTab">
+                    <div class="activity-log" id="activityLog">
+                        <div class="log-entry info">
+                            <div class="log-time">--:--</div>
+                            Welcome! Start your shift to begin.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="studyTab">
+                    <div class="study-topics">
+                        <div class="study-topic" onclick="openStudy('anatomy')">
+                            <div class="study-topic-title">🫁 Pulmonary Anatomy</div>
+                            <div class="study-topic-desc">Airways, alveoli, gas exchange</div>
+                        </div>
+                        <div class="study-topic" onclick="openStudy('asthma')">
+                            <div class="study-topic-title">😤 Asthma & COPD</div>
+                            <div class="study-topic-desc">Pathophysiology & differences</div>
+                        </div>
+                        <div class="study-topic" onclick="openStudy('drugs')">
+                            <div class="study-topic-title">💊 Respiratory Drugs</div>
+                            <div class="study-topic-desc">SABAs, LABAs, ICS, combos</div>
+                        </div>
+                        <div class="study-topic" onclick="openStudy('pediatric')">
+                            <div class="study-topic-title">👶 Pediatric Conditions</div>
+                            <div class="study-topic-desc">Croup, RSV, bronchiolitis</div>
+                        </div>
+                        <div class="study-topic" onclick="openStudy('infections')">
+                            <div class="study-topic-title">🦠 Respiratory Infections</div>
+                            <div class="study-topic-desc">Pneumonia, TB, influenza</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Modal -->
+    <div class="patient-modal" id="patientModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePatientModal()">×</span>
+            <h2 class="screen-title" id="modalPatientName">Patient Name</h2>
+            
+            <div class="patient-chart">
+                <div class="chart-section">
+                    <div class="chart-title">📊 Vital Signs</div>
+                    <div class="vitals-grid" id="patientVitals">
+                        <!-- Vitals will be populated -->
+                    </div>
+                </div>
+                <div class="chart-section">
+                    <div class="chart-title">📝 Assessment</div>
+                    <div id="patientAssessment">
+                        <!-- Assessment info -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-grid" id="patientActions">
+                <!-- Actions will be populated -->
+            </div>
+            
+            <div class="quiz-panel" id="quizPanel" style="display: none;">
+                <div class="quiz-question" id="quizQuestion"></div>
+                <div class="quiz-options" id="quizOptions"></div>
+                <div class="quiz-feedback" id="quizFeedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Modal -->
+    <div class="study-modal" id="studyModal">
+        <div class="study-content" id="studyContent">
+            <!-- Study content will be populated -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-title" id="toastTitle">Notification</div>
+        <div class="toast-message" id="toastMessage">Message</div>
+    </div>
+
+    <!-- Level Up Animation -->
+    <div class="level-up" id="levelUp">LEVEL UP! ⬆️</div>
+
+    <script>
+        // Game State
+        const gameState = {
+            day: 1,
+            time: 8,
+            energy: 100,
+            knowledge: 50,
+            skill: 30,
+            reputation: 20,
+            score: 0,
+            patientsTreated: 0,
+            currentPatient: null,
+            patients: []
+        };
+
+        // Patient Database
+        const patientTemplates = [
+            // Adult Asthma/COPD
+            {
+                type: 'adult',
+                conditions: [
+                    {
+                        name: 'Acute Asthma Exacerbation',
+                        icon: '😮‍💨',
+                        urgency: 'high',
+                        vitals: { hr: 110, rr: 28, spo2: 89, bp: '140/90', temp: 98.6 },
+                        symptoms: ['Wheezing', 'Dyspnea', 'Accessory muscle use', 'Speaks in short phrases'],
+                        history: 'Uses albuterol 4x/week, no ICS currently prescribed',
+                        quiz: {
+                            question: 'This patient uses SABA >2 days/week. What does this indicate?',
+                            options: ['Normal usage', 'Poor asthma control - needs step-up', 'Should discontinue', 'Switch to LABA only'],
+                            correct: 1,
+                            explanation: 'SABA use >2 days/week indicates poor asthma control. The patient needs step-up therapy, likely adding an ICS.'
+                        },
+                        correctTreatment: 'bronchodilator',
+                        teachings: ['SABA overuse signals poor control', 'ICS is foundation of asthma treatment', 'Consider ICS+LABA combination']
+                    },
+                    {
+                        name: 'COPD Exacerbation',
+                        icon: '🫁',
+                        urgency: 'high',
+                        vitals: { hr: 95, rr: 24, spo2: 86, bp: '150/85', temp: 99.2 },
+                        symptoms: ['Productive cough', 'Increased sputum', 'Barrel chest', 'Pursed lip breathing'],
+                        history: 'Former smoker 40 pack-years, on tiotropium at home',
+                        quiz: {
+                            question: 'What is the foundation of COPD maintenance therapy?',
+                            options: ['Inhaled corticosteroids', 'LABA + LAMA bronchodilators', 'Theophylline', 'SABA only'],
+                            correct: 1,
+                            explanation: 'COPD = Obstruction → Bronchodilators (LABA + LAMA) are the foundation. Unlike asthma, steroids are not first-line.'
+                        },
+                        correctTreatment: 'bronchodilator',
+                        teachings: ['COPD uses bronchodilators as foundation', 'Unlike asthma, ICS not first-line', 'Smoking cessation critical']
+                    }
+                ]
+            },
+            // Pediatric
+            {
+                type: 'pediatric',
+                conditions: [
+                    {
+                        name: 'Croup (Laryngotracheobronchitis)',
+                        icon: '👶',
+                        urgency: 'medium',
+                        vitals: { hr: 130, rr: 36, spo2: 93, bp: '90/60', temp: 101.2 },
+                        symptoms: ['Barking seal-like cough', 'Stridor (inspiratory)', 'Hoarse voice', 'Steeple sign on X-ray'],
+                        history: '2-year-old, URI symptoms for 2 days, worse at night',
+                        quiz: {
+                            question: 'Croup causes what characteristic sound?',
+                            options: ['Expiratory wheeze', 'Inspiratory stridor', 'Rhonchi', 'Fine crackles'],
+                            correct: 1,
+                            explanation: 'Croup causes inspiratory stridor due to subglottic (upper airway) swelling. The "barking seal" cough is classic.'
+                        },
+                        correctTreatment: 'steroid',
+                        teachings: ['Croup = subglottic swelling', 'Stridor is INSPIRATORY', 'Cool mist, steroids, racemic epi for severe']
+                    },
+                    {
+                        name: 'Bronchiolitis (RSV)',
+                        icon: '🍼',
+                        urgency: 'medium',
+                        vitals: { hr: 145, rr: 50, spo2: 91, bp: '85/55', temp: 100.8 },
+                        symptoms: ['Nasal flaring', 'Expiratory wheezing', 'Retractions', 'Poor feeding'],
+                        history: '6-month-old, runny nose 3 days, now breathing fast, older sibling had cold',
+                        quiz: {
+                            question: 'RSV bronchiolitis primarily affects which age group?',
+                            options: ['Adolescents', 'Infants <2 years', 'Adults >65', 'School-age children'],
+                            correct: 1,
+                            explanation: 'RSV bronchiolitis peaks in infants under 2 years. It causes lower airway inflammation and is highly contagious.'
+                        },
+                        correctTreatment: 'supportive',
+                        teachings: ['RSV = infants <2yo most affected', 'Supportive care is mainstay', 'Contact isolation required']
+                    },
+                    {
+                        name: 'Epiglottitis',
+                        icon: '🚨',
+                        urgency: 'critical',
+                        vitals: { hr: 140, rr: 32, spo2: 88, bp: '95/60', temp: 103.5 },
+                        symptoms: ['Tripod positioning', 'Drooling', 'Muffled "hot potato" voice', 'Thumb sign on X-ray'],
+                        history: '4-year-old, sudden high fever, refuses to lie down, appears anxious',
+                        quiz: {
+                            question: 'A child with suspected epiglottitis is tripoding. What should you AVOID?',
+                            options: ['Oxygen', 'Examining the throat', 'Keeping child calm', 'IV access preparation'],
+                            correct: 1,
+                            explanation: 'NEVER examine the throat in suspected epiglottitis - can trigger complete airway obstruction! This is a medical emergency.'
+                        },
+                        correctTreatment: 'emergency',
+                        teachings: ['NEVER examine throat!', 'Airway emergency', 'Tripod position is protective', 'Caused by H. influenzae']
+                    }
+                ]
+            },
+            // Infections
+            {
+                type: 'infection',
+                conditions: [
+                    {
+                        name: 'Community-Acquired Pneumonia',
+                        icon: '🦠',
+                        urgency: 'medium',
+                        vitals: { hr: 102, rr: 26, spo2: 92, bp: '130/80', temp: 102.5 },
+                        symptoms: ['Productive cough', 'Pleuritic chest pain', 'Crackles on auscultation', 'Consolidation on CXR'],
+                        history: '55-year-old, cough 5 days, green sputum, feels terrible',
+                        quiz: {
+                            question: 'Pneumonia classically presents with what lung sounds?',
+                            options: ['Wheezes', 'Stridor', 'Crackles/rales', 'Absent breath sounds'],
+                            correct: 2,
+                            explanation: 'Pneumonia causes crackles (rales) due to fluid/exudate in alveoli. Consolidation means solid appearance on X-ray.'
+                        },
+                        correctTreatment: 'antibiotic',
+                        teachings: ['Crackles = fluid in alveoli', 'Consolidation on CXR', 'Antibiotics based on CAP guidelines']
+                    },
+                    {
+                        name: 'Pulmonary Embolism',
+                        icon: '🩸',
+                        urgency: 'critical',
+                        vitals: { hr: 120, rr: 30, spo2: 88, bp: '100/70', temp: 98.8 },
+                        symptoms: ['Sudden dyspnea', 'Pleuritic chest pain', 'Tachycardia', 'Anxiety/sense of doom'],
+                        history: '45-year-old, recent long flight, sudden SOB, leg swelling noted',
+                        quiz: {
+                            question: 'PE occurs when a clot travels to where?',
+                            options: ['Coronary arteries', 'Pulmonary arteries', 'Cerebral arteries', 'Aorta'],
+                            correct: 1,
+                            explanation: 'PE = clot (usually from DVT in legs) travels to and blocks pulmonary arteries, causing V/Q mismatch and hypoxemia.'
+                        },
+                        correctTreatment: 'emergency',
+                        teachings: ['V/Q mismatch causes hypoxemia', 'DVT is common source', 'Anticoagulation is treatment']
+                    }
+                ]
+            },
+            // Stable patients for monitoring
+            {
+                type: 'stable',
+                conditions: [
+                    {
+                        name: 'Stable Asthma - Routine Check',
+                        icon: '😊',
+                        urgency: 'low',
+                        vitals: { hr: 78, rr: 16, spo2: 98, bp: '120/75', temp: 98.4 },
+                        symptoms: ['Using ICS regularly', 'No night symptoms', 'Exercise tolerance good'],
+                        history: 'Well-controlled on Advair, here for routine follow-up',
+                        quiz: {
+                            question: 'What is Advair a combination of?',
+                            options: ['SABA + SABA', 'ICS + LABA', 'LABA + LAMA', 'ICS + LAMA'],
+                            correct: 1,
+                            explanation: 'Advair = Fluticasone (ICS) + Salmeterol (LABA). This ICS+LABA combo is common for asthma maintenance.'
+                        },
+                        correctTreatment: 'education',
+                        teachings: ['Advair = fluticasone + salmeterol', 'ICS+LABA for moderate persistent', 'Rinse mouth after ICS']
+                    },
+                    {
+                        name: 'Post-Bronchitis Recovery',
+                        icon: '🌡️',
+                        urgency: 'low',
+                        vitals: { hr: 82, rr: 18, spo2: 97, bp: '118/72', temp: 98.6 },
+                        symptoms: ['Residual cough improving', 'No fever', 'Good energy'],
+                        history: 'Had acute bronchitis last week, finishing course of rest',
+                        quiz: {
+                            question: 'Acute bronchitis is usually caused by what?',
+                            options: ['Bacteria', 'Viruses', 'Fungi', 'Parasites'],
+                            correct: 1,
+                            explanation: 'Acute bronchitis is 90% viral - antibiotics usually NOT needed! Supportive care is mainstay.'
+                        },
+                        correctTreatment: 'education',
+                        teachings: ['Usually viral - no antibiotics', 'Cough can persist 2-3 weeks', 'Supportive care is key']
+                    }
+                ]
+            }
+        ];
+
+        // Study Content
+        const studyContent = {
+            anatomy: {
+                title: '🫁 Pulmonary Anatomy & Physiology',
+                cards: [
+                    {
+                        title: 'The Respiratory Tree',
+                        content: 'Air flows: Nose/Mouth → Pharynx → Larynx → Trachea → Bronchi → Bronchioles → Alveoli. The trachea branches at the carina into left and right mainstem bronchi.',
+                        hook: '🧠 Memory: "Take A Long Breath" - Trachea → Bronchi → Bronchioles → Alveoli'
+                    },
+                    {
+                        title: 'Alveoli - The Gas Exchange Units',
+                        content: 'Type I cells are for gas exchange (thin). Type II cells produce surfactant (prevents collapse). Macrophages patrol for pathogens.',
+                        hook: '🧠 Type II = Surfactant producer (think "2" looks like "S")'
+                    },
+                    {
+                        title: 'V/Q Matching',
+                        content: 'Optimal gas exchange requires matching ventilation (V) with perfusion (Q). Normal V/Q ≈ 0.8. Mismatch causes hypoxemia.',
+                        hook: '🧠 V/Q mismatch = Blood going where there\'s no air OR air going where there\'s no blood'
+                    }
+                ]
+            },
+            asthma: {
+                title: '😤 Asthma vs COPD',
+                cards: [
+                    {
+                        title: 'Asthma = INFLAMMATION',
+                        content: 'Reversible airway obstruction caused by inflammation, bronchospasm, and mucus. Triggered by allergens, exercise, cold air. Steroids are the FOUNDATION of treatment.',
+                        hook: '🧠 Asthma = Inflammation → STEROIDS are foundation!'
+                    },
+                    {
+                        title: 'COPD = OBSTRUCTION',
+                        content: 'Chronic bronchitis + emphysema. NOT reversible. Caused by smoking. Alpha-1 antitrypsin deficiency in young non-smokers. Bronchodilators are the FOUNDATION.',
+                        hook: '🧠 COPD = Obstruction → BRONCHODILATORS are foundation!'
+                    },
+                    {
+                        title: 'Key Differences Table',
+                        content: 'Asthma: Young onset, reversible, variable, atopy history, good prognosis. COPD: Older onset, irreversible, progressive, smoking history, poor prognosis without cessation.',
+                        hook: '🧠 Asthma attacks and retreats. COPD advances and stays.'
+                    }
+                ]
+            },
+            drugs: {
+                title: '💊 Respiratory Medications',
+                cards: [
+                    {
+                        title: 'SABA - Short-Acting Beta Agonists',
+                        content: 'Albuterol is the prototype. Works in 5-15 min. RESCUE medication. If using >2 days/week → poor control, step up therapy!',
+                        hook: '🧠 SABA = "SOS" rescue inhaler'
+                    },
+                    {
+                        title: 'LABA - Long-Acting Beta Agonists',
+                        content: 'Salmeterol, Formoterol. 12-hour duration. NEVER use alone in asthma! BLACK BOX WARNING - increased death risk without ICS.',
+                        hook: '🧠 LABA Alone = KILLS Asthmatics! Always combine with ICS!'
+                    },
+                    {
+                        title: 'ICS - Inhaled Corticosteroids',
+                        content: 'Fluticasone, Budesonide. Anti-inflammatory - not for acute relief! Side effects: thrush (rinse mouth!), hoarseness, bone effects long-term.',
+                        hook: '🧠 ICS: Rinse, Spit, Don\'t Swallow! Prevents thrush'
+                    },
+                    {
+                        title: 'Common Combinations',
+                        content: 'Advair = Fluticasone + Salmeterol (ICS+LABA). Symbicort = Budesonide + Formoterol (ICS+LABA). Anoro = Vilanterol + Umeclidinium (LABA+LAMA for COPD).',
+                        hook: '🧠 Combos increase compliance and effectiveness'
+                    }
+                ]
+            },
+            pediatric: {
+                title: '👶 Pediatric Respiratory Conditions',
+                cards: [
+                    {
+                        title: 'Croup (Laryngotracheobronchitis)',
+                        content: 'Age 6mo-3yr. Parainfluenza virus. Subglottic swelling. Barking "seal" cough, inspiratory stridor. Steeple sign on X-ray. Treatment: cool mist, steroids, racemic epinephrine if severe.',
+                        hook: '🧠 Croup = Seal barking at night 🦭'
+                    },
+                    {
+                        title: 'Epiglottitis - EMERGENCY!',
+                        content: 'H. influenzae type B. Sudden high fever, drooling, tripod position, muffled voice. NEVER examine throat! Thumb sign on X-ray. Emergent intubation may be needed.',
+                        hook: '🧠 Epiglottitis: 3 D\'s = Drooling, Dysphagia, Distress. DON\'T look!'
+                    },
+                    {
+                        title: 'RSV Bronchiolitis',
+                        content: 'Infants <2 years. Highly contagious. Expiratory wheezing, nasal flaring, retractions. Treatment is supportive - O2, hydration, suctioning. Palivizumab for high-risk prevention.',
+                        hook: '🧠 RSV loves babies. Support them through it!'
+                    }
+                ]
+            },
+            infections: {
+                title: '🦠 Respiratory Infections',
+                cards: [
+                    {
+                        title: 'Pneumonia',
+                        content: 'Infection of lung parenchyma. Crackles, consolidation, fever, productive cough. CAP vs HAP matters for antibiotic choice. Can be bacterial, viral, or atypical.',
+                        hook: '🧠 Pneumonia = fluid-filled alveoli = crackles + consolidation'
+                    },
+                    {
+                        title: 'Tuberculosis',
+                        content: 'Mycobacterium tuberculosis. Latent vs Active. Classic: night sweats, weight loss, hemoptysis, upper lobe cavitary lesions. Airborne isolation! Multi-drug therapy.',
+                        hook: '🧠 TB: "Consumption" consumes you - weight loss, night sweats'
+                    },
+                    {
+                        title: 'Pulmonary Embolism',
+                        content: 'Clot to pulmonary arteries. Sudden dyspnea, pleuritic pain, hypoxemia with clear CXR. Risk: DVT, immobility, surgery, cancer. Anticoagulation treatment.',
+                        hook: '🧠 PE: Sudden SOB + Clear lungs = Something blocking blood!'
+                    }
+                ]
+            }
+        };
+
+        // Patient name generator
+        const firstNames = ['James', 'Maria', 'Robert', 'Linda', 'Michael', 'Sarah', 'William', 'Jessica', 'David', 'Emily', 'Joseph', 'Ashley', 'Thomas', 'Amanda', 'Charles', 'Sophia', 'Christopher', 'Olivia', 'Daniel', 'Emma'];
+        const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
+
+        function generatePatientName() {
+            const first = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const last = lastNames[Math.floor(Math.random() * lastNames.length)];
+            return `${first} ${last}`;
+        }
+
+        // Generate random patients for the ward
+        function generatePatients() {
+            gameState.patients = [];
+            const numPatients = 5 + Math.floor(Math.random() * 2); // 5-6 patients
+            
+            for (let i = 0; i < 6; i++) {
+                if (i < numPatients) {
+                    const templateGroup = patientTemplates[Math.floor(Math.random() * patientTemplates.length)];
+                    const condition = templateGroup.conditions[Math.floor(Math.random() * templateGroup.conditions.length)];
+                    
+                    gameState.patients.push({
+                        id: i,
+                        name: generatePatientName(),
+                        room: `R${101 + i}`,
+                        ...condition,
+                        treated: false
+                    });
+                } else {
+                    gameState.patients.push({
+                        id: i,
+                        empty: true
+                    });
+                }
+            }
+            
+            renderPatients();
+        }
+
+        // Render patients in ward
+        function renderPatients() {
+            const container = document.getElementById('patientBeds');
+            container.innerHTML = '';
+            
+            gameState.patients.forEach(patient => {
+                const bed = document.createElement('div');
+                
+                if (patient.empty) {
+                    bed.className = 'patient-bed empty';
+                    bed.innerHTML = `
+                        <div class="patient-icon">🛏️</div>
+                        <div class="patient-name">Empty Bed</div>
+                        <div class="patient-condition">Available</div>
+                    `;
+                } else {
+                    const urgencyClass = patient.urgency === 'critical' ? 'critical' : '';
+                    bed.className = `patient-bed ${urgencyClass} ${patient.treated ? 'treated' : ''}`;
+                    bed.onclick = () => openPatientModal(patient);
+                    
+                    if (patient.treated) {
+                        bed.style.opacity = '0.6';
+                        bed.style.borderColor = 'var(--accent-green)';
+                    }
+                    
+                    bed.innerHTML = `
+                        <div class="patient-urgency urgency-${patient.urgency}"></div>
+                        <div class="patient-icon">${patient.icon}</div>
+                        <div class="patient-name">${patient.name}</div>
+                        <div class="patient-condition">${patient.treated ? '✓ Treated' : patient.name.split(' ')[0] + '\'s Case'}</div>
+                    `;
+                }
+                
+                container.appendChild(bed);
+            });
+        }
+
+        // Open patient modal
+        function openPatientModal(patient) {
+            if (patient.treated) {
+                showToast('Already Treated', 'This patient has already been cared for this shift.');
+                return;
+            }
+            
+            gameState.currentPatient = patient;
+            document.getElementById('modalPatientName').textContent = `${patient.icon} ${patient.name} - ${patient.room}`;
+            
+            // Populate vitals
+            const vitalsHtml = `
+                <div class="vital-item">
+                    <div class="vital-label">Heart Rate</div>
+                    <div class="vital-value ${patient.vitals.hr > 100 ? 'abnormal' : ''}">${patient.vitals.hr} bpm</div>
+                </div>
+                <div class="vital-item">
+                    <div class="vital-label">Resp Rate</div>
+                    <div class="vital-value ${patient.vitals.rr > 20 ? 'abnormal' : ''}">${patient.vitals.rr}/min</div>
+                </div>
+                <div class="vital-item">
+                    <div class="vital-label">SpO2</div>
+                    <div class="vital-value ${patient.vitals.spo2 < 94 ? 'abnormal' : ''}">${patient.vitals.spo2}%</div>
+                </div>
+                <div class="vital-item">
+                    <div class="vital-label">BP</div>
+                    <div class="vital-value">${patient.vitals.bp}</div>
+                </div>
+                <div class="vital-item">
+                    <div class="vital-label">Temp</div>
+                    <div class="vital-value ${patient.vitals.temp > 100.4 ? 'abnormal' : ''}">${patient.vitals.temp}°F</div>
+                </div>
+            `;
+            document.getElementById('patientVitals').innerHTML = vitalsHtml;
+            
+            // Populate assessment
+            const assessmentHtml = `
+                <p><strong>Diagnosis:</strong> ${patient.name.split(' ')[0]}'s presenting condition: <span style="color: var(--accent-yellow)">${patient.condition}</span></p>
+                <p style="margin-top: 10px"><strong>Symptoms:</strong></p>
+                <ul style="margin-left: 20px; color: var(--text-dim)">
+                    ${patient.symptoms.map(s => `<li>${s}</li>`).join('')}
+                </ul>
+                <p style="margin-top: 10px"><strong>History:</strong> ${patient.history}</p>
+            `;
+            document.getElementById('patientAssessment').innerHTML = assessmentHtml;
+            
+            // Populate actions
+            const actionsHtml = `
+                <button class="action-btn" onclick="performAction('assess')">
+                    <div class="action-icon">🩺</div>
+                    <div class="action-name">Full Assessment</div>
+                    <div class="action-cost">-10 Energy, +5 Knowledge</div>
+                </button>
+                <button class="action-btn" onclick="performAction('bronchodilator')">
+                    <div class="action-icon">💨</div>
+                    <div class="action-name">Bronchodilator</div>
+                    <div class="action-cost">-15 Energy</div>
+                </button>
+                <button class="action-btn" onclick="performAction('steroid')">
+                    <div class="action-icon">💊</div>
+                    <div class="action-name">Corticosteroid</div>
+                    <div class="action-cost">-15 Energy</div>
+                </button>
+                <button class="action-btn" onclick="performAction('oxygen')">
+                    <div class="action-icon">🫁</div>
+                    <div class="action-name">Oxygen Therapy</div>
+                    <div class="action-cost">-10 Energy</div>
+                </button>
+                <button class="action-btn" onclick="performAction('antibiotic')">
+                    <div class="action-icon">💉</div>
+                    <div class="action-name">Antibiotics</div>
+                    <div class="action-cost">-15 Energy</div>
+                </button>
+                <button class="action-btn" onclick="performAction('supportive')">
+                    <div class="action-icon">🤲</div>
+                    <div class="action-name">Supportive Care</div>
+                    <div class="action-cost">-10 Energy</div>
+                </button>
+                <button class="action-btn" onclick="performAction('education')">
+                    <div class="action-icon">📚</div>
+                    <div class="action-name">Patient Education</div>
+                    <div class="action-cost">-5 Energy, +10 Reputation</div>
+                </button>
+                <button class="action-btn" onclick="performAction('emergency')">
+                    <div class="action-icon">🚨</div>
+                    <div class="action-name">Call Emergency</div>
+                    <div class="action-cost">-5 Energy</div>
+                </button>
+            `;
+            document.getElementById('patientActions').innerHTML = actionsHtml;
+            
+            // Reset quiz panel
+            document.getElementById('quizPanel').style.display = 'none';
+            document.getElementById('quizFeedback').className = 'quiz-feedback';
+            document.getElementById('quizFeedback').style.display = 'none';
+            
+            document.getElementById('patientModal').classList.add('active');
+        }
+
+        // Close patient modal
+        function closePatientModal() {
+            document.getElementById('patientModal').classList.remove('active');
+            gameState.currentPatient = null;
+        }
+
+        // Perform action on patient
+        function performAction(action) {
+            const patient = gameState.currentPatient;
+            if (!patient) return;
+            
+            // Energy check
+            if (gameState.energy < 10) {
+                showToast('Too Tired! 😴', 'You need to rest. Energy is too low.');
+                return;
+            }
+            
+            // Show quiz
+            if (action === 'assess') {
+                updateStat('energy', -10);
+                updateStat('knowledge', 5);
+                addLog(`Performed full assessment on ${patient.name}`, 'info');
+                showQuiz();
+                return;
+            }
+            
+            // Check if correct treatment
+            let isCorrect = (action === patient.correctTreatment);
+            let energyCost = 15;
+            let message = '';
+            
+            if (action === 'education') {
+                energyCost = 5;
+                updateStat('reputation', 10);
+                addLog(`Provided patient education to ${patient.name}`, 'success');
+                message = 'Great teaching! Patient education is crucial for long-term management.';
+                isCorrect = true; // Education is always good
+            } else if (action === 'oxygen') {
+                energyCost = 10;
+                if (patient.vitals.spo2 < 94) {
+                    addLog(`Applied oxygen therapy to ${patient.name} - SpO2 was ${patient.vitals.spo2}%`, 'success');
+                    message = 'Good call! Patient was hypoxic and needed supplemental O2.';
+                    isCorrect = true;
+                } else {
+                    addLog(`Applied unnecessary oxygen to ${patient.name}`, 'warning');
+                    message = 'SpO2 was already adequate. Save resources for patients who need it.';
+                }
+            } else if (action === 'supportive') {
+                energyCost = 10;
+            }
+            
+            updateStat('energy', -energyCost);
+            
+            if (isCorrect) {
+                // Correct treatment!
+                const points = patient.urgency === 'critical' ? 100 : patient.urgency === 'high' ? 75 : 50;
+                updateStat('score', points);
+                updateStat('skill', 5);
+                updateStat('reputation', 5);
+                
+                patient.treated = true;
+                gameState.patientsTreated++;
+                document.getElementById('patientsTreated').textContent = gameState.patientsTreated;
+                
+                addLog(`Successfully treated ${patient.name} with ${action}! +${points} points`, 'success');
+                
+                if (!message) {
+                    message = `Excellent choice! ${patient.teachings[0]}`;
+                }
+                
+                showToast('Treatment Success! 🎉', message);
+                
+                // Check for level up
+                if (gameState.skill >= 50 && gameState.skill < 55) {
+                    showLevelUp();
+                }
+                
+                setTimeout(() => {
+                    closePatientModal();
+                    renderPatients();
+                }, 1500);
+            } else {
+                // Wrong treatment
+                updateStat('reputation', -5);
+                addLog(`Suboptimal treatment for ${patient.name}. Consider: ${patient.correctTreatment}`, 'warning');
+                
+                showToast('Reconsider Treatment 🤔', `Think about the pathophysiology. ${patient.name} has ${patient.condition}.`);
+                showQuiz();
+            }
+        }
+
+        // Show quiz
+        function showQuiz() {
+            const patient = gameState.currentPatient;
+            if (!patient || !patient.quiz) return;
+            
+            document.getElementById('quizPanel').style.display = 'block';
+            document.getElementById('quizQuestion').textContent = `📝 ${patient.quiz.question}`;
+            
+            const optionsHtml = patient.quiz.options.map((opt, i) => 
+                `<div class="quiz-option" onclick="checkQuizAnswer(${i})">${String.fromCharCode(65 + i)}) ${opt}</div>`
+            ).join('');
+            
+            document.getElementById('quizOptions').innerHTML = optionsHtml;
+        }
+
+        // Check quiz answer
+        function checkQuizAnswer(selectedIndex) {
+            const patient = gameState.currentPatient;
+            if (!patient) return;
+            
+            const options = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('quizFeedback');
+            const isCorrect = selectedIndex === patient.quiz.correct;
+            
+            // Disable all options
+            options.forEach((opt, i) => {
+                opt.style.pointerEvents = 'none';
+                if (i === patient.quiz.correct) {
+                    opt.classList.add('correct');
+                } else if (i === selectedIndex && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            
+            // Show feedback
+            feedback.className = `quiz-feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.innerHTML = isCorrect 
+                ? `🎉 Correct! ${patient.quiz.explanation}` 
+                : `❌ Not quite. ${patient.quiz.explanation}`;
+            feedback.style.display = 'block';
+            
+            if (isCorrect) {
+                updateStat('knowledge', 10);
+                updateStat('score', 25);
+                addLog(`Answered quiz correctly! +10 Knowledge`, 'success');
+            } else {
+                updateStat('knowledge', 3);
+                addLog(`Quiz answer incorrect, but learned something! +3 Knowledge`, 'info');
+            }
+        }
+
+        // Update stats
+        function updateStat(stat, change) {
+            gameState[stat] = Math.max(0, Math.min(100, gameState[stat] + change));
+            
+            // Update display
+            switch(stat) {
+                case 'energy':
+                    document.getElementById('energyValue').textContent = gameState.energy;
+                    document.getElementById('energyBar').style.width = gameState.energy + '%';
+                    break;
+                case 'knowledge':
+                    document.getElementById('knowledgeValue').textContent = gameState.knowledge;
+                    document.getElementById('knowledgeBar').style.width = gameState.knowledge + '%';
+                    break;
+                case 'skill':
+                    document.getElementById('skillValue').textContent = gameState.skill;
+                    document.getElementById('skillBar').style.width = gameState.skill + '%';
+                    break;
+                case 'reputation':
+                    document.getElementById('repValue').textContent = gameState.reputation;
+                    document.getElementById('repBar').style.width = gameState.reputation + '%';
+                    break;
+                case 'score':
+                    gameState.score = Math.max(0, gameState.score + change);
+                    document.getElementById('totalScore').textContent = gameState.score;
+                    break;
+            }
+        }
+
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('activityLog');
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<div class="log-time">${time}</div>${message}`;
+            
+            log.insertBefore(entry, log.firstChild);
+            
+            // Keep only last 20 entries
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Show toast notification
+        function showToast(title, message) {
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('toast').classList.add('show');
+            
+            setTimeout(() => {
+                document.getElementById('toast').classList.remove('show');
+            }, 4000);
+        }
+
+        // Show level up animation
+        function showLevelUp() {
+            const el = document.getElementById('levelUp');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'log') {
+                document.querySelector('.panel-tab:nth-child(1)').classList.add('active');
+                document.getElementById('logTab').classList.add('active');
+            } else {
+                document.querySelector('.panel-tab:nth-child(2)').classList.add('active');
+                document.getElementById('studyTab').classList.add('active');
+            }
+        }
+
+        // Open study modal
+        function openStudy(topic) {
+            const content = studyContent[topic];
+            if (!content) return;
+            
+            let html = `
+                <span class="modal-close" onclick="closeStudy()">×</span>
+                <h2 class="study-header">${content.title}</h2>
+            `;
+            
+            content.cards.forEach(card => {
+                html += `
+                    <div class="study-card">
+                        <h3>${card.title}</h3>
+                        <p>${card.content}</p>
+                        <div class="memory-hook">${card.hook}</div>
+                    </div>
+                `;
+            });
+            
+            html += `<button class="study-btn" onclick="completeStudy()">Finish Studying (+15 Knowledge, -10 Energy)</button>`;
+            
+            document.getElementById('studyContent').innerHTML = html;
+            document.getElementById('studyModal').classList.add('active');
+        }
+
+        // Close study modal
+        function closeStudy() {
+            document.getElementById('studyModal').classList.remove('active');
+        }
+
+        // Complete studying
+        function completeStudy() {
+            if (gameState.energy < 10) {
+                showToast('Too Tired! 😴', 'You need energy to study effectively.');
+                return;
+            }
+            
+            updateStat('knowledge', 15);
+            updateStat('energy', -10);
+            addLog('Completed study session! +15 Knowledge', 'success');
+            showToast('Study Complete! 📚', 'Your knowledge has increased!');
+            closeStudy();
+        }
+
+        // Start game
+        function startGame() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('hospitalWard').style.display = 'block';
+            
+            generatePatients();
+            addLog('Started shift! Check on your patients.', 'info');
+            showToast('Shift Started! 🏥', 'Click on patients to assess and treat them.');
+            
+            // Slowly drain energy over time
+            setInterval(() => {
+                if (gameState.energy > 5) {
+                    updateStat('energy', -1);
+                }
+            }, 30000); // Every 30 seconds
+        }
+
+        // Next shift
+        function nextShift() {
+            gameState.day++;
+            gameState.energy = 100;
+            updateStat('energy', 0);
+            document.getElementById('currentShift').textContent = `Day ${gameState.day}`;
+            
+            generatePatients();
+            addLog(`Started Day ${gameState.day}! New patients admitted.`, 'info');
+            showToast('New Shift! ☀️', 'Your energy is restored. New patients are waiting!');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add next shift button after some patients treated
+            setInterval(() => {
+                const treatedAll = gameState.patients.filter(p => !p.empty).every(p => p.treated);
+                if (treatedAll && gameState.patients.some(p => !p.empty)) {
+                    if (!document.getElementById('nextShiftBtn')) {
+                        const btn = document.createElement('button');
+                        btn.id = 'nextShiftBtn';
+                        btn.className = 'start-btn';
+                        btn.style.marginTop = '20px';
+                        btn.textContent = 'Next Shift →';
+                        btn.onclick = nextShift;
+                        document.getElementById('hospitalWard').appendChild(btn);
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
